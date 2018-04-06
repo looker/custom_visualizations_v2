@@ -2,6 +2,7 @@ var path = require('path')
 
 var webpackConfig = {
   entry: {
+    hello_world: './src/examples/hello_world/hello_world.js',
     sankey: './src/examples/sankey/sankey.ts'
   },
   output: {
