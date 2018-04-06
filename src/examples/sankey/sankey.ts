@@ -7,7 +7,6 @@ import {
   Link,
   Looker,
   LookerChartUtils,
-  VisConfig,
   VisualizationDefinition
 } from '../types/types'
 
@@ -31,7 +30,7 @@ const vis: Sankey = {
     }
   },
   // Set up the initial state of the visualization
-  create: (element: HTMLElement, config: VisConfig) => {
+  create: (element, config) => {
     element.innerHTML = `
       <style>
       .node,
@@ -43,7 +42,7 @@ const vis: Sankey = {
     vis.svg = d3.select(element).append('svg')
   },
   // Render in response to the data or settings changing
-  updateAsync: function (data, element, config, queryResponse, _details, doneRendering) {
+  updateAsync (data, element, config, queryResponse, details, doneRendering) {
     if (!handleErrors(this, queryResponse, {
       min_pivots: 0, max_pivots: 0,
       min_dimensions: 2, max_dimensions: undefined,

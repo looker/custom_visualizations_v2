@@ -35,7 +35,7 @@ Now let's actually create `hello_world.js`
 
 ### Just The Bones
 
-If you want to just jump to the final source code for this example, [that's available here](../examples/hello_world/hello_world.js).
+If you want to just jump to the final source code for this example, [that's available here](../src/examples/hello_world/hello_world.js).
 
 In the folder you are hosting via `pyhttps` open a new blank JavaScript file on our computer and call it `hello_world.js`.
 
@@ -238,7 +238,7 @@ Because the `updateAsync` function gets called any time the config changes, and 
 
 ### Doneskies
 
-And that's the basics of how to create a custom visualization using the Visualization API. [You can check out the complete source code to this "Hello World" visualization here](../examples/hello_world/hello_world.js).
+And that's the basics of how to create a custom visualization using the Visualization API. [You can check out the complete source code to this "Hello World" visualization here](../src/examples/hello_world/hello_world.js).
 
 There's a bunch of additional functionality you can use as well, so definitely take a look at the [Visualization API Reference](api_reference.md) for more information.
 
