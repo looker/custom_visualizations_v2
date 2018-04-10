@@ -54,7 +54,7 @@ Custom Visualizations should be served as https content externally to looker. If
 
 	There is a synchronous and asynchronous version of this function – you'll only need to specify one. (It's an error to define both). The async method is more reliable for pdf rendering due to the nature of iframes.
 
-	[See details about these `update` functions &rarr;](#the-update-and-updateasync-functions)
+	[See details about these `update` functions &rarr;](#the-updateasync-and-update-functions)
 
 #### Optional Properties
 

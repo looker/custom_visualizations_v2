@@ -1,4 +1,7 @@
 looker.plugins.visualizations.add({
+  // Id and Label are legacy properties that no longer have any function besides documenting
+  // what the visualization used to have. The properties are now set via the manifest
+  // form within the admin/visualizations page of Looker
   id: "hello_world",
   label: "Hello World",
   options: {
@@ -37,7 +40,7 @@ looker.plugins.visualizations.add({
     `;
 
     // Create a container element to let us center the text.
-    const container = element.appendChild(document.createElement("div"));
+    var container = element.appendChild(document.createElement("div"));
     container.className = "hello-world-vis";
 
     // Create an element to contain the text.
@@ -57,8 +60,8 @@ looker.plugins.visualizations.add({
     }
 
     // Grab the first cell of the data
-    const firstRow = data[0];
-    const firstCell = firstRow[queryResponse.fields.dimensions[0].name];
+    var firstRow = data[0];
+    var firstCell = firstRow[queryResponse.fields.dimensions[0].name];
 
     // Insert the data into the page
     this._textElement.innerHTML = LookerCharts.Utils.htmlForCell(firstCell);
