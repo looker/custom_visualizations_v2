@@ -1,5 +1,5 @@
 
-The Looker Visualization API is a pure-JavaScript API that runs in a sandboxed iframe and will be hosted within the Looker application.
+The Looker Visualization API is a pure-JavaScript API that runs in a [sandboxed iframe](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe#attr-sandbox) and will be hosted within the Looker application.
 
 The same visualization code can provide a visualization anywhere in Looker: explore, Looks, Dashboards, embed or in PDF or rendered images.
 
@@ -18,7 +18,7 @@ Let's walk thorough creating a simple visualization script.
 
 We'll be creating a simple "Hello World" visualization that displays the first dimension of a given query. The final result should look like this:
 
-![](../examples/hello_world/hello_world.png)
+![](../src/examples/hello_world/hello_world.png)
 
 ### Setup
 
@@ -166,7 +166,7 @@ We can just modify the beginning of our `updateAsync` method to detect an error 
 
 That's it! If the user creates a query that only has measures, they'll now see this:
 
-![](../examples/hello_world/hello_world_error.png)
+![](../src/examples/hello_world/hello_world_error.png)
 
 ### Configuration
 
