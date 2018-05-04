@@ -4,9 +4,9 @@
 	else if(typeof define === 'function' && define.amd)
 		define([], factory);
 	else if(typeof exports === 'object')
-		exports["sankey"] = factory();
+		exports["liquid_fill_gauge"] = factory();
 	else
-		root["sankey"] = factory();
+		root["liquid_fill_gauge"] = factory();
 })(typeof self !== 'undefined' ? self : this, function() {
 return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
@@ -70,7 +70,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 467);
+/******/ 	return __webpack_require__(__webpack_require__.s = 472);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -22743,593 +22743,516 @@ var handleErrors = function (vis, resp, options) {
 
 
 /***/ }),
-/* 465 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* unused harmony export left */
-/* unused harmony export right */
-/* harmony export (immutable) */ __webpack_exports__["a"] = justify;
-/* unused harmony export center */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_d3_array__ = __webpack_require__(2);
-
-
-function targetDepth(d) {
-  return d.target.depth;
-}
-
-function left(node) {
-  return node.depth;
-}
-
-function right(node, n) {
-  return n - 1 - node.height;
-}
-
-function justify(node, n) {
-  return node.sourceLinks.length ? node.depth : n - 1;
-}
-
-function center(node) {
-  return node.targetLinks.length ? node.depth
-      : node.sourceLinks.length ? Object(__WEBPACK_IMPORTED_MODULE_0_d3_array__["e" /* min */])(node.sourceLinks, targetDepth) - 1
-      : 0;
-}
-
-
-/***/ }),
+/* 465 */,
 /* 466 */,
-/* 467 */
+/* 467 */,
+/* 468 */,
+/* 469 */,
+/* 470 */,
+/* 471 */,
+/* 472 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_d3__ = __webpack_require__(90);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_d3_sankey__ = __webpack_require__(468);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__common_utils__ = __webpack_require__(464);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__common_utils__ = __webpack_require__(464);
 
 
-
+var LiquidFillGauge = __webpack_require__(473);
+var defaults = LiquidFillGauge.liquidFillGaugeDefaultSettings();
 var vis = {
-    id: 'sankey',
-    label: 'Sankey',
+    id: 'liquid_fill_gauge',
+    label: 'Liquid Fill Gauge',
     options: {
-        color_range: {
-            type: 'array',
-            label: 'Color Range',
-            display: 'colors',
-            default: ['#dd3333', '#80ce5d', '#f78131', '#369dc1', '#c572d3', '#36c1b3', '#b57052', '#ed69af']
+        showComparison: {
+            label: 'Use field comparison',
+            default: false,
+            section: 'Value',
+            type: 'boolean'
+        },
+        minValue: {
+            label: 'Min value',
+            min: 0,
+            default: defaults.minValue,
+            section: 'Value',
+            type: 'number',
+            placeholder: 'Any positive number'
+        },
+        maxValue: {
+            label: 'Max value',
+            min: 0,
+            default: defaults.maxValue,
+            section: 'Value',
+            type: 'number',
+            placeholder: 'Any positive number',
+            hidden: function (config, queryResponse) {
+                return config.showComparison;
+            }
+        },
+        circleThickness: {
+            label: 'Circle Thickness',
+            min: 0,
+            max: 1,
+            step: 0.05,
+            default: defaults.circleThickness,
+            section: 'Style',
+            type: 'number',
+            display: 'range'
+        },
+        circleFillGap: {
+            label: 'Circle Gap',
+            min: 0,
+            max: 1,
+            step: 0.05,
+            default: defaults.circleFillGap,
+            section: 'Style',
+            type: 'number',
+            display: 'range'
+        },
+        circleColor: {
+            label: 'Circle Color',
+            default: defaults.circleFillGap,
+            section: 'Style',
+            type: 'string',
+            display: 'color'
+        },
+        waveHeight: {
+            label: 'Wave Height',
+            min: 0,
+            max: 1,
+            step: 0.05,
+            default: defaults.waveHeight,
+            section: 'Waves',
+            type: 'number',
+            display: 'range'
+        },
+        waveCount: {
+            label: 'Wave Count',
+            min: 0,
+            max: 10,
+            default: defaults.waveCount,
+            section: 'Waves',
+            type: 'number',
+            display: 'range'
+        },
+        waveRiseTime: {
+            label: 'Wave Rise Time',
+            min: 0,
+            max: 5000,
+            step: 50,
+            default: defaults.waveRiseTime,
+            section: 'Waves',
+            type: 'number',
+            display: 'range'
+        },
+        waveAnimateTime: {
+            label: 'Wave Animation Time',
+            min: 0,
+            max: 5000,
+            step: 50,
+            default: 1800,
+            section: 'Waves',
+            type: 'number',
+            display: 'range'
+        },
+        waveRise: {
+            label: 'Wave Rise from Bottom',
+            default: defaults.waveRise,
+            section: 'Waves',
+            type: 'boolean'
+        },
+        waveHeightScaling: {
+            label: 'Scale waves if high or low',
+            default: defaults.waveHeightScaling,
+            section: 'Waves',
+            type: 'boolean'
+        },
+        waveAnimate: {
+            label: 'Animate Waves',
+            default: true,
+            section: 'Waves',
+            type: 'boolean'
+        },
+        waveColor: {
+            label: 'Wave Color',
+            default: '#64518A',
+            section: 'Style',
+            type: 'string',
+            display: 'color'
+        },
+        waveOffset: {
+            label: 'Wave Offset',
+            min: 0,
+            max: 1,
+            step: 0.05,
+            default: 0,
+            section: 'Waves',
+            type: 'number',
+            display: 'range'
+        },
+        textVertPosition: {
+            label: 'Text Vertical Offset',
+            min: 0,
+            max: 1,
+            step: 0.01,
+            default: 0.5,
+            section: 'Value',
+            type: 'number',
+            display: 'range'
+        },
+        textSize: {
+            label: 'Text Size',
+            min: 0,
+            max: 1,
+            step: 0.01,
+            default: 1,
+            section: 'Value',
+            type: 'number',
+            display: 'range'
+        },
+        valueCountUp: {
+            label: 'Animate to Value',
+            default: true,
+            section: 'Waves',
+            type: 'boolean'
+        },
+        displayPercent: {
+            label: 'Display as Percent',
+            default: true,
+            section: 'Value',
+            type: 'boolean'
+        },
+        textColor: {
+            label: 'Text Color (non-overlapped)',
+            default: '#000000',
+            section: 'Style',
+            type: 'string',
+            display: 'color'
+        },
+        waveTextColor: {
+            label: 'Text Color (overlapped)',
+            default: '#FFFFFF',
+            section: 'Style',
+            type: 'string',
+            display: 'color'
         }
     },
     // Set up the initial state of the visualization
     create: function (element, config) {
+        element.style.margin = '10px';
         element.innerHTML = "\n      <style>\n      .node,\n      .link {\n        transition: 0.5s opacity;\n      }\n      </style>\n    ";
-        vis.svg = __WEBPACK_IMPORTED_MODULE_0_d3__["d" /* select */](element).append('svg');
+        var elementId = "fill-gauge-" + Date.now();
+        this.svg = __WEBPACK_IMPORTED_MODULE_0_d3__["d" /* select */](element).append('svg');
+        this.svg.attr('id', elementId);
     },
     // Render in response to the data or settings changing
-    updateAsync: function (data, element, config, queryResponse, details, doneRendering) {
-        if (!Object(__WEBPACK_IMPORTED_MODULE_2__common_utils__["a" /* handleErrors */])(this, queryResponse, {
+    update: function (data, element, config, res, details) {
+        // TODO error handling
+        if (!Object(__WEBPACK_IMPORTED_MODULE_1__common_utils__["a" /* handleErrors */])(this, res, {
             min_pivots: 0, max_pivots: 0,
-            min_dimensions: 2, max_dimensions: undefined,
-            min_measures: 1, max_measures: 1
+            min_dimensions: 0, max_dimensions: undefined,
+            min_measures: 1, max_measures: undefined
         }))
             return;
-        var width = element.clientWidth;
-        var height = element.clientHeight;
-        var svg = this.svg
-            .html('')
-            .attr('width', '100%')
-            .attr('height', '100%')
-            .append('g');
-        var dimensions = queryResponse.fields.dimension_like;
-        var measure = queryResponse.fields.measure_like[0];
-        //  The standard d3.ScaleOrdinal<string, {}>, causes error
-        // `no-inferred-empty-object-type  Explicit type parameter needs to be provided to the function call`
-        // https://stackoverflow.com/questions/31564730/typescript-with-d3js-with-definitlytyped
-        var color = __WEBPACK_IMPORTED_MODULE_0_d3__["c" /* scaleOrdinal */]()
-            .range(config.color_range || vis.options.color_range.default);
-        var defs = svg.append('defs');
-        var sankeyInst = Object(__WEBPACK_IMPORTED_MODULE_1_d3_sankey__["a" /* sankey */])()
-            .nodeWidth(10)
-            .nodePadding(12)
-            .extent([[1, 1], [width - 1, height - 6]]);
-        var link = svg.append('g')
-            .attr('class', 'links')
-            .attr('fill', 'none')
-            .attr('stroke', '#fff')
-            .selectAll('path');
-        var node = svg.append('g')
-            .attr('class', 'nodes')
-            .attr('font-family', 'sans-serif')
-            .attr('font-size', 10)
-            .selectAll('g');
-        var graph = {
-            nodes: [],
-            links: []
-        };
-        var nodes = __WEBPACK_IMPORTED_MODULE_0_d3__["f" /* set */]();
-        data.forEach(function (d) {
-            // variable number of dimensions
-            var path = dimensions.map(function (dim) { return d[dim.name].value + ''; });
-            path.forEach(function (p, i) {
-                if (i === path.length - 1)
-                    return;
-                var source = path.slice(i, i + 1)[0] + i;
-                var target = path.slice(i + 1, i + 2)[0] + (i + 1);
-                nodes.add(source);
-                nodes.add(target);
-                // Setup drill links
-                var drillLinks = [];
-                for (var key in d) {
-                    if (d[key].links) {
-                        d[key].links.forEach(function (link) { drillLinks.push(link); });
-                    }
-                }
-                graph.links.push({
-                    'drillLinks': drillLinks,
-                    'source': source,
-                    'target': target,
-                    'value': +d[measure.name].value
-                });
-            });
-        });
-        var nodesArray = nodes.values();
-        graph.links.forEach(function (d) {
-            d.source = nodesArray.indexOf(d.source);
-            d.target = nodesArray.indexOf(d.target);
-        });
-        graph.nodes = nodes.values().map(function (d) {
-            return {
-                name: d.slice(0, -1)
-            };
-        });
-        sankeyInst(graph);
-        link = link
-            .data(graph.links)
-            .enter().append('path')
-            .attr('class', 'link')
-            .attr('d', function (d) { return 'M' + -10 + ',' + -10 + Object(__WEBPACK_IMPORTED_MODULE_1_d3_sankey__["b" /* sankeyLinkHorizontal */])()(d); })
-            .style('opacity', 0.4)
-            .attr('stroke-width', function (d) { return Math.max(1, d.width); })
-            .on('mouseenter', function (d) {
-            svg.selectAll('.link')
-                .style('opacity', 0.05);
-            __WEBPACK_IMPORTED_MODULE_0_d3__["d" /* select */](this)
-                .style('opacity', 0.7);
-            svg.selectAll('.node')
-                .style('opacity', function (p) {
-                if (p === d.source)
-                    return 1;
-                if (p === d.target)
-                    return 1;
-                return 0.5;
-            });
-        })
-            .on('click', function (d) {
-            // Add drill menu event
-            var coords = __WEBPACK_IMPORTED_MODULE_0_d3__["b" /* mouse */](this);
-            var event = { pageX: coords[0], pageY: coords[1] };
-            LookerCharts.Utils.openDrillMenu({
-                links: d.drillLinks,
-                event: event
-            });
-        })
-            .on('mouseleave', function (d) {
-            __WEBPACK_IMPORTED_MODULE_0_d3__["e" /* selectAll */]('.node').style('opacity', 1);
-            __WEBPACK_IMPORTED_MODULE_0_d3__["e" /* selectAll */]('.link').style('opacity', 0.4);
-        });
-        // gradients https://bl.ocks.org/micahstubbs/bf90fda6717e243832edad6ed9f82814
-        link.style('stroke', function (d, i) {
-            // make unique gradient ids
-            var gradientID = 'gradient' + i;
-            var startColor = color(d.source.name.replace(/ .*/, ''));
-            var stopColor = color(d.target.name.replace(/ .*/, ''));
-            var linearGradient = defs.append('linearGradient')
-                .attr('id', gradientID);
-            linearGradient.selectAll('stop')
-                .data([
-                { offset: '10%', color: startColor },
-                { offset: '90%', color: stopColor }
-            ])
-                .enter().append('stop')
-                .attr('offset', function (d) {
-                return d.offset;
-            })
-                .attr('stop-color', function (d) {
-                return d.color;
-            });
-            return 'url(#' + gradientID + ')';
-        });
-        node = node
-            .data(graph.nodes)
-            .enter().append('g')
-            .attr('class', 'node')
-            .on('mouseenter', function (d) {
-            svg.selectAll('.link')
-                .style('opacity', function (p) {
-                if (p.source === d)
-                    return 0.7;
-                if (p.target === d)
-                    return 0.7;
-                return 0.05;
-            });
-        })
-            .on('mouseleave', function (d) {
-            __WEBPACK_IMPORTED_MODULE_0_d3__["e" /* selectAll */]('.link').style('opacity', 0.4);
-        });
-        node.append('rect')
-            .attr('x', function (d) { return d.x0; })
-            .attr('y', function (d) { return d.y0; })
-            .attr('height', function (d) { return Math.abs(d.y1 - d.y0); })
-            .attr('width', function (d) { return Math.abs(d.x1 - d.x0); })
-            .attr('fill', function (d) { return color(d.name.replace(/ .*/, '')); })
-            .attr('stroke', '#555');
-        node.append('text')
-            .attr('x', function (d) { return d.x0 - 6; })
-            .attr('y', function (d) { return (d.y1 + d.y0) / 2; })
-            .attr('dy', '0.35em')
-            .style('font-weight', 'bold')
-            .attr('text-anchor', 'end')
-            .style('fill', '#222')
-            .text(function (d) { return d.name; })
-            .filter(function (d) { return d.x0 < width / 2; })
-            .attr('x', function (d) { return d.x1 + 6; })
-            .attr('text-anchor', 'start');
-        node.append('title')
-            .text(function (d) { return d.name + '\n' + d.value; });
-        doneRendering();
+        var gaugeConfig = _.extend(LiquidFillGauge.liquidFillGaugeDefaultSettings(), config);
+        var datumField = res.fields.measure_like[0];
+        var datum = data[0][datumField.name];
+        var value = datum.value;
+        var compareField = res.fields.measure_like[1];
+        if (compareField && gaugeConfig.showComparison) {
+            var compareDatum = data[0][compareField.name];
+            gaugeConfig.maxValue = compareDatum.value;
+        }
+        if (gaugeConfig.displayPercent) {
+            value = datum.value / gaugeConfig.maxValue * 100;
+            gaugeConfig.maxValue = 100;
+        }
+        this.svg.html('');
+        this.svg.attr('width', element.clientWidth - 20);
+        this.svg.attr('height', element.clientHeight - 20);
+        this.gauge = LiquidFillGauge.loadLiquidFillGauge(this.svg.attr('id'), value, gaugeConfig);
     }
 };
 looker.plugins.visualizations.add(vis);
 
 
 /***/ }),
-/* 468 */
+/* 473 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__src_sankey__ = __webpack_require__(469);
-/* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return __WEBPACK_IMPORTED_MODULE_0__src_sankey__["a"]; });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__src_align__ = __webpack_require__(465);
-/* unused harmony reexport sankeyCenter */
-/* unused harmony reexport sankeyLeft */
-/* unused harmony reexport sankeyRight */
-/* unused harmony reexport sankeyJustify */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__src_sankeyLinkHorizontal__ = __webpack_require__(471);
-/* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "b", function() { return __WEBPACK_IMPORTED_MODULE_2__src_sankeyLinkHorizontal__["a"]; });
-
-
-
-
-
-/***/ }),
-/* 469 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_d3_array__ = __webpack_require__(2);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_d3_collection__ = __webpack_require__(21);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__align__ = __webpack_require__(465);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__constant__ = __webpack_require__(470);
-
-
-
-
-
-function ascendingSourceBreadth(a, b) {
-  return ascendingBreadth(a.source, b.source) || a.index - b.index;
+Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
+/* harmony export (immutable) */ __webpack_exports__["liquidFillGaugeDefaultSettings"] = liquidFillGaugeDefaultSettings;
+/* harmony export (immutable) */ __webpack_exports__["loadLiquidFillGauge"] = loadLiquidFillGauge;
+/*!
+ * @license Open source under BSD 2-clause (http://choosealicense.com/licenses/bsd-2-clause/)
+ * Copyright (c) 2015, Curtis Bratton
+ * All rights reserved.
+ *
+ * Liquid Fill Gauge v1.1
+ */
+function liquidFillGaugeDefaultSettings() {
+  return {
+    minValue: 0, // The gauge minimum value.
+    maxValue: 100, // The gauge maximum value.
+    circleThickness: 0.05, // The outer circle thickness as a percentage of it's radius.
+    circleFillGap: 0.05, // The size of the gap between the outer circle and wave circle as a percentage of the outer circles radius.
+    circleColor: "#178BCA", // The color of the outer circle.
+    waveHeight: 0.05, // The wave height as a percentage of the radius of the wave circle.
+    waveCount: 1, // The number of full waves per width of the wave circle.
+    waveRiseTime: 1000, // The amount of time in milliseconds for the wave to rise from 0 to it's final height.
+    waveAnimateTime: 18000, // The amount of time in milliseconds for a full wave to enter the wave circle.
+    waveRise: true, // Control if the wave should rise from 0 to it's full height, or start at it's full height.
+    waveHeightScaling: true, // Controls wave size scaling at low and high fill percentages. When true, wave height reaches it's maximum at 50% fill, and minimum at 0% and 100% fill. This helps to prevent the wave from making the wave circle from appear totally full or empty when near it's minimum or maximum fill.
+    waveAnimate: true, // Controls if the wave scrolls or is static.
+    waveColor: "#178BCA", // The color of the fill wave.
+    waveOffset: 0, // The amount to initially offset the wave. 0 = no offset. 1 = offset of one full wave.
+    textVertPosition: .5, // The height at which to display the percentage text withing the wave circle. 0 = bottom, 1 = top.
+    textSize: 1, // The relative height of the text to display in the wave circle. 1 = 50%
+    valueCountUp: true, // If true, the displayed value counts up from 0 to it's final value upon loading. If false, the final value is displayed.
+    displayPercent: true, // If true, a % symbol is displayed after the value.
+    textColor: "#045681", // The color of the value text when the wave does not overlap it.
+    waveTextColor: "#A4DBf8" // The color of the value text when the wave overlaps it.
+  };
 }
 
-function ascendingTargetBreadth(a, b) {
-  return ascendingBreadth(a.target, b.target) || a.index - b.index;
-}
+function loadLiquidFillGauge(elementId, value, config) {
+  if (config == null) config = liquidFillGaugeDefaultSettings();
 
-function ascendingBreadth(a, b) {
-  return a.y0 - b.y0;
-}
+  var gauge = d3.select("#" + elementId);
+  var radius = Math.min(parseInt(gauge.style("width")), parseInt(gauge.style("height"))) / 2;
+  var locationX = parseInt(gauge.style("width")) / 2 - radius;
+  var locationY = parseInt(gauge.style("height")) / 2 - radius;
+  var fillPercent = Math.max(config.minValue, Math.min(config.maxValue, value)) / config.maxValue;
 
-function value(d) {
-  return d.value;
-}
-
-function nodeCenter(node) {
-  return (node.y0 + node.y1) / 2;
-}
-
-function weightedSource(link) {
-  return nodeCenter(link.source) * link.value;
-}
-
-function weightedTarget(link) {
-  return nodeCenter(link.target) * link.value;
-}
-
-function defaultId(d) {
-  return d.index;
-}
-
-function defaultNodes(graph) {
-  return graph.nodes;
-}
-
-function defaultLinks(graph) {
-  return graph.links;
-}
-
-function find(nodeById, id) {
-  var node = nodeById.get(id);
-  if (!node) throw new Error("missing: " + id);
-  return node;
-}
-
-/* harmony default export */ __webpack_exports__["a"] = (function() {
-  var x0 = 0, y0 = 0, x1 = 1, y1 = 1, // extent
-      dx = 24, // nodeWidth
-      py = 8, // nodePadding
-      id = defaultId,
-      align = __WEBPACK_IMPORTED_MODULE_2__align__["a" /* justify */],
-      nodes = defaultNodes,
-      links = defaultLinks,
-      iterations = 32;
-
-  function sankey() {
-    var graph = {nodes: nodes.apply(null, arguments), links: links.apply(null, arguments)};
-    computeNodeLinks(graph);
-    computeNodeValues(graph);
-    computeNodeDepths(graph);
-    computeNodeBreadths(graph, iterations);
-    computeLinkBreadths(graph);
-    return graph;
+  var waveHeightScale;
+  if (config.waveHeightScaling) {
+    waveHeightScale = d3.scale.linear()
+      .range([0, config.waveHeight, 0])
+      .domain([0, 50, 100]);
+  } else {
+    waveHeightScale = d3.scale.linear()
+      .range([config.waveHeight, config.waveHeight])
+      .domain([0, 100]);
   }
 
-  sankey.update = function(graph) {
-    computeLinkBreadths(graph);
-    return graph;
-  };
+  var textPixels = (config.textSize * radius / 2);
+  var textFinalValue = parseFloat(value).toFixed(2);
+  var textStartValue = config.valueCountUp ? config.minValue : textFinalValue;
+  var percentText = config.displayPercent ? "%" : "";
+  var circleThickness = config.circleThickness * radius;
+  var circleFillGap = config.circleFillGap * radius;
+  var fillCircleMargin = circleThickness + circleFillGap;
+  var fillCircleRadius = radius - fillCircleMargin;
+  var waveHeight = fillCircleRadius * waveHeightScale(fillPercent * 100);
 
-  sankey.nodeId = function(_) {
-    return arguments.length ? (id = typeof _ === "function" ? _ : Object(__WEBPACK_IMPORTED_MODULE_3__constant__["a" /* default */])(_), sankey) : id;
-  };
+  var waveLength = fillCircleRadius * 2 / config.waveCount;
+  var waveClipCount = 1 + config.waveCount;
+  var waveClipWidth = waveLength * waveClipCount;
 
-  sankey.nodeAlign = function(_) {
-    return arguments.length ? (align = typeof _ === "function" ? _ : Object(__WEBPACK_IMPORTED_MODULE_3__constant__["a" /* default */])(_), sankey) : align;
-  };
-
-  sankey.nodeWidth = function(_) {
-    return arguments.length ? (dx = +_, sankey) : dx;
-  };
-
-  sankey.nodePadding = function(_) {
-    return arguments.length ? (py = +_, sankey) : py;
-  };
-
-  sankey.nodes = function(_) {
-    return arguments.length ? (nodes = typeof _ === "function" ? _ : Object(__WEBPACK_IMPORTED_MODULE_3__constant__["a" /* default */])(_), sankey) : nodes;
-  };
-
-  sankey.links = function(_) {
-    return arguments.length ? (links = typeof _ === "function" ? _ : Object(__WEBPACK_IMPORTED_MODULE_3__constant__["a" /* default */])(_), sankey) : links;
-  };
-
-  sankey.size = function(_) {
-    return arguments.length ? (x0 = y0 = 0, x1 = +_[0], y1 = +_[1], sankey) : [x1 - x0, y1 - y0];
-  };
-
-  sankey.extent = function(_) {
-    return arguments.length ? (x0 = +_[0][0], x1 = +_[1][0], y0 = +_[0][1], y1 = +_[1][1], sankey) : [[x0, y0], [x1, y1]];
-  };
-
-  sankey.iterations = function(_) {
-    return arguments.length ? (iterations = +_, sankey) : iterations;
-  };
-
-  // Populate the sourceLinks and targetLinks for each node.
-  // Also, if the source and target are not objects, assume they are indices.
-  function computeNodeLinks(graph) {
-    graph.nodes.forEach(function(node, i) {
-      node.index = i;
-      node.sourceLinks = [];
-      node.targetLinks = [];
-    });
-    var nodeById = Object(__WEBPACK_IMPORTED_MODULE_1_d3_collection__["a" /* map */])(graph.nodes, id);
-    graph.links.forEach(function(link, i) {
-      link.index = i;
-      var source = link.source, target = link.target;
-      if (typeof source !== "object") source = link.source = find(nodeById, source);
-      if (typeof target !== "object") target = link.target = find(nodeById, target);
-      source.sourceLinks.push(link);
-      target.targetLinks.push(link);
-    });
+  // Rounding functions so that the correct number of decimal places is always displayed as the value counts up.
+  var textRounder = function (value) { return Math.round(value); };
+  if (parseFloat(textFinalValue) != parseFloat(textRounder(textFinalValue))) {
+    textRounder = function (value) { return parseFloat(value).toFixed(1); };
+  }
+  if (parseFloat(textFinalValue) != parseFloat(textRounder(textFinalValue))) {
+    textRounder = function (value) { return parseFloat(value).toFixed(2); };
   }
 
-  // Compute the value (size) of each node by summing the associated links.
-  function computeNodeValues(graph) {
-    graph.nodes.forEach(function(node) {
-      node.value = Math.max(
-        Object(__WEBPACK_IMPORTED_MODULE_0_d3_array__["h" /* sum */])(node.sourceLinks, value),
-        Object(__WEBPACK_IMPORTED_MODULE_0_d3_array__["h" /* sum */])(node.targetLinks, value)
-      );
-    });
+  // Data for building the clip wave area.
+  var data = [];
+  for (var i = 0; i <= 40 * waveClipCount; i++) {
+    data.push({ x: i / (40 * waveClipCount), y: (i / (40)) });
   }
 
-  // Iteratively assign the depth (x-position) for each node.
-  // Nodes are assigned the maximum depth of incoming neighbors plus one;
-  // nodes with no incoming links are assigned depth zero, while
-  // nodes with no outgoing links are assigned the maximum depth.
-  function computeNodeDepths(graph) {
-    var nodes, next, x;
+  // Scales for drawing the outer circle.
+  var gaugeCircleX = d3.scale.linear().range([0, 2 * Math.PI]).domain([0, 1]);
+  var gaugeCircleY = d3.scale.linear().range([0, radius]).domain([0, radius]);
 
-    for (nodes = graph.nodes, next = [], x = 0; nodes.length; ++x, nodes = next, next = []) {
-      nodes.forEach(function(node) {
-        node.depth = x;
-        node.sourceLinks.forEach(function(link) {
-          if (next.indexOf(link.target) < 0) {
-            next.push(link.target);
+  // Scales for controlling the size of the clipping path.
+  var waveScaleX = d3.scale.linear().range([0, waveClipWidth]).domain([0, 1]);
+  var waveScaleY = d3.scale.linear().range([0, waveHeight]).domain([0, 1]);
+
+  // Scales for controlling the position of the clipping path.
+  var waveRiseScale = d3.scale.linear()
+    // The clipping area size is the height of the fill circle + the wave height, so we position the clip wave
+    // such that the it will overlap the fill circle at all when at 0%, and will totally cover the fill
+    // circle at 100%.
+    .range([(fillCircleMargin + fillCircleRadius * 2 + waveHeight), (fillCircleMargin - waveHeight)])
+    .domain([0, 1]);
+  var waveAnimateScale = d3.scale.linear()
+    .range([0, waveClipWidth - fillCircleRadius * 2]) // Push the clip area one full wave then snap back.
+    .domain([0, 1]);
+
+  // Scale for controlling the position of the text within the gauge.
+  var textRiseScaleY = d3.scale.linear()
+    .range([fillCircleMargin + fillCircleRadius * 2, (fillCircleMargin + textPixels * 0.7)])
+    .domain([0, 1]);
+
+  // Center the gauge within the parent SVG.
+  var gaugeGroup = gauge.append("g")
+    .attr('transform', 'translate(' + locationX + ',' + locationY + ')');
+
+  // Draw the outer circle.
+  var gaugeCircleArc = d3.svg.arc()
+    .startAngle(gaugeCircleX(0))
+    .endAngle(gaugeCircleX(1))
+    .outerRadius(gaugeCircleY(radius))
+    .innerRadius(gaugeCircleY(radius - circleThickness));
+  gaugeGroup.append("path")
+    .attr("d", gaugeCircleArc)
+    .style("fill", config.circleColor)
+    .attr('transform', 'translate(' + radius + ',' + radius + ')');
+
+  // Text where the wave does not overlap.
+  var text1 = gaugeGroup.append("text")
+    .text(textRounder(textStartValue) + percentText)
+    .attr("class", "liquidFillGaugeText")
+    .attr("text-anchor", "middle")
+    .attr("font-size", textPixels + "px")
+    .style("fill", config.textColor)
+    .attr('transform', 'translate(' + radius + ',' + textRiseScaleY(config.textVertPosition) + ')');
+
+  // The clipping wave area.
+  var clipArea = d3.svg.area()
+    .x(function (d) { return waveScaleX(d.x); })
+    .y0(function (d) { return waveScaleY(Math.sin(Math.PI * 2 * config.waveOffset * -1 + Math.PI * 2 * (1 - config.waveCount) + d.y * 2 * Math.PI)); })
+    .y1(function (d) { return (fillCircleRadius * 2 + waveHeight); });
+  var waveGroup = gaugeGroup.append("defs")
+    .append("clipPath")
+    .attr("id", "clipWave" + elementId);
+  var wave = waveGroup.append("path")
+    .datum(data)
+    .attr("d", clipArea)
+    .attr("T", 0);
+
+  // The inner circle with the clipping wave attached.
+  var fillCircleGroup = gaugeGroup.append("g")
+    .attr("clip-path", "url(#clipWave" + elementId + ")");
+  fillCircleGroup.append("circle")
+    .attr("cx", radius)
+    .attr("cy", radius)
+    .attr("r", fillCircleRadius)
+    .style("fill", config.waveColor);
+
+  // Text where the wave does overlap.
+  var text2 = fillCircleGroup.append("text")
+    .text(textRounder(textStartValue) + percentText)
+    .attr("class", "liquidFillGaugeText")
+    .attr("text-anchor", "middle")
+    .attr("font-size", textPixels + "px")
+    .style("fill", config.waveTextColor)
+    .attr('transform', 'translate(' + radius + ',' + textRiseScaleY(config.textVertPosition) + ')');
+
+  // Make the value count up.
+  if (config.valueCountUp) {
+    var textTween = function () {
+      var i = d3.interpolate(this.textContent, textFinalValue);
+      return function (t) { this.textContent = textRounder(i(t)) + percentText; }
+    };
+    text1.transition()
+      .duration(config.waveRiseTime)
+      .tween("text", textTween);
+    text2.transition()
+      .duration(config.waveRiseTime)
+      .tween("text", textTween);
+  }
+
+  // Make the wave rise. wave and waveGroup are separate so that horizontal and vertical movement can be controlled independently.
+  var waveGroupXPosition = fillCircleMargin + fillCircleRadius * 2 - waveClipWidth;
+  if (config.waveRise) {
+    waveGroup.attr('transform', 'translate(' + waveGroupXPosition + ',' + waveRiseScale(0) + ')')
+      .transition()
+      .duration(config.waveRiseTime)
+      .attr('transform', 'translate(' + waveGroupXPosition + ',' + waveRiseScale(fillPercent) + ')')
+      .each("start", function () { wave.attr('transform', 'translate(1,0)'); }); // This transform is necessary to get the clip wave positioned correctly when waveRise=true and waveAnimate=false. The wave will not position correctly without this, but it's not clear why this is actually necessary.
+  } else {
+    waveGroup.attr('transform', 'translate(' + waveGroupXPosition + ',' + waveRiseScale(fillPercent) + ')');
+  }
+
+  if (config.waveAnimate) animateWave();
+
+  function animateWave() {
+    wave.attr('transform', 'translate(' + waveAnimateScale(wave.attr('T')) + ',0)');
+    wave.transition()
+      .duration(config.waveAnimateTime * (1 - wave.attr('T')))
+      .ease('linear')
+      .attr('transform', 'translate(' + waveAnimateScale(1) + ',0)')
+      .attr('T', 1)
+      .each('end', function () {
+        wave.attr('T', 0);
+        animateWave(config.waveAnimateTime);
+      });
+  }
+
+  function GaugeUpdater() {
+    this.update = function (value) {
+      var newFinalValue = parseFloat(value).toFixed(2);
+      var textRounderUpdater = function (value) { return Math.round(value); };
+      if (parseFloat(newFinalValue) != parseFloat(textRounderUpdater(newFinalValue))) {
+        textRounderUpdater = function (value) { return parseFloat(value).toFixed(1); };
+      }
+      if (parseFloat(newFinalValue) != parseFloat(textRounderUpdater(newFinalValue))) {
+        textRounderUpdater = function (value) { return parseFloat(value).toFixed(2); };
+      }
+
+      var textTween = function () {
+        var i = d3.interpolate(this.textContent, parseFloat(value).toFixed(2));
+        return function (t) { this.textContent = textRounderUpdater(i(t)) + percentText; }
+      };
+
+      text1.transition()
+        .duration(config.waveRiseTime)
+        .tween("text", textTween);
+      text2.transition()
+        .duration(config.waveRiseTime)
+        .tween("text", textTween);
+
+      var fillPercent = Math.max(config.minValue, Math.min(config.maxValue, value)) / config.maxValue;
+      var waveHeight = fillCircleRadius * waveHeightScale(fillPercent * 100);
+      var waveRiseScale = d3.scale.linear()
+        // The clipping area size is the height of the fill circle + the wave height, so we position the clip wave
+        // such that the it will overlap the fill circle at all when at 0%, and will totally cover the fill
+        // circle at 100%.
+        .range([(fillCircleMargin + fillCircleRadius * 2 + waveHeight), (fillCircleMargin - waveHeight)])
+        .domain([0, 1]);
+      var newHeight = waveRiseScale(fillPercent);
+      var waveScaleX = d3.scale.linear().range([0, waveClipWidth]).domain([0, 1]);
+      var waveScaleY = d3.scale.linear().range([0, waveHeight]).domain([0, 1]);
+      var newClipArea;
+      if (config.waveHeightScaling) {
+        newClipArea = d3.svg.area()
+          .x(function (d) { return waveScaleX(d.x); })
+          .y0(function (d) { return waveScaleY(Math.sin(Math.PI * 2 * config.waveOffset * -1 + Math.PI * 2 * (1 - config.waveCount) + d.y * 2 * Math.PI)); })
+          .y1(function (d) { return (fillCircleRadius * 2 + waveHeight); });
+      } else {
+        newClipArea = clipArea;
+      }
+
+      var newWavePosition = config.waveAnimate ? waveAnimateScale(1) : 0;
+      wave.transition()
+        .duration(0)
+        .transition()
+        .duration(config.waveAnimate ? (config.waveAnimateTime * (1 - wave.attr('T'))) : (config.waveRiseTime))
+        .ease('linear')
+        .attr('d', newClipArea)
+        .attr('transform', 'translate(' + newWavePosition + ',0)')
+        .attr('T', '1')
+        .each("end", function () {
+          if (config.waveAnimate) {
+            wave.attr('transform', 'translate(' + waveAnimateScale(0) + ',0)');
+            animateWave(config.waveAnimateTime);
           }
         });
-      });
-    }
-
-    for (nodes = graph.nodes, next = [], x = 0; nodes.length; ++x, nodes = next, next = []) {
-      nodes.forEach(function(node) {
-        node.height = x;
-        node.targetLinks.forEach(function(link) {
-          if (next.indexOf(link.source) < 0) {
-            next.push(link.source);
-          }
-        });
-      });
-    }
-
-    var kx = (x1 - x0 - dx) / (x - 1);
-    graph.nodes.forEach(function(node) {
-      node.x1 = (node.x0 = x0 + Math.max(0, Math.min(x - 1, Math.floor(align.call(null, node, x)))) * kx) + dx;
-    });
-  }
-
-  function computeNodeBreadths(graph) {
-    var columns = Object(__WEBPACK_IMPORTED_MODULE_1_d3_collection__["b" /* nest */])()
-        .key(function(d) { return d.x0; })
-        .sortKeys(__WEBPACK_IMPORTED_MODULE_0_d3_array__["a" /* ascending */])
-        .entries(graph.nodes)
-        .map(function(d) { return d.values; });
-
-    //
-    initializeNodeBreadth();
-    resolveCollisions();
-    for (var alpha = 1, n = iterations; n > 0; --n) {
-      relaxRightToLeft(alpha *= 0.99);
-      resolveCollisions();
-      relaxLeftToRight(alpha);
-      resolveCollisions();
-    }
-
-    function initializeNodeBreadth() {
-      var ky = Object(__WEBPACK_IMPORTED_MODULE_0_d3_array__["e" /* min */])(columns, function(nodes) {
-        return (y1 - y0 - (nodes.length - 1) * py) / Object(__WEBPACK_IMPORTED_MODULE_0_d3_array__["h" /* sum */])(nodes, value);
-      });
-
-      columns.forEach(function(nodes) {
-        nodes.forEach(function(node, i) {
-          node.y1 = (node.y0 = i) + node.value * ky;
-        });
-      });
-
-      graph.links.forEach(function(link) {
-        link.width = link.value * ky;
-      });
-    }
-
-    function relaxLeftToRight(alpha) {
-      columns.forEach(function(nodes) {
-        nodes.forEach(function(node) {
-          if (node.targetLinks.length) {
-            var dy = (Object(__WEBPACK_IMPORTED_MODULE_0_d3_array__["h" /* sum */])(node.targetLinks, weightedSource) / Object(__WEBPACK_IMPORTED_MODULE_0_d3_array__["h" /* sum */])(node.targetLinks, value) - nodeCenter(node)) * alpha;
-            node.y0 += dy, node.y1 += dy;
-          }
-        });
-      });
-    }
-
-    function relaxRightToLeft(alpha) {
-      columns.slice().reverse().forEach(function(nodes) {
-        nodes.forEach(function(node) {
-          if (node.sourceLinks.length) {
-            var dy = (Object(__WEBPACK_IMPORTED_MODULE_0_d3_array__["h" /* sum */])(node.sourceLinks, weightedTarget) / Object(__WEBPACK_IMPORTED_MODULE_0_d3_array__["h" /* sum */])(node.sourceLinks, value) - nodeCenter(node)) * alpha;
-            node.y0 += dy, node.y1 += dy;
-          }
-        });
-      });
-    }
-
-    function resolveCollisions() {
-      columns.forEach(function(nodes) {
-        var node,
-            dy,
-            y = y0,
-            n = nodes.length,
-            i;
-
-        // Push any overlapping nodes down.
-        nodes.sort(ascendingBreadth);
-        for (i = 0; i < n; ++i) {
-          node = nodes[i];
-          dy = y - node.y0;
-          if (dy > 0) node.y0 += dy, node.y1 += dy;
-          y = node.y1 + py;
-        }
-
-        // If the bottommost node goes outside the bounds, push it back up.
-        dy = y - py - y1;
-        if (dy > 0) {
-          y = (node.y0 -= dy), node.y1 -= dy;
-
-          // Push any overlapping nodes back up.
-          for (i = n - 2; i >= 0; --i) {
-            node = nodes[i];
-            dy = node.y1 + py - y;
-            if (dy > 0) node.y0 -= dy, node.y1 -= dy;
-            y = node.y0;
-          }
-        }
-      });
+      waveGroup.transition()
+        .duration(config.waveRiseTime)
+        .attr('transform', 'translate(' + waveGroupXPosition + ',' + newHeight + ')')
     }
   }
 
-  function computeLinkBreadths(graph) {
-    graph.nodes.forEach(function(node) {
-      node.sourceLinks.sort(ascendingTargetBreadth);
-      node.targetLinks.sort(ascendingSourceBreadth);
-    });
-    graph.nodes.forEach(function(node) {
-      var y0 = node.y0, y1 = y0;
-      node.sourceLinks.forEach(function(link) {
-        link.y0 = y0 + link.width / 2, y0 += link.width;
-      });
-      node.targetLinks.forEach(function(link) {
-        link.y1 = y1 + link.width / 2, y1 += link.width;
-      });
-    });
-  }
-
-  return sankey;
-});
-
-
-/***/ }),
-/* 470 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony export (immutable) */ __webpack_exports__["a"] = constant;
-function constant(x) {
-  return function() {
-    return x;
-  };
+  return new GaugeUpdater();
 }
-
-
-/***/ }),
-/* 471 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_d3_shape__ = __webpack_require__(173);
-
-
-function horizontalSource(d) {
-  return [d.source.x1, d.y0];
-}
-
-function horizontalTarget(d) {
-  return [d.target.x0, d.y1];
-}
-
-/* harmony default export */ __webpack_exports__["a"] = (function() {
-  return Object(__WEBPACK_IMPORTED_MODULE_0_d3_shape__["a" /* linkHorizontal */])()
-      .source(horizontalSource)
-      .target(horizontalTarget);
-});
 
 
 /***/ })
