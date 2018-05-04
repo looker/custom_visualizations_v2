@@ -31,8 +31,8 @@ function log() {
 const defaults = LiquidFillGauge.liquidFillGaugeDefaultSettings()
 
 const vis: LiquidFillGaugeVisualization = {
-  id: 'liquid_fill_gauge3', // id/label not required, but nice for testing and keeping manifests in sync
-  label: 'Liquid Fill Gauge 3',
+  id: 'liquid_fill_gauge', // id/label not required, but nice for testing and keeping manifests in sync
+  label: 'Liquid Fill Gauge',
   options: {
     showComparison: {
       label: 'Use field comparison',
