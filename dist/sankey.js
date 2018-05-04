@@ -9766,7 +9766,7 @@ var vis = {
     // Set up the initial state of the visualization
     create: function (element, config) {
         element.innerHTML = "\n      <style>\n      .node,\n      .link {\n        transition: 0.5s opacity;\n      }\n      </style>\n    ";
-        vis.svg = __WEBPACK_IMPORTED_MODULE_0_d3__["d" /* select */](element).append('svg');
+        this.svg = __WEBPACK_IMPORTED_MODULE_0_d3__["d" /* select */](element).append('svg');
     },
     // Render in response to the data or settings changing
     updateAsync: function (data, element, config, queryResponse, details, doneRendering) {
