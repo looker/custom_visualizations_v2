@@ -24,10 +24,6 @@ interface LiquidFillGaugeVisualization extends VisualizationDefinition {
   gauge?: any,
 }
 
-function log() {
-  console.log.apply(console, arguments)
-}
-
 const defaults = LiquidFillGauge.liquidFillGaugeDefaultSettings()
 
 const vis: LiquidFillGaugeVisualization = {
