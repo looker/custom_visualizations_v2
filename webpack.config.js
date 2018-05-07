@@ -5,6 +5,7 @@ var webpackConfig = {
     hello_world: './src/examples/hello_world/hello_world.js',
     sankey: './src/examples/sankey/sankey.ts',
     liquid_fill_gauge: './src/examples/liquid_fill_gauge/liquid_fill_gauge.ts',
+    sunburst: './src/examples/sunburst/sunburst.ts',
   },
   output: {
     filename: "[name].js",

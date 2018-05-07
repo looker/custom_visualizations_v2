@@ -219,9 +219,9 @@ const vis: LiquidFillGaugeVisualization = {
     this.svg.attr('id', elementId)
   },
   // Render in response to the data or settings changing
-  update(data, element, config, res, details) {
+  update(data, element, config, queryResponse) {
     // TODO error handling
-    if (!handleErrors(this, res, {
+    if (!handleErrors(this, queryResponse, {
       min_pivots: 0, max_pivots: 0,
       min_dimensions: 0, max_dimensions: undefined,
       min_measures: 1, max_measures: undefined
@@ -229,11 +229,11 @@ const vis: LiquidFillGaugeVisualization = {
 
     const gaugeConfig = _.extend(LiquidFillGauge.liquidFillGaugeDefaultSettings(), config)
 
-    const datumField = res.fields.measure_like[0]
+    const datumField = queryResponse.fields.measure_like[0]
     const datum = data[0][datumField.name]
     let value = datum.value
 
-    const compareField = res.fields.measure_like[1]
+    const compareField = queryResponse.fields.measure_like[1]
     if (compareField && gaugeConfig.showComparison) {
       const compareDatum = data[0][compareField.name]
       gaugeConfig.maxValue = compareDatum.value

@@ -4,9 +4,9 @@
 	else if(typeof define === 'function' && define.amd)
 		define([], factory);
 	else if(typeof exports === 'object')
-		exports["sankey"] = factory();
+		exports["sunburst"] = factory();
 	else
-		root["sankey"] = factory();
+		root["sunburst"] = factory();
 })(typeof self !== 'undefined' ? self : this, function() {
 return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
@@ -70,7 +70,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 467);
+/******/ 	return __webpack_require__(__webpack_require__.s = 474);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -22746,56 +22746,67 @@ var handleErrors = function (vis, resp, options) {
 
 
 /***/ }),
-/* 465 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* unused harmony export left */
-/* unused harmony export right */
-/* harmony export (immutable) */ __webpack_exports__["a"] = justify;
-/* unused harmony export center */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_d3_array__ = __webpack_require__(3);
-
-
-function targetDepth(d) {
-  return d.target.depth;
-}
-
-function left(node) {
-  return node.depth;
-}
-
-function right(node, n) {
-  return n - 1 - node.height;
-}
-
-function justify(node, n) {
-  return node.sourceLinks.length ? node.depth : n - 1;
-}
-
-function center(node) {
-  return node.targetLinks.length ? node.depth
-      : node.sourceLinks.length ? Object(__WEBPACK_IMPORTED_MODULE_0_d3_array__["e" /* min */])(node.sourceLinks, targetDepth) - 1
-      : 0;
-}
-
-
-/***/ }),
+/* 465 */,
 /* 466 */,
-/* 467 */
+/* 467 */,
+/* 468 */,
+/* 469 */,
+/* 470 */,
+/* 471 */,
+/* 472 */,
+/* 473 */,
+/* 474 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_d3__ = __webpack_require__(90);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_d3_sankey__ = __webpack_require__(468);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__common_utils__ = __webpack_require__(464);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__common_utils__ = __webpack_require__(464);
 
 
-
+// recursively create children array
+function descend(obj, depth) {
+    if (depth === void 0) { depth = 0; }
+    var arr = [];
+    for (var k in obj) {
+        if (k === '__data') {
+            continue;
+        }
+        var child = {
+            name: k,
+            depth: depth,
+            children: descend(obj[k], depth + 1)
+        };
+        if ('__data' in obj[k]) {
+            child.data = obj[k].__data;
+        }
+        arr.push(child);
+    }
+    return arr;
+}
+function burrow(table) {
+    // create nested object
+    var obj = {};
+    table.forEach(function (row) {
+        // start at root
+        var layer = obj;
+        // create children as nested objects
+        row.taxonomy.value.forEach(function (key) {
+            layer[key] = key in layer ? layer[key] : {};
+            layer = layer[key];
+        });
+        layer.__data = row;
+    });
+    // use descend to create nested children arrays
+    return {
+        name: 'root',
+        children: descend(obj, 1),
+        depth: 0
+    };
+}
 var vis = {
-    id: 'sankey',
-    label: 'Sankey',
+    id: 'sunburst',
+    label: 'Sunburst',
     options: {
         color_range: {
             type: 'array',
@@ -22806,533 +22817,89 @@ var vis = {
     },
     // Set up the initial state of the visualization
     create: function (element, config) {
-        element.innerHTML = "\n      <style>\n      .node,\n      .link {\n        transition: 0.5s opacity;\n      }\n      </style>\n    ";
-        vis.svg = __WEBPACK_IMPORTED_MODULE_0_d3__["i" /* select */](element).append('svg');
+        this.svg = __WEBPACK_IMPORTED_MODULE_0_d3__["i" /* select */](element).append('svg');
     },
     // Render in response to the data or settings changing
-    updateAsync: function (data, element, config, queryResponse, details, doneRendering) {
-        if (!Object(__WEBPACK_IMPORTED_MODULE_2__common_utils__["a" /* handleErrors */])(this, queryResponse, {
+    update: function (data, element, config, queryResponse) {
+        if (!Object(__WEBPACK_IMPORTED_MODULE_1__common_utils__["a" /* handleErrors */])(this, queryResponse, {
             min_pivots: 0, max_pivots: 0,
-            min_dimensions: 2, max_dimensions: undefined,
+            min_dimensions: 1, max_dimensions: undefined,
             min_measures: 1, max_measures: 1
         }))
             return;
         var width = element.clientWidth;
         var height = element.clientHeight;
-        var svg = this.svg
+        var radius = Math.min(width, height) / 2 - 8;
+        var dimensions = queryResponse.fields.dimension_like;
+        var measure = queryResponse.fields.measure_like[0];
+        var format = formatType(measure.value_format);
+        var x = __WEBPACK_IMPORTED_MODULE_0_d3__["f" /* scaleLinear */]().range([0, 2 * Math.PI]);
+        var y = __WEBPACK_IMPORTED_MODULE_0_d3__["h" /* scaleSqrt */]().range([0, radius]);
+        var color = __WEBPACK_IMPORTED_MODULE_0_d3__["g" /* scaleOrdinal */]().range(config.color_range);
+        data.forEach(function (row) {
+            row.taxonomy = {
+                value: dimensions.map(function (dimension) { return row[dimension.name].value; })
+            };
+        });
+        // row[dimension].value.split("-");
+        var partition = __WEBPACK_IMPORTED_MODULE_0_d3__["e" /* partition */]().size([2 * Math.PI, radius * radius]);
+        var arc = (__WEBPACK_IMPORTED_MODULE_0_d3__["a" /* arc */]()
+            .startAngle(function (d) { return d.x0; })
+            .endAngle(function (d) { return d.x1; })
+            .innerRadius(function (d) { return Math.sqrt(d.y0); })
+            .outerRadius(function (d) { return Math.sqrt(d.y1); }));
+        var svg = (this.svg
             .html('')
             .attr('width', '100%')
             .attr('height', '100%')
-            .append('g');
-        var dimensions = queryResponse.fields.dimension_like;
-        var measure = queryResponse.fields.measure_like[0];
-        //  The standard d3.ScaleOrdinal<string, {}>, causes error
-        // `no-inferred-empty-object-type  Explicit type parameter needs to be provided to the function call`
-        // https://stackoverflow.com/questions/31564730/typescript-with-d3js-with-definitlytyped
-        var color = __WEBPACK_IMPORTED_MODULE_0_d3__["g" /* scaleOrdinal */]()
-            .range(config.color_range || vis.options.color_range.default);
-        var defs = svg.append('defs');
-        var sankeyInst = Object(__WEBPACK_IMPORTED_MODULE_1_d3_sankey__["a" /* sankey */])()
-            .nodeWidth(10)
-            .nodePadding(12)
-            .extent([[1, 1], [width - 1, height - 6]]);
-        var link = svg.append('g')
-            .attr('class', 'links')
-            .attr('fill', 'none')
-            .attr('stroke', '#fff')
-            .selectAll('path');
-        var node = svg.append('g')
-            .attr('class', 'nodes')
-            .attr('font-family', 'sans-serif')
-            .attr('font-size', 10)
-            .selectAll('g');
-        var graph = {
-            nodes: [],
-            links: []
-        };
-        var nodes = __WEBPACK_IMPORTED_MODULE_0_d3__["k" /* set */]();
-        data.forEach(function (d) {
-            // variable number of dimensions
-            var path = dimensions.map(function (dim) { return d[dim.name].value + ''; });
-            path.forEach(function (p, i) {
-                if (i === path.length - 1)
-                    return;
-                var source = path.slice(i, i + 1)[0] + i;
-                var target = path.slice(i + 1, i + 2)[0] + (i + 1);
-                nodes.add(source);
-                nodes.add(target);
-                // Setup drill links
-                var drillLinks = [];
-                for (var key in d) {
-                    if (d[key].links) {
-                        d[key].links.forEach(function (link) { drillLinks.push(link); });
-                    }
-                }
-                graph.links.push({
-                    'drillLinks': drillLinks,
-                    'source': source,
-                    'target': target,
-                    'value': +d[measure.name].value
-                });
-            });
+            .append('g')
+            .attr('transform', 'translate(' + width / 2 + ',' + height / 2 + ')'));
+        var label = svg.append('text').attr('y', -height / 2 + 20).attr('x', -width / 2 + 20);
+        var root = __WEBPACK_IMPORTED_MODULE_0_d3__["c" /* hierarchy */](burrow(data)).sum(function (d) {
+            return 'data' in d ? d.data[measure.name].value : 0;
         });
-        var nodesArray = nodes.values();
-        graph.links.forEach(function (d) {
-            d.source = nodesArray.indexOf(d.source);
-            d.target = nodesArray.indexOf(d.target);
-        });
-        graph.nodes = nodes.values().map(function (d) {
-            return {
-                name: d.slice(0, -1)
-            };
-        });
-        sankeyInst(graph);
-        link = link
-            .data(graph.links)
-            .enter().append('path')
-            .attr('class', 'link')
-            .attr('d', function (d) { return 'M' + -10 + ',' + -10 + Object(__WEBPACK_IMPORTED_MODULE_1_d3_sankey__["b" /* sankeyLinkHorizontal */])()(d); })
-            .style('opacity', 0.4)
-            .attr('stroke-width', function (d) { return Math.max(1, d.width); })
-            .on('mouseenter', function (d) {
-            svg.selectAll('.link')
-                .style('opacity', 0.05);
-            __WEBPACK_IMPORTED_MODULE_0_d3__["i" /* select */](this)
-                .style('opacity', 0.7);
-            svg.selectAll('.node')
-                .style('opacity', function (p) {
-                if (p === d.source)
-                    return 1;
-                if (p === d.target)
-                    return 1;
-                return 0.5;
-            });
+        partition(root);
+        svg
+            .selectAll('path')
+            .data(root.descendants())
+            .enter()
+            .append('path')
+            .attr('d', arc)
+            .style('fill', function (d) {
+            if (d.depth === 0)
+                return 'none';
+            return color(d.ancestors().map(function (p) { return p.data.name; }).slice(-2, -1));
         })
+            .style('fill-opacity', function (d) { return 1 - d.depth * 0.15; })
+            .style('transition', function (d) { return 'fill-opacity 0.5s'; })
+            .style('stroke', function (d) { return '#fff'; })
+            .style('stroke-width', function (d) { return '0.5px'; })
             .on('click', function (d) {
-            // Add drill menu event
-            var coords = __WEBPACK_IMPORTED_MODULE_0_d3__["d" /* mouse */](this);
-            var event = { pageX: coords[0], pageY: coords[1] };
-            LookerCharts.Utils.openDrillMenu({
-                links: d.drillLinks,
-                event: event
-            });
+            console.log(d);
         })
-            .on('mouseleave', function (d) {
-            __WEBPACK_IMPORTED_MODULE_0_d3__["j" /* selectAll */]('.node').style('opacity', 1);
-            __WEBPACK_IMPORTED_MODULE_0_d3__["j" /* selectAll */]('.link').style('opacity', 0.4);
-        });
-        // gradients https://bl.ocks.org/micahstubbs/bf90fda6717e243832edad6ed9f82814
-        link.style('stroke', function (d, i) {
-            // make unique gradient ids
-            var gradientID = 'gradient' + i;
-            var startColor = color(d.source.name.replace(/ .*/, ''));
-            var stopColor = color(d.target.name.replace(/ .*/, ''));
-            var linearGradient = defs.append('linearGradient')
-                .attr('id', gradientID);
-            linearGradient.selectAll('stop')
-                .data([
-                { offset: '10%', color: startColor },
-                { offset: '90%', color: stopColor }
-            ])
-                .enter().append('stop')
-                .attr('offset', function (d) {
-                return d.offset;
-            })
-                .attr('stop-color', function (d) {
-                return d.color;
-            });
-            return 'url(#' + gradientID + ')';
-        });
-        node = node
-            .data(graph.nodes)
-            .enter().append('g')
-            .attr('class', 'node')
             .on('mouseenter', function (d) {
-            svg.selectAll('.link')
-                .style('opacity', function (p) {
-                if (p.source === d)
-                    return 0.7;
-                if (p.target === d)
-                    return 0.7;
-                return 0.05;
+            var ancestorText = (d.ancestors()
+                .map(function (p) { return p.data.name; })
+                .slice(0, -1)
+                .reverse()
+                .join('-'));
+            label.text(ancestorText + ": " + format(d.value));
+            var ancestors = d.ancestors();
+            svg
+                .selectAll('path')
+                .style('fill-opacity', function (p) {
+                return ancestors.indexOf(p) > -1 ? 1 : 0.15;
             });
         })
             .on('mouseleave', function (d) {
-            __WEBPACK_IMPORTED_MODULE_0_d3__["j" /* selectAll */]('.link').style('opacity', 0.4);
+            label.text('');
+            svg
+                .selectAll('path')
+                .style('fill-opacity', function (d) { return 1 - d.depth * 0.15; });
         });
-        node.append('rect')
-            .attr('x', function (d) { return d.x0; })
-            .attr('y', function (d) { return d.y0; })
-            .attr('height', function (d) { return Math.abs(d.y1 - d.y0); })
-            .attr('width', function (d) { return Math.abs(d.x1 - d.x0); })
-            .attr('fill', function (d) { return color(d.name.replace(/ .*/, '')); })
-            .attr('stroke', '#555');
-        node.append('text')
-            .attr('x', function (d) { return d.x0 - 6; })
-            .attr('y', function (d) { return (d.y1 + d.y0) / 2; })
-            .attr('dy', '0.35em')
-            .style('font-weight', 'bold')
-            .attr('text-anchor', 'end')
-            .style('fill', '#222')
-            .text(function (d) { return d.name; })
-            .filter(function (d) { return d.x0 < width / 2; })
-            .attr('x', function (d) { return d.x1 + 6; })
-            .attr('text-anchor', 'start');
-        node.append('title')
-            .text(function (d) { return d.name + '\n' + d.value; });
-        doneRendering();
     }
 };
 looker.plugins.visualizations.add(vis);
-
-
-/***/ }),
-/* 468 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__src_sankey__ = __webpack_require__(469);
-/* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return __WEBPACK_IMPORTED_MODULE_0__src_sankey__["a"]; });
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__src_align__ = __webpack_require__(465);
-/* unused harmony reexport sankeyCenter */
-/* unused harmony reexport sankeyLeft */
-/* unused harmony reexport sankeyRight */
-/* unused harmony reexport sankeyJustify */
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__src_sankeyLinkHorizontal__ = __webpack_require__(471);
-/* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "b", function() { return __WEBPACK_IMPORTED_MODULE_2__src_sankeyLinkHorizontal__["a"]; });
-
-
-
-
-
-/***/ }),
-/* 469 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_d3_array__ = __webpack_require__(3);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_d3_collection__ = __webpack_require__(21);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__align__ = __webpack_require__(465);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__constant__ = __webpack_require__(470);
-
-
-
-
-
-function ascendingSourceBreadth(a, b) {
-  return ascendingBreadth(a.source, b.source) || a.index - b.index;
-}
-
-function ascendingTargetBreadth(a, b) {
-  return ascendingBreadth(a.target, b.target) || a.index - b.index;
-}
-
-function ascendingBreadth(a, b) {
-  return a.y0 - b.y0;
-}
-
-function value(d) {
-  return d.value;
-}
-
-function nodeCenter(node) {
-  return (node.y0 + node.y1) / 2;
-}
-
-function weightedSource(link) {
-  return nodeCenter(link.source) * link.value;
-}
-
-function weightedTarget(link) {
-  return nodeCenter(link.target) * link.value;
-}
-
-function defaultId(d) {
-  return d.index;
-}
-
-function defaultNodes(graph) {
-  return graph.nodes;
-}
-
-function defaultLinks(graph) {
-  return graph.links;
-}
-
-function find(nodeById, id) {
-  var node = nodeById.get(id);
-  if (!node) throw new Error("missing: " + id);
-  return node;
-}
-
-/* harmony default export */ __webpack_exports__["a"] = (function() {
-  var x0 = 0, y0 = 0, x1 = 1, y1 = 1, // extent
-      dx = 24, // nodeWidth
-      py = 8, // nodePadding
-      id = defaultId,
-      align = __WEBPACK_IMPORTED_MODULE_2__align__["a" /* justify */],
-      nodes = defaultNodes,
-      links = defaultLinks,
-      iterations = 32;
-
-  function sankey() {
-    var graph = {nodes: nodes.apply(null, arguments), links: links.apply(null, arguments)};
-    computeNodeLinks(graph);
-    computeNodeValues(graph);
-    computeNodeDepths(graph);
-    computeNodeBreadths(graph, iterations);
-    computeLinkBreadths(graph);
-    return graph;
-  }
-
-  sankey.update = function(graph) {
-    computeLinkBreadths(graph);
-    return graph;
-  };
-
-  sankey.nodeId = function(_) {
-    return arguments.length ? (id = typeof _ === "function" ? _ : Object(__WEBPACK_IMPORTED_MODULE_3__constant__["a" /* default */])(_), sankey) : id;
-  };
-
-  sankey.nodeAlign = function(_) {
-    return arguments.length ? (align = typeof _ === "function" ? _ : Object(__WEBPACK_IMPORTED_MODULE_3__constant__["a" /* default */])(_), sankey) : align;
-  };
-
-  sankey.nodeWidth = function(_) {
-    return arguments.length ? (dx = +_, sankey) : dx;
-  };
-
-  sankey.nodePadding = function(_) {
-    return arguments.length ? (py = +_, sankey) : py;
-  };
-
-  sankey.nodes = function(_) {
-    return arguments.length ? (nodes = typeof _ === "function" ? _ : Object(__WEBPACK_IMPORTED_MODULE_3__constant__["a" /* default */])(_), sankey) : nodes;
-  };
-
-  sankey.links = function(_) {
-    return arguments.length ? (links = typeof _ === "function" ? _ : Object(__WEBPACK_IMPORTED_MODULE_3__constant__["a" /* default */])(_), sankey) : links;
-  };
-
-  sankey.size = function(_) {
-    return arguments.length ? (x0 = y0 = 0, x1 = +_[0], y1 = +_[1], sankey) : [x1 - x0, y1 - y0];
-  };
-
-  sankey.extent = function(_) {
-    return arguments.length ? (x0 = +_[0][0], x1 = +_[1][0], y0 = +_[0][1], y1 = +_[1][1], sankey) : [[x0, y0], [x1, y1]];
-  };
-
-  sankey.iterations = function(_) {
-    return arguments.length ? (iterations = +_, sankey) : iterations;
-  };
-
-  // Populate the sourceLinks and targetLinks for each node.
-  // Also, if the source and target are not objects, assume they are indices.
-  function computeNodeLinks(graph) {
-    graph.nodes.forEach(function(node, i) {
-      node.index = i;
-      node.sourceLinks = [];
-      node.targetLinks = [];
-    });
-    var nodeById = Object(__WEBPACK_IMPORTED_MODULE_1_d3_collection__["a" /* map */])(graph.nodes, id);
-    graph.links.forEach(function(link, i) {
-      link.index = i;
-      var source = link.source, target = link.target;
-      if (typeof source !== "object") source = link.source = find(nodeById, source);
-      if (typeof target !== "object") target = link.target = find(nodeById, target);
-      source.sourceLinks.push(link);
-      target.targetLinks.push(link);
-    });
-  }
-
-  // Compute the value (size) of each node by summing the associated links.
-  function computeNodeValues(graph) {
-    graph.nodes.forEach(function(node) {
-      node.value = Math.max(
-        Object(__WEBPACK_IMPORTED_MODULE_0_d3_array__["h" /* sum */])(node.sourceLinks, value),
-        Object(__WEBPACK_IMPORTED_MODULE_0_d3_array__["h" /* sum */])(node.targetLinks, value)
-      );
-    });
-  }
-
-  // Iteratively assign the depth (x-position) for each node.
-  // Nodes are assigned the maximum depth of incoming neighbors plus one;
-  // nodes with no incoming links are assigned depth zero, while
-  // nodes with no outgoing links are assigned the maximum depth.
-  function computeNodeDepths(graph) {
-    var nodes, next, x;
-
-    for (nodes = graph.nodes, next = [], x = 0; nodes.length; ++x, nodes = next, next = []) {
-      nodes.forEach(function(node) {
-        node.depth = x;
-        node.sourceLinks.forEach(function(link) {
-          if (next.indexOf(link.target) < 0) {
-            next.push(link.target);
-          }
-        });
-      });
-    }
-
-    for (nodes = graph.nodes, next = [], x = 0; nodes.length; ++x, nodes = next, next = []) {
-      nodes.forEach(function(node) {
-        node.height = x;
-        node.targetLinks.forEach(function(link) {
-          if (next.indexOf(link.source) < 0) {
-            next.push(link.source);
-          }
-        });
-      });
-    }
-
-    var kx = (x1 - x0 - dx) / (x - 1);
-    graph.nodes.forEach(function(node) {
-      node.x1 = (node.x0 = x0 + Math.max(0, Math.min(x - 1, Math.floor(align.call(null, node, x)))) * kx) + dx;
-    });
-  }
-
-  function computeNodeBreadths(graph) {
-    var columns = Object(__WEBPACK_IMPORTED_MODULE_1_d3_collection__["b" /* nest */])()
-        .key(function(d) { return d.x0; })
-        .sortKeys(__WEBPACK_IMPORTED_MODULE_0_d3_array__["a" /* ascending */])
-        .entries(graph.nodes)
-        .map(function(d) { return d.values; });
-
-    //
-    initializeNodeBreadth();
-    resolveCollisions();
-    for (var alpha = 1, n = iterations; n > 0; --n) {
-      relaxRightToLeft(alpha *= 0.99);
-      resolveCollisions();
-      relaxLeftToRight(alpha);
-      resolveCollisions();
-    }
-
-    function initializeNodeBreadth() {
-      var ky = Object(__WEBPACK_IMPORTED_MODULE_0_d3_array__["e" /* min */])(columns, function(nodes) {
-        return (y1 - y0 - (nodes.length - 1) * py) / Object(__WEBPACK_IMPORTED_MODULE_0_d3_array__["h" /* sum */])(nodes, value);
-      });
-
-      columns.forEach(function(nodes) {
-        nodes.forEach(function(node, i) {
-          node.y1 = (node.y0 = i) + node.value * ky;
-        });
-      });
-
-      graph.links.forEach(function(link) {
-        link.width = link.value * ky;
-      });
-    }
-
-    function relaxLeftToRight(alpha) {
-      columns.forEach(function(nodes) {
-        nodes.forEach(function(node) {
-          if (node.targetLinks.length) {
-            var dy = (Object(__WEBPACK_IMPORTED_MODULE_0_d3_array__["h" /* sum */])(node.targetLinks, weightedSource) / Object(__WEBPACK_IMPORTED_MODULE_0_d3_array__["h" /* sum */])(node.targetLinks, value) - nodeCenter(node)) * alpha;
-            node.y0 += dy, node.y1 += dy;
-          }
-        });
-      });
-    }
-
-    function relaxRightToLeft(alpha) {
-      columns.slice().reverse().forEach(function(nodes) {
-        nodes.forEach(function(node) {
-          if (node.sourceLinks.length) {
-            var dy = (Object(__WEBPACK_IMPORTED_MODULE_0_d3_array__["h" /* sum */])(node.sourceLinks, weightedTarget) / Object(__WEBPACK_IMPORTED_MODULE_0_d3_array__["h" /* sum */])(node.sourceLinks, value) - nodeCenter(node)) * alpha;
-            node.y0 += dy, node.y1 += dy;
-          }
-        });
-      });
-    }
-
-    function resolveCollisions() {
-      columns.forEach(function(nodes) {
-        var node,
-            dy,
-            y = y0,
-            n = nodes.length,
-            i;
-
-        // Push any overlapping nodes down.
-        nodes.sort(ascendingBreadth);
-        for (i = 0; i < n; ++i) {
-          node = nodes[i];
-          dy = y - node.y0;
-          if (dy > 0) node.y0 += dy, node.y1 += dy;
-          y = node.y1 + py;
-        }
-
-        // If the bottommost node goes outside the bounds, push it back up.
-        dy = y - py - y1;
-        if (dy > 0) {
-          y = (node.y0 -= dy), node.y1 -= dy;
-
-          // Push any overlapping nodes back up.
-          for (i = n - 2; i >= 0; --i) {
-            node = nodes[i];
-            dy = node.y1 + py - y;
-            if (dy > 0) node.y0 -= dy, node.y1 -= dy;
-            y = node.y0;
-          }
-        }
-      });
-    }
-  }
-
-  function computeLinkBreadths(graph) {
-    graph.nodes.forEach(function(node) {
-      node.sourceLinks.sort(ascendingTargetBreadth);
-      node.targetLinks.sort(ascendingSourceBreadth);
-    });
-    graph.nodes.forEach(function(node) {
-      var y0 = node.y0, y1 = y0;
-      node.sourceLinks.forEach(function(link) {
-        link.y0 = y0 + link.width / 2, y0 += link.width;
-      });
-      node.targetLinks.forEach(function(link) {
-        link.y1 = y1 + link.width / 2, y1 += link.width;
-      });
-    });
-  }
-
-  return sankey;
-});
-
-
-/***/ }),
-/* 470 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony export (immutable) */ __webpack_exports__["a"] = constant;
-function constant(x) {
-  return function() {
-    return x;
-  };
-}
-
-
-/***/ }),
-/* 471 */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_d3_shape__ = __webpack_require__(173);
-
-
-function horizontalSource(d) {
-  return [d.source.x1, d.y0];
-}
-
-function horizontalTarget(d) {
-  return [d.target.x0, d.y1];
-}
-
-/* harmony default export */ __webpack_exports__["a"] = (function() {
-  return Object(__WEBPACK_IMPORTED_MODULE_0_d3_shape__["b" /* linkHorizontal */])()
-      .source(horizontalSource)
-      .target(horizontalTarget);
-});
 
 
 /***/ })
