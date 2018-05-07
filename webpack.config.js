@@ -6,6 +6,7 @@ var webpackConfig = {
     sankey: './src/examples/sankey/sankey.ts',
     liquid_fill_gauge: './src/examples/liquid_fill_gauge/liquid_fill_gauge.ts',
     sunburst: './src/examples/sunburst/sunburst.ts',
+    collapsible_tree: './src/examples/collapsible_tree/collapsible_tree.ts',
   },
   output: {
     filename: "[name].js",
