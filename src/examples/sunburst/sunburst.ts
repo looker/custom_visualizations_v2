@@ -23,7 +23,7 @@ interface SunburstVisualization extends VisualizationDefinition {
   gauge?: any,
 }
 
-  // recursively create children array
+// recursively create children array
 function descend(obj: any, depth: number = 0) {
   const arr: any[] = []
   for (const k in obj) {
