@@ -23,6 +23,7 @@
     "tslint": "5.8.0",
     "tslint-config-standard": "7.0.0",
     "typescript": "2.6.2",
+    "uglifyjs-webpack-plugin": "^1.2.5",
     "webpack": "3.10.0",
     "webpack-dev-server": "2.9.7"
   },
