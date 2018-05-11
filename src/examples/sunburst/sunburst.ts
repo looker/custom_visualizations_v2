@@ -1,10 +1,9 @@
 // Global values provided via the API
 declare var looker: Looker
 declare var LookerCharts: LookerChartUtils
-declare var formatType: any
 
 import * as d3 from 'd3'
-import { handleErrors } from '../common/utils'
+import { formatType, handleErrors } from '../common/utils'
 
 import {
   Row,
@@ -163,7 +162,7 @@ const vis: SunburstVisualization = {
         .reverse()
         .join('-')
       )
-      label.text(`${ancestorText}: ${format(d.value)}`)
+      if (format) label.text(`${ancestorText}: ${format(d.value)}`)
 
       const ancestors = d.ancestors()
       svg
