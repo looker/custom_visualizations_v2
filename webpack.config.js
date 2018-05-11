@@ -7,6 +7,7 @@ var webpackConfig = {
     liquid_fill_gauge: './src/examples/liquid_fill_gauge/liquid_fill_gauge.ts',
     sunburst: './src/examples/sunburst/sunburst.ts',
     collapsible_tree: './src/examples/collapsible_tree/collapsible_tree.ts',
+    chord: './src/examples/chord/chord.ts',
   },
   output: {
     filename: "[name].js",
