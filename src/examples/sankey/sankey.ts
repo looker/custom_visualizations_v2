@@ -10,13 +10,13 @@ import {
   VisualizationDefinition
 } from '../types/types'
 
-interface Sankey extends VisualizationDefinition {
-  svg?: any
-}
-
 // Global values provided via the API
 declare var looker: Looker
 declare var LookerCharts: LookerChartUtils
+
+interface Sankey extends VisualizationDefinition {
+  svg?: any
+}
 
 const vis: Sankey = {
   id: 'sankey', // id/label not required, but nice for testing and keeping manifests in sync
@@ -126,7 +126,7 @@ const vis: Sankey = {
       d.target = nodesArray.indexOf(d.target)
     })
 
-    graph.nodes = nodes.values().map(function (d) {
+    graph.nodes = nodes.values().map((d: any) => {
       return {
         name: d.slice(0, -1)
       }
