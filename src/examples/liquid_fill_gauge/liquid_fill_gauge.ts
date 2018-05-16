@@ -6,6 +6,11 @@ declare var _: any
 
 import * as d3 from 'd3'
 import { handleErrors } from '../common/utils'
+/**
+ * TODO install this version?
+ * https://github.com/ugomeda/d3-liquid-fill-gauge
+ * hmm, it's not published on npm
+ */
 const LiquidFillGauge = require('./liquid_fill_gauge.js')
 
 import {

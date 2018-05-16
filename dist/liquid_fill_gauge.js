@@ -22765,7 +22765,11 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__common_utils__ = __webpack_require__(464);
 
 
-// https://github.com/ugomeda/d3-liquid-fill-gauge
+/**
+ * TODO install this version?
+ * https://github.com/ugomeda/d3-liquid-fill-gauge
+ * hmm, it's not published on npm
+ */
 var LiquidFillGauge = __webpack_require__(473);
 var defaults = LiquidFillGauge.liquidFillGaugeDefaultSettings();
 var vis = {
