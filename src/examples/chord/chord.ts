@@ -12,6 +12,10 @@ import {
 declare var looker: Looker
 declare var LookerCharts: LookerChartUtils
 
+function log(...args: any[]) {
+  console.log.apply(console, args)
+}
+
 interface ChordVisualization extends VisualizationDefinition {
   svg?: any,
   tooltip?: any,
@@ -59,6 +63,8 @@ const vis: ChordVisualization = {
     this.tooltip = d3.select(element).append('div').attr('class', 'chord-tip')
 
     this.svg = d3.select(element).append('svg')
+
+    log('create config', config)
   },
 
   computeMatrix(data, dimensions, measure) {
@@ -129,7 +135,11 @@ const vis: ChordVisualization = {
 
     const tooltip = this.tooltip
 
+    log('update config', config)
+
     // Set color scale
+    // DNR
+    // const color = d3.scaleOrdinal().range(config.color_range || ['#dd3333', '#80ce5d', '#f78131', '#369dc1', '#c572d3', '#36c1b3', '#b57052', '#ed69af'])
     const color = d3.scaleOrdinal().range(config.color_range)
 
     // Set chord layout
@@ -149,6 +159,7 @@ const vis: ChordVisualization = {
 
     // Turn data into matrix
     const matrix = this.computeMatrix(data, dimensions.map(d => d.name), measure.name)
+    log('matrix', matrix)
 
     // draw
     const svg = this.svg
@@ -181,13 +192,7 @@ const vis: ChordVisualization = {
     const groupPath = group.append('path')
       .style('opacity', 0.8)
       .style('fill', (d: any) => color(d.index))
-      .style('stroke', (d: any) => {
-        console.log(d)
-        console.log(d.index)
-        console.log(color(d.index))
-
-        return d3.rgb('red').darker()
-      })
+      .style('stroke', (d: any) => d3.rgb('red').darker())
       .attr('id', (d: any, i: number) => `group${i}`)
       .attr('d', arc)
 
@@ -199,16 +204,17 @@ const vis: ChordVisualization = {
       .attr('xlink:href', (d: any, i: number) => `#group${i}`)
       .attr('startOffset',(d: any, i: number) => (groupPathNodes[i].getTotalLength() - (thickness * 2)) / 4)
       .style('text-anchor','middle')
-      .text((d: any) => matrix.nameByIndex.get(d.index))
+      .text((d: any) => {
+        log('d.index', d.index)
+        const txt = matrix.nameByIndex.get(d.index.toString())
+        log('txt', JSON.stringify(txt))
+        return txt
+      })
 
     // Remove the labels that don't fit. :(
     groupText
-      .filter(function (d: any, i: number) {
-        // is `this` the same as d when calling filter on a d3 array
-        // ts-disable
-        // console.log('this === d', this === d)
-        return groupPathNodes[i].getTotalLength() / 2 - 16 < d.getComputedTextLength()
-        // return groupPathNodes[i].getTotalLength() / 2 - 16 < this.getComputedTextLength()
+      .filter(function (this: SVGTextElement, d: any, i: number) {
+        return groupPathNodes[i].getTotalLength() / 2 - 16 < this.getComputedTextLength()
       })
       .remove()
 
@@ -220,13 +226,7 @@ const vis: ChordVisualization = {
       .style('opacity', 0.8)
       .attr('d', ribbon)
       .style('fill', (d: any) => color(d.target.index))
-      .style('stroke', (d: any) => {
-        console.log(d)
-        console.log(d.target)
-        console.log(d.target.index)
-        console.log(color(d.target.index))
-        return d3.rgb('blue').darker()
-      })
+      .style('stroke', (d: any) => d3.rgb('blue').darker())
       .on('mouseenter', (d: any) => {
         tooltip.html(this.titleText(matrix.nameByIndex, d.source, d.target, valueFormatter))
       })
@@ -234,7 +234,7 @@ const vis: ChordVisualization = {
 
   },
 
-  titleText: function(lookup, source, target, formatter) {
+  titleText: function(lookup, source, target, formatter = (s: string) => s) {
     const sourceName = lookup.get(source.index)
     const sourceValue = formatter(source.value)
     const targetName = lookup.get(target.index)
