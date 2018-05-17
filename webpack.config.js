@@ -8,6 +8,7 @@ var webpackConfig = {
     sunburst: './src/examples/sunburst/sunburst.ts',
     collapsible_tree: './src/examples/collapsible_tree/collapsible_tree.ts',
     chord: './src/examples/chord/chord.ts',
+    treemap: './src/examples/treemap/treemap.ts',
   },
   output: {
     filename: "[name].js",
