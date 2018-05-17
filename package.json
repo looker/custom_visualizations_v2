@@ -9,7 +9,7 @@
     "test": "tests"
   },
   "scripts": {
-    "build": "yarn webpack --config webpack.config.js",
+    "build": "webpack --config webpack.config.js",
     "lint": "tslint --project tsconfig.json --format stylish 'src/**/*.ts'",
     "lint-fix": "tslint --fix --project tsconfig.json  --format stylish 'src/**/*.ts'",
     "test": "mocha"
