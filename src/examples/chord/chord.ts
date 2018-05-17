@@ -1,5 +1,5 @@
 import * as d3 from 'd3'
-import { formatType, handleErrors } from '../common/utils'
+import { formatType, handleErrors, log } from '../common/utils'
 
 import {
   Looker,
@@ -11,10 +11,6 @@ import {
 // Global values provided via the API
 declare var looker: Looker
 declare var LookerCharts: LookerChartUtils
-
-function log(...args: any[]) {
-  console.log.apply(console, args)
-}
 
 interface ChordVisualization extends VisualizationDefinition {
   svg?: any,
