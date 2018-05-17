@@ -5062,6 +5062,8 @@ function clipEdges(x0, y0, x1, y1) {
 /* harmony namespace reexport (by used) */ __webpack_require__.d(__webpack_exports__, "e", function() { return __WEBPACK_IMPORTED_MODULE_14_d3_hierarchy__["a"]; });
 /* harmony namespace reexport (by used) */ __webpack_require__.d(__webpack_exports__, "h", function() { return __WEBPACK_IMPORTED_MODULE_14_d3_hierarchy__["b"]; });
 /* harmony namespace reexport (by used) */ __webpack_require__.d(__webpack_exports__, "q", function() { return __WEBPACK_IMPORTED_MODULE_14_d3_hierarchy__["c"]; });
+/* harmony namespace reexport (by used) */ __webpack_require__.d(__webpack_exports__, "r", function() { return __WEBPACK_IMPORTED_MODULE_14_d3_hierarchy__["d"]; });
+/* harmony namespace reexport (by used) */ __webpack_require__.d(__webpack_exports__, "s", function() { return __WEBPACK_IMPORTED_MODULE_14_d3_hierarchy__["e"]; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_15_d3_interpolate__ = __webpack_require__(5);
 /* unused harmony namespace reexport */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_16_d3_path__ = __webpack_require__(13);
@@ -17583,7 +17585,7 @@ transverseMercatorRaw.invert = function(x, y) {
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__src_tree__ = __webpack_require__(370);
 /* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "c", function() { return __WEBPACK_IMPORTED_MODULE_7__src_tree__["a"]; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__src_treemap_index__ = __webpack_require__(371);
-/* unused harmony reexport treemap */
+/* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "d", function() { return __WEBPACK_IMPORTED_MODULE_8__src_treemap_index__["a"]; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__src_treemap_binary__ = __webpack_require__(372);
 /* unused harmony reexport treemapBinary */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_10__src_treemap_dice__ = __webpack_require__(26);
@@ -17593,7 +17595,7 @@ transverseMercatorRaw.invert = function(x, y) {
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_12__src_treemap_sliceDice__ = __webpack_require__(373);
 /* unused harmony reexport treemapSliceDice */
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_13__src_treemap_squarify__ = __webpack_require__(79);
-/* unused harmony reexport treemapSquarify */
+/* harmony reexport (binding) */ __webpack_require__.d(__webpack_exports__, "e", function() { return __WEBPACK_IMPORTED_MODULE_13__src_treemap_squarify__["a"]; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_14__src_treemap_resquarify__ = __webpack_require__(374);
 /* unused harmony reexport treemapResquarify */
 
@@ -18423,7 +18425,7 @@ function treeRoot(root) {
 
 
 
-/* unused harmony default export */ var _unused_webpack_default_export = (function() {
+/* harmony default export */ __webpack_exports__["a"] = (function() {
   var tile = __WEBPACK_IMPORTED_MODULE_1__squarify__["a" /* default */],
       round = false,
       dx = 1,
@@ -22664,10 +22666,18 @@ function nopropagation() {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
+/* harmony export (immutable) */ __webpack_exports__["c"] = log;
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return formatType; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "b", function() { return handleErrors; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_d3__ = __webpack_require__(90);
 
+function log() {
+    var args = [];
+    for (var _i = 0; _i < arguments.length; _i++) {
+        args[_i] = arguments[_i];
+    }
+    console.log.apply(console, args);
+}
 var formatType = function (valueFormat) {
     if (!valueFormat)
         return undefined;
@@ -22769,13 +22779,6 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__common_utils__ = __webpack_require__(464);
 
 
-function log() {
-    var args = [];
-    for (var _i = 0; _i < arguments.length; _i++) {
-        args[_i] = arguments[_i];
-    }
-    console.log.apply(console, args);
-}
 var vis = {
     id: 'chord',
     label: 'Chord',
@@ -22792,7 +22795,7 @@ var vis = {
         element.innerHTML = "\n      <style>\n        .chordchart circle {\n          fill: none;\n          pointer-events: all;\n        }\n\n        .chordchart:hover path.chord-fade {\n          display: none;\n        }\n\n        .groups text {\n          font-size: 12px;\n        }\n\n        .chord-tip {\n          position: absolute;\n          top: 0;\n          left: 0;\n          z-index: 10;\n        }\n      </style>\n    ";
         this.tooltip = __WEBPACK_IMPORTED_MODULE_0_d3__["n" /* select */](element).append('div').attr('class', 'chord-tip');
         this.svg = __WEBPACK_IMPORTED_MODULE_0_d3__["n" /* select */](element).append('svg');
-        log('create config', config);
+        Object(__WEBPACK_IMPORTED_MODULE_1__common_utils__["c" /* log */])('create config', config);
     },
     computeMatrix: function (data, dimensions, measure) {
         var indexByName = __WEBPACK_IMPORTED_MODULE_0_d3__["f" /* map */]();
@@ -22854,7 +22857,7 @@ var vis = {
             return;
         var valueFormatter = Object(__WEBPACK_IMPORTED_MODULE_1__common_utils__["a" /* formatType */])(measure.value_format);
         var tooltip = this.tooltip;
-        log('update config', config);
+        Object(__WEBPACK_IMPORTED_MODULE_1__common_utils__["c" /* log */])('update config', config);
         // Set color scale
         // DNR
         // const color = d3.scaleOrdinal().range(config.color_range || ['#dd3333', '#80ce5d', '#f78131', '#369dc1', '#c572d3', '#36c1b3', '#b57052', '#ed69af'])
@@ -22873,7 +22876,7 @@ var vis = {
             .outerRadius(outerRadius);
         // Turn data into matrix
         var matrix = this.computeMatrix(data, dimensions.map(function (d) { return d.name; }), measure.name);
-        log('matrix', matrix);
+        Object(__WEBPACK_IMPORTED_MODULE_1__common_utils__["c" /* log */])('matrix', matrix);
         // draw
         var svg = this.svg
             .html('')
@@ -22909,9 +22912,9 @@ var vis = {
             .attr('startOffset', function (d, i) { return (groupPathNodes[i].getTotalLength() - (thickness * 2)) / 4; })
             .style('text-anchor', 'middle')
             .text(function (d) {
-            log('d.index', d.index);
+            Object(__WEBPACK_IMPORTED_MODULE_1__common_utils__["c" /* log */])('d.index', d.index);
             var txt = matrix.nameByIndex.get(d.index.toString());
-            log('txt', JSON.stringify(txt));
+            Object(__WEBPACK_IMPORTED_MODULE_1__common_utils__["c" /* log */])('txt', JSON.stringify(txt));
             return txt;
         });
         // Remove the labels that don't fit. :(
