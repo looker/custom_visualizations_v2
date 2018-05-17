@@ -1,9 +1,5 @@
-// Global values provided via the API
-declare var looker: Looker
-declare var LookerCharts: LookerChartUtils
-
 import * as d3 from 'd3'
-import { formatType, handleErrors } from '../common/utils'
+import { formatType, handleErrors, log } from '../common/utils'
 
 import {
   Row,
@@ -17,9 +13,12 @@ import {
   VisQueryResponse
 } from '../types/types'
 
+// Global values provided via the API
+declare var looker: Looker
+declare var LookerCharts: LookerChartUtils
+
 interface SunburstVisualization extends VisualizationDefinition {
   svg?: any,
-  gauge?: any,
 }
 
 // recursively create children array
@@ -42,7 +41,7 @@ function descend(obj: any, depth: number = 0) {
   return arr
 }
 
-function burrow(table: any) {
+function burrow(table: Row[]) {
   // create nested object
   const obj: any = {}
 
@@ -102,7 +101,8 @@ const vis: SunburstVisualization = {
 
     const y = d3.scaleSqrt().range([0, radius])
 
-    const color = d3.scaleOrdinal().range(config.color_range)
+    // const color = d3.scaleOrdinal().range(config.color_range)
+    const color = d3.scaleOrdinal().range(config.color_range || this.options.color_range.default) // DNR
 
     data.forEach(row => {
       row.taxonomy = {
