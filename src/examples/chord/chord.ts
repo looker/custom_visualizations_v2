@@ -59,8 +59,6 @@ const vis: ChordVisualization = {
     this.tooltip = d3.select(element).append('div').attr('class', 'chord-tip')
 
     this.svg = d3.select(element).append('svg')
-
-    log('create config', config)
   },
 
   computeMatrix(data, dimensions, measure) {
@@ -74,7 +72,7 @@ const vis: ChordVisualization = {
       data.forEach((d) => {
         const value = d[dimension].value
         if (!indexByName.has(value)) {
-          nameByIndex.set(n.toString(), d)
+          nameByIndex.set(n.toString(), value)
           indexByName.set(value, n++)
         }
       })
@@ -127,16 +125,13 @@ const vis: ChordVisualization = {
     // TODO: Set a min-radius ???
     if (innerRadius < 0) return
 
-    const valueFormatter = formatType(measure.value_format)
+    const valueFormatter = formatType(measure.value_format) || ((s: any): string => s.toString())
 
     const tooltip = this.tooltip
 
-    log('update config', config)
-
     // Set color scale
-    // DNR
-    // const color = d3.scaleOrdinal().range(config.color_range || ['#dd3333', '#80ce5d', '#f78131', '#369dc1', '#c572d3', '#36c1b3', '#b57052', '#ed69af'])
     const color = d3.scaleOrdinal().range(config.color_range)
+    // const color = d3.scaleOrdinal().range(config.color_range || this.options.color_range.default) // DNR
 
     // Set chord layout
     const chord = d3.chord()
@@ -155,10 +150,9 @@ const vis: ChordVisualization = {
 
     // Turn data into matrix
     const matrix = this.computeMatrix(data, dimensions.map(d => d.name), measure.name)
-    log('matrix', matrix)
 
     // draw
-    const svg = this.svg
+    const svg = this.svg!
       .html('')
       .attr('width', '100%')
       .attr('height', '100%')
@@ -201,9 +195,7 @@ const vis: ChordVisualization = {
       .attr('startOffset',(d: any, i: number) => (groupPathNodes[i].getTotalLength() - (thickness * 2)) / 4)
       .style('text-anchor','middle')
       .text((d: any) => {
-        log('d.index', d.index)
         const txt = matrix.nameByIndex.get(d.index.toString())
-        log('txt', JSON.stringify(txt))
         return txt
       })
 

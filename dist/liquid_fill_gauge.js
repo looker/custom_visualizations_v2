@@ -22666,7 +22666,7 @@ function nopropagation() {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony export (immutable) */ __webpack_exports__["c"] = log;
+/* unused harmony export log */
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return formatType; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "b", function() { return handleErrors; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_d3__ = __webpack_require__(90);

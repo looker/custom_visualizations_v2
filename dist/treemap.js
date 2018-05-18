@@ -22666,7 +22666,7 @@ function nopropagation() {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony export (immutable) */ __webpack_exports__["c"] = log;
+/* unused harmony export log */
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return formatType; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "b", function() { return handleErrors; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_d3__ = __webpack_require__(90);
@@ -22848,8 +22848,8 @@ var vis = {
         var dimensions = queryResponse.fields.dimension_like;
         var measure = queryResponse.fields.measure_like[0];
         var format = Object(__WEBPACK_IMPORTED_MODULE_1__common_utils__["a" /* formatType */])(measure.value_format) || (function (s) { return s.toString(); });
-        // const color = d3.scaleOrdinal().range(config.color_range)
-        var color = __WEBPACK_IMPORTED_MODULE_0_d3__["l" /* scaleOrdinal */]().range(config.color_range || this.options.color_range.default); // DNR
+        var color = __WEBPACK_IMPORTED_MODULE_0_d3__["l" /* scaleOrdinal */]().range(config.color_range);
+        // const color = d3.scaleOrdinal().range(config.color_range || this.options.color_range.default) // DNR
         data.forEach(function (row) {
             row.taxonomy = {
                 value: dimensions.map(function (dimension) { return row[dimension.name].value; })

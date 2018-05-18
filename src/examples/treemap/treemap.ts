@@ -18,7 +18,7 @@ declare var looker: Looker
 declare var LookerCharts: LookerChartUtils
 
 interface TreemapVisualization extends VisualizationDefinition {
-  svg?: d3.Selection<SVGElement, any, null, any>,
+  svg?: d3.Selection<SVGElement, {}, any, any>,
 }
 
 // recursively create children array
@@ -96,8 +96,8 @@ const vis: TreemapVisualization = {
 
     const format = formatType(measure.value_format) || ((s: any): string => s.toString())
 
-    // const color = d3.scaleOrdinal().range(config.color_range)
-    const color = d3.scaleOrdinal().range(config.color_range || this.options.color_range.default) // DNR
+    const color = d3.scaleOrdinal().range(config.color_range)
+    // const color = d3.scaleOrdinal().range(config.color_range || this.options.color_range.default) // DNR
 
     data.forEach(function(row) {
       row.taxonomy = {

@@ -22666,7 +22666,7 @@ function nopropagation() {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony export (immutable) */ __webpack_exports__["c"] = log;
+/* unused harmony export log */
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return formatType; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "b", function() { return handleErrors; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_d3__ = __webpack_require__(90);
@@ -22795,7 +22795,6 @@ var vis = {
         element.innerHTML = "\n      <style>\n        .chordchart circle {\n          fill: none;\n          pointer-events: all;\n        }\n\n        .chordchart:hover path.chord-fade {\n          display: none;\n        }\n\n        .groups text {\n          font-size: 12px;\n        }\n\n        .chord-tip {\n          position: absolute;\n          top: 0;\n          left: 0;\n          z-index: 10;\n        }\n      </style>\n    ";
         this.tooltip = __WEBPACK_IMPORTED_MODULE_0_d3__["n" /* select */](element).append('div').attr('class', 'chord-tip');
         this.svg = __WEBPACK_IMPORTED_MODULE_0_d3__["n" /* select */](element).append('svg');
-        Object(__WEBPACK_IMPORTED_MODULE_1__common_utils__["c" /* log */])('create config', config);
     },
     computeMatrix: function (data, dimensions, measure) {
         var indexByName = __WEBPACK_IMPORTED_MODULE_0_d3__["f" /* map */]();
@@ -22807,7 +22806,7 @@ var vis = {
             data.forEach(function (d) {
                 var value = d[dimension].value;
                 if (!indexByName.has(value)) {
-                    nameByIndex.set(n.toString(), d);
+                    nameByIndex.set(n.toString(), value);
                     indexByName.set(value, n++);
                 }
             });
@@ -22855,13 +22854,11 @@ var vis = {
         // TODO: Set a min-radius ???
         if (innerRadius < 0)
             return;
-        var valueFormatter = Object(__WEBPACK_IMPORTED_MODULE_1__common_utils__["a" /* formatType */])(measure.value_format);
+        var valueFormatter = Object(__WEBPACK_IMPORTED_MODULE_1__common_utils__["a" /* formatType */])(measure.value_format) || (function (s) { return s.toString(); });
         var tooltip = this.tooltip;
-        Object(__WEBPACK_IMPORTED_MODULE_1__common_utils__["c" /* log */])('update config', config);
         // Set color scale
-        // DNR
-        // const color = d3.scaleOrdinal().range(config.color_range || ['#dd3333', '#80ce5d', '#f78131', '#369dc1', '#c572d3', '#36c1b3', '#b57052', '#ed69af'])
         var color = __WEBPACK_IMPORTED_MODULE_0_d3__["l" /* scaleOrdinal */]().range(config.color_range);
+        // const color = d3.scaleOrdinal().range(config.color_range || this.options.color_range.default) // DNR
         // Set chord layout
         var chord = __WEBPACK_IMPORTED_MODULE_0_d3__["b" /* chord */]()
             .padAngle(0.025)
@@ -22876,7 +22873,6 @@ var vis = {
             .outerRadius(outerRadius);
         // Turn data into matrix
         var matrix = this.computeMatrix(data, dimensions.map(function (d) { return d.name; }), measure.name);
-        Object(__WEBPACK_IMPORTED_MODULE_1__common_utils__["c" /* log */])('matrix', matrix);
         // draw
         var svg = this.svg
             .html('')
@@ -22912,9 +22908,7 @@ var vis = {
             .attr('startOffset', function (d, i) { return (groupPathNodes[i].getTotalLength() - (thickness * 2)) / 4; })
             .style('text-anchor', 'middle')
             .text(function (d) {
-            Object(__WEBPACK_IMPORTED_MODULE_1__common_utils__["c" /* log */])('d.index', d.index);
             var txt = matrix.nameByIndex.get(d.index.toString());
-            Object(__WEBPACK_IMPORTED_MODULE_1__common_utils__["c" /* log */])('txt', JSON.stringify(txt));
             return txt;
         });
         // Remove the labels that don't fit. :(
