@@ -72,7 +72,7 @@ const vis: ChordVisualization = {
       data.forEach((d) => {
         const value = d[dimension].value
         if (!indexByName.has(value)) {
-          nameByIndex.set(n.toString(), d)
+          nameByIndex.set(n.toString(), value)
           indexByName.set(value, n++)
         }
       })
@@ -125,7 +125,7 @@ const vis: ChordVisualization = {
     // TODO: Set a min-radius ???
     if (innerRadius < 0) return
 
-    const valueFormatter = formatType(measure.value_format)
+    const valueFormatter = formatType(measure.value_format) || ((s: any): string => s.toString())
 
     const tooltip = this.tooltip
 
@@ -150,7 +150,6 @@ const vis: ChordVisualization = {
 
     // Turn data into matrix
     const matrix = this.computeMatrix(data, dimensions.map(d => d.name), measure.name)
-    log('matrix', matrix)
 
     // draw
     const svg = this.svg!
@@ -196,9 +195,7 @@ const vis: ChordVisualization = {
       .attr('startOffset',(d: any, i: number) => (groupPathNodes[i].getTotalLength() - (thickness * 2)) / 4)
       .style('text-anchor','middle')
       .text((d: any) => {
-        log('d.index', d.index)
         const txt = matrix.nameByIndex.get(d.index.toString())
-        log('txt', JSON.stringify(txt))
         return txt
       })
 
