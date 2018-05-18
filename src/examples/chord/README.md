@@ -14,7 +14,7 @@ For example, in the chord diagram featured above, more flights occur from LAX to
 
 **More Info**
 
-The chord visualization is best used with dimensions that have a direct relationship between them. 
+The chord visualization is best used with dimensions that have a direct relationship between them. Hovering over a particular relationship between two dimensions will show both the value of the measure for the higher affinity measure as well as the lower affinity measure. In the context of the example above, hovering over the relationship between LAX and ORD will show both the number of flights that have originated in LAX and landed in ORD, and the number of flights that have originated in ORD and landed in LAX.
 
 
 Include [chord.js](/chord.js), [utils.js](../common/utils.js) and [d3.v4.js](../common/d3.v4.js)
