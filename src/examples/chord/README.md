@@ -12,4 +12,9 @@ Create a look with one measure and two dimensions. The order of the dimensions d
 
 For example, in the chord diagram featured above, more flights occur from LAX to ORD compared to ORD to LAX, so the chord color is associated with LAX.
 
+**More Info**
+
+The chord visualization is best used with dimensions that have a direct relationship between them. 
+
+
 Include [chord.js](/chord.js), [utils.js](../common/utils.js) and [d3.v4.js](../common/d3.v4.js)
