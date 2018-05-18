@@ -59,8 +59,6 @@ const vis: ChordVisualization = {
     this.tooltip = d3.select(element).append('div').attr('class', 'chord-tip')
 
     this.svg = d3.select(element).append('svg')
-
-    log('create config', config)
   },
 
   computeMatrix(data, dimensions, measure) {
@@ -131,12 +129,9 @@ const vis: ChordVisualization = {
 
     const tooltip = this.tooltip
 
-    log('update config', config)
-
     // Set color scale
-    // DNR
-    // const color = d3.scaleOrdinal().range(config.color_range || ['#dd3333', '#80ce5d', '#f78131', '#369dc1', '#c572d3', '#36c1b3', '#b57052', '#ed69af'])
-    const color = d3.scaleOrdinal().range(config.color_range)
+    // const color = d3.scaleOrdinal().range(config.color_range)
+    const color = d3.scaleOrdinal().range(config.color_range || this.options.color_range.default) // DNR
 
     // Set chord layout
     const chord = d3.chord()
@@ -158,7 +153,7 @@ const vis: ChordVisualization = {
     log('matrix', matrix)
 
     // draw
-    const svg = this.svg
+    const svg = this.svg!
       .html('')
       .attr('width', '100%')
       .attr('height', '100%')

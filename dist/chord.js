@@ -22795,7 +22795,6 @@ var vis = {
         element.innerHTML = "\n      <style>\n        .chordchart circle {\n          fill: none;\n          pointer-events: all;\n        }\n\n        .chordchart:hover path.chord-fade {\n          display: none;\n        }\n\n        .groups text {\n          font-size: 12px;\n        }\n\n        .chord-tip {\n          position: absolute;\n          top: 0;\n          left: 0;\n          z-index: 10;\n        }\n      </style>\n    ";
         this.tooltip = __WEBPACK_IMPORTED_MODULE_0_d3__["n" /* select */](element).append('div').attr('class', 'chord-tip');
         this.svg = __WEBPACK_IMPORTED_MODULE_0_d3__["n" /* select */](element).append('svg');
-        Object(__WEBPACK_IMPORTED_MODULE_1__common_utils__["c" /* log */])('create config', config);
     },
     computeMatrix: function (data, dimensions, measure) {
         var indexByName = __WEBPACK_IMPORTED_MODULE_0_d3__["f" /* map */]();
@@ -22857,11 +22856,9 @@ var vis = {
             return;
         var valueFormatter = Object(__WEBPACK_IMPORTED_MODULE_1__common_utils__["a" /* formatType */])(measure.value_format);
         var tooltip = this.tooltip;
-        Object(__WEBPACK_IMPORTED_MODULE_1__common_utils__["c" /* log */])('update config', config);
         // Set color scale
-        // DNR
-        // const color = d3.scaleOrdinal().range(config.color_range || ['#dd3333', '#80ce5d', '#f78131', '#369dc1', '#c572d3', '#36c1b3', '#b57052', '#ed69af'])
-        var color = __WEBPACK_IMPORTED_MODULE_0_d3__["l" /* scaleOrdinal */]().range(config.color_range);
+        // const color = d3.scaleOrdinal().range(config.color_range)
+        var color = __WEBPACK_IMPORTED_MODULE_0_d3__["l" /* scaleOrdinal */]().range(config.color_range || this.options.color_range.default); // DNR
         // Set chord layout
         var chord = __WEBPACK_IMPORTED_MODULE_0_d3__["b" /* chord */]()
             .padAngle(0.025)
