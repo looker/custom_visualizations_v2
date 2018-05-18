@@ -18,7 +18,7 @@ declare var looker: Looker
 declare var LookerCharts: LookerChartUtils
 
 interface TreemapVisualization extends VisualizationDefinition {
-  svg?: d3.Selection<SVGElement, any, null, any>,
+  svg?: d3.Selection<SVGElement, {}, any, any>,
 }
 
 // recursively create children array
