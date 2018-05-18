@@ -22666,7 +22666,7 @@ function nopropagation() {
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
-/* harmony export (immutable) */ __webpack_exports__["c"] = log;
+/* unused harmony export log */
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return formatType; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "b", function() { return handleErrors; });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_d3__ = __webpack_require__(90);
@@ -22845,7 +22845,7 @@ var vis = {
         var radius = Math.min(width, height) / 2 - 8;
         var dimensions = queryResponse.fields.dimension_like;
         var measure = queryResponse.fields.measure_like[0];
-        var format = Object(__WEBPACK_IMPORTED_MODULE_1__common_utils__["a" /* formatType */])(measure.value_format);
+        var format = Object(__WEBPACK_IMPORTED_MODULE_1__common_utils__["a" /* formatType */])(measure.value_format) || (function (s) { return s.toString(); });
         var x = __WEBPACK_IMPORTED_MODULE_0_d3__["k" /* scaleLinear */]().range([0, 2 * Math.PI]);
         var y = __WEBPACK_IMPORTED_MODULE_0_d3__["m" /* scaleSqrt */]().range([0, radius]);
         var color = __WEBPACK_IMPORTED_MODULE_0_d3__["l" /* scaleOrdinal */]().range(config.color_range);
@@ -22897,8 +22897,7 @@ var vis = {
                 .slice(0, -1)
                 .reverse()
                 .join('-'));
-            if (format)
-                label.text(ancestorText + ": " + format(d.value));
+            label.text(ancestorText + ": " + format(d.value));
             var ancestors = d.ancestors();
             svg
                 .selectAll('path')

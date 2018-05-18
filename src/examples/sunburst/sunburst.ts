@@ -94,8 +94,7 @@ const vis: SunburstVisualization = {
 
     const dimensions = queryResponse.fields.dimension_like
     const measure = queryResponse.fields.measure_like[0]
-
-    const format = formatType(measure.value_format)
+    const format = formatType(measure.value_format) || ((s: any): string => s.toString())
 
     const x = d3.scaleLinear().range([0, 2 * Math.PI])
 
@@ -162,7 +161,7 @@ const vis: SunburstVisualization = {
         .reverse()
         .join('-')
       )
-      if (format) label.text(`${ancestorText}: ${format(d.value)}`)
+      label.text(`${ancestorText}: ${format(d.value)}`)
 
       const ancestors = d.ancestors()
       svg
