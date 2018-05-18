@@ -22857,8 +22857,8 @@ var vis = {
         var valueFormatter = Object(__WEBPACK_IMPORTED_MODULE_1__common_utils__["a" /* formatType */])(measure.value_format);
         var tooltip = this.tooltip;
         // Set color scale
-        // const color = d3.scaleOrdinal().range(config.color_range)
-        var color = __WEBPACK_IMPORTED_MODULE_0_d3__["l" /* scaleOrdinal */]().range(config.color_range || this.options.color_range.default); // DNR
+        var color = __WEBPACK_IMPORTED_MODULE_0_d3__["l" /* scaleOrdinal */]().range(config.color_range);
+        // const color = d3.scaleOrdinal().range(config.color_range || this.options.color_range.default) // DNR
         // Set chord layout
         var chord = __WEBPACK_IMPORTED_MODULE_0_d3__["b" /* chord */]()
             .padAngle(0.025)

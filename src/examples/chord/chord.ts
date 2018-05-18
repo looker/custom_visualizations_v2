@@ -130,8 +130,8 @@ const vis: ChordVisualization = {
     const tooltip = this.tooltip
 
     // Set color scale
-    // const color = d3.scaleOrdinal().range(config.color_range)
-    const color = d3.scaleOrdinal().range(config.color_range || this.options.color_range.default) // DNR
+    const color = d3.scaleOrdinal().range(config.color_range)
+    // const color = d3.scaleOrdinal().range(config.color_range || this.options.color_range.default) // DNR
 
     // Set chord layout
     const chord = d3.chord()

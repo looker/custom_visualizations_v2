@@ -101,8 +101,8 @@ const vis: SunburstVisualization = {
 
     const y = d3.scaleSqrt().range([0, radius])
 
-    // const color = d3.scaleOrdinal().range(config.color_range)
-    const color = d3.scaleOrdinal().range(config.color_range || this.options.color_range.default) // DNR
+    const color = d3.scaleOrdinal().range(config.color_range)
+    // const color = d3.scaleOrdinal().range(config.color_range || this.options.color_range.default) // DNR
 
     data.forEach(row => {
       row.taxonomy = {
