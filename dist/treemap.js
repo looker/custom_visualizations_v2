@@ -22921,8 +22921,7 @@ var vis = {
             .attr('id', function (d, i) { return 'clip-' + i; })
             .append('use')
             .attr('xlink:href', function (d, i) { return '#rect-' + i; });
-        var label = cell
-            .append('text')
+        cell.append('text')
             .style('opacity', function (d) {
             if (d.depth === 1)
                 return 1;

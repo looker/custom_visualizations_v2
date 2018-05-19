@@ -22845,7 +22845,6 @@ var vis = {
         // Set dimensions
         var width = element.clientWidth;
         var height = element.clientHeight;
-        var margin = 10;
         var thickness = 15;
         var outerRadius = Math.min(width, height) * 0.5;
         var innerRadius = outerRadius - thickness;
