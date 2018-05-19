@@ -4,3 +4,4 @@ code cleanup
 √ steps to replicate infinite query loop
 √ create PR to our master
 describe typescript d3.selection quandary
+apply (d: Cell) annotation where appropriate
