@@ -2,7 +2,6 @@
 declare var looker: Looker
 declare var LookerCharts: LookerChartUtils
 declare var require: any
-declare var _: any
 
 import * as d3 from 'd3'
 import { handleErrors } from '../common/utils'
@@ -232,7 +231,7 @@ const vis: LiquidFillGaugeVisualization = {
       min_measures: 1, max_measures: undefined
     })) return
 
-    const gaugeConfig = _.extend(LiquidFillGauge.liquidFillGaugeDefaultSettings(), config)
+    const gaugeConfig = Object.assign(LiquidFillGauge.liquidFillGaugeDefaultSettings(), config)
 
     const datumField = queryResponse.fields.measure_like[0]
     const datum = data[0][datumField.name]

@@ -5,7 +5,7 @@
     "noImplicitReturns": true,
     "outDir": "lib",
     "strict": true,
-    "lib": [ "dom", "es5", "es2015.collection" ],
+    "lib": [ "dom", "es6", "es2015.collection" ],
     "target": "es5"
   },
   "exclude": [
