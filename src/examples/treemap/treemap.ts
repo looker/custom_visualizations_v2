@@ -1,21 +1,14 @@
 import * as d3 from 'd3'
-import { formatType, handleErrors, log } from '../common/utils'
+import { formatType, handleErrors } from '../common/utils'
 
 import {
   Row,
-  Cell,
-  Link,
   Looker,
-  LookerChartUtils,
-  VisualizationDefinition,
-  VisOptions,
-  VisConfig,
-  VisQueryResponse
+  VisualizationDefinition
 } from '../types/types'
 
 // Global values provided via the API
 declare var looker: Looker
-declare var LookerCharts: LookerChartUtils
 
 interface TreemapVisualization extends VisualizationDefinition {
   svg?: d3.Selection<SVGElement, {}, any, any>,
@@ -179,8 +172,7 @@ const vis: TreemapVisualization = {
       .append('use')
       .attr('xlink:href', (d, i) => '#rect-' + i)
 
-    const label = cell
-      .append('text')
+    cell.append('text')
       .style('opacity', (d) => {
         if (d.depth === 1) return 1
         return 0

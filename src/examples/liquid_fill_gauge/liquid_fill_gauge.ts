@@ -1,6 +1,5 @@
 // Global values provided via the API
 declare var looker: Looker
-declare var LookerCharts: LookerChartUtils
 declare var require: any
 
 import * as d3 from 'd3'
@@ -13,12 +12,8 @@ import { handleErrors } from '../common/utils'
 const LiquidFillGauge = require('./liquid_fill_gauge.js')
 
 import {
-  Cell,
-  Link,
   Looker,
-  LookerChartUtils,
   VisualizationDefinition,
-  VisOptions,
   VisConfig,
   VisQueryResponse
 } from '../types/types'

@@ -1,20 +1,13 @@
 // Global values provided via the API
 declare var looker: Looker
-declare var LookerCharts: LookerChartUtils
 
 import * as d3 from 'd3'
 import { handleErrors } from '../common/utils'
 
 import {
   Row,
-  Cell,
-  Link,
   Looker,
-  LookerChartUtils,
-  VisualizationDefinition,
-  VisOptions,
-  VisConfig,
-  VisQueryResponse
+  VisualizationDefinition
 } from '../types/types'
 
 interface CollapsibleTreeVisualization extends VisualizationDefinition {
@@ -193,99 +186,99 @@ const vis: CollapsibleTreeVisualization = {
       // Update the nodes...
       const node = (
         svg
-        .selectAll('g.node')
-        .data(nodes, (d: any) => d.id || (d.id = ++i))
+          .selectAll('g.node')
+          .data(nodes, (d: any) => d.id || (d.id = ++i))
       )
 
       // Enter any new modes at the parent's previous position.
       const nodeEnter = (
         node
-        .enter()
-        .append('g')
-        .attr('class', 'node')
-        .attr('transform', (d: any) => {
-          return 'translate(' + source.y0 + ',' + source.x0 + ')'
-        })
-        .on('click', click)
+          .enter()
+          .append('g')
+          .attr('class', 'node')
+          .attr('transform', (d: any) => {
+            return 'translate(' + source.y0 + ',' + source.x0 + ')'
+          })
+          .on('click', click)
       )
 
       // Add Circle for the nodes
       nodeEnter.append('circle')
-      .attr('class', 'node')
-      .attr('r', 1e-6)
-      .style('fill', (d: any) => {
-        return (
-          d._children
-          ? nodeColors.children
-          : nodeColors.empty
-        )
-      })
+        .attr('class', 'node')
+        .attr('r', 1e-6)
+        .style('fill', (d: any) => {
+          return (
+            d._children
+              ? nodeColors.children
+              : nodeColors.empty
+          )
+        })
 
       // Add labels for the nodes
       nodeEnter.append('text')
-      .attr('dy', '.35em')
-      .attr('x', (d: any) => {
+        .attr('dy', '.35em')
+        .attr('x', (d: any) => {
           return d.children || d._children ? -textSize : textSize
-      })
-      .attr('text-anchor', (d: any) => {
+        })
+        .attr('text-anchor', (d: any) => {
           return d.children || d._children ? 'end' : 'start'
-      })
-      .style('font-size', textSize + 'px')
-      .text((d: any) => d.data.name)
+        })
+        .style('font-size', textSize + 'px')
+        .text((d: any) => d.data.name)
 
       // UPDATE
       const nodeUpdate = nodeEnter.merge(node)
 
       // Transition to the proper position for the node
       nodeUpdate.transition()
-      .duration(duration)
-      .attr('transform', (d: any) => {
-        return 'translate(' + d.y + ',' + d.x + ')'
-      })
+        .duration(duration)
+        .attr('transform', (d: any) => {
+          return 'translate(' + d.y + ',' + d.x + ')'
+        })
 
       // Update the node attributes and style
       nodeUpdate.select('circle.node')
-      .attr('r', nodeRadius)
-      .style('fill', (d: any) => {
+        .attr('r', nodeRadius)
+        .style('fill', (d: any) => {
           return d._children ? nodeColors.children : nodeColors.empty
-      })
-      .attr('cursor', 'pointer')
+        })
+        .attr('cursor', 'pointer')
 
       // Remove any exiting nodes
       const nodeExit = node.exit().transition()
-      .duration(duration)
-      .attr('transform', (d: any) => {
+        .duration(duration)
+        .attr('transform', (d: any) => {
           return 'translate(' + source.y + ',' + source.x + ')'
-      })
-      .remove()
+        })
+        .remove()
 
       // On exit reduce the node circles size to 0
       nodeExit.select('circle')
-      .attr('r', 1e-6)
+        .attr('r', 1e-6)
 
       // On exit reduce the opacity of text labels
       nodeExit.select('text')
-      .style('fill-opacity', 1e-6)
+        .style('fill-opacity', 1e-6)
 
       // ****************** links section ***************************
 
       // Update the links...
       const link = (
         svg
-        .selectAll('path.link')
-        .data(links, (d: any) => d.id)
+          .selectAll('path.link')
+          .data(links, (d: any) => d.id)
       )
 
       // Enter any new links at the parent's previous position.
       const linkEnter = (
         link
-        .enter()
-        .insert('path', 'g')
-        .attr('class', 'link')
-        .attr('d', (d: any) => {
-          const o = { x: source.x0, y: source.y0 }
-          return diagonal(o, o)
-        })
+          .enter()
+          .insert('path', 'g')
+          .attr('class', 'link')
+          .attr('d', (d: any) => {
+            const o = { x: source.x0, y: source.y0 }
+            return diagonal(o, o)
+          })
       )
 
       // UPDATE
@@ -293,13 +286,12 @@ const vis: CollapsibleTreeVisualization = {
 
       // Transition back to the parent element position
       linkUpdate
-      .transition()
-      .duration(duration)
-      .attr('d', (d: any) => diagonal(d, d.parent))
+        .transition()
+        .duration(duration)
+        .attr('d', (d: any) => diagonal(d, d.parent))
 
       // Remove any exiting links
-      const linkExit = (
-        link
+      link
         .exit()
         .transition()
         .duration(duration)
@@ -308,7 +300,6 @@ const vis: CollapsibleTreeVisualization = {
           return diagonal(o, o)
         })
         .remove()
-      )
 
       // Store the old positions for transition.
       nodes.forEach((d: any) => {

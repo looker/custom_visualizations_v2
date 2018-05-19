@@ -1,16 +1,14 @@
 import * as d3 from 'd3'
-import { formatType, handleErrors, log } from '../common/utils'
+import { formatType, handleErrors } from '../common/utils'
 
 import {
   Looker,
-  LookerChartUtils,
   VisualizationDefinition,
   VisData
 } from '../types/types'
 
 // Global values provided via the API
 declare var looker: Looker
-declare var LookerCharts: LookerChartUtils
 
 interface ChordVisualization extends VisualizationDefinition {
   svg?: any,
@@ -115,7 +113,6 @@ const vis: ChordVisualization = {
     // Set dimensions
     const width = element.clientWidth
     const height = element.clientHeight
-    const margin = 10
     const thickness = 15
     const outerRadius = Math.min(width, height) * 0.5
     const innerRadius = outerRadius - thickness
@@ -152,7 +149,7 @@ const vis: ChordVisualization = {
     const matrix = this.computeMatrix(data, dimensions.map(d => d.name), measure.name)
 
     // draw
-    const svg = this.svg!
+    const svg = this.svg
       .html('')
       .attr('width', '100%')
       .attr('height', '100%')
