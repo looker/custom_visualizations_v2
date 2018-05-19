@@ -2,7 +2,8 @@
 
 const $ = require('jquery')
 require('pivottable')
-require('subtotal')
+require('subtotal')($)
+window.$ = $ // XXX
 
 looker.plugins.visualizations.add({
   id: 'subtotal',
@@ -12,7 +13,8 @@ looker.plugins.visualizations.add({
   create (element, config) {
     [
       'https://unpkg.com/pivottable@2.20.0/dist/pivot.min.css',
-      'https://unpkg.com/subtotal@1.11.0-alpha.0/dist/subtotal.min.css'
+      // 'https://unpkg.com/subtotal@1.11.0-alpha.0/dist/subtotal.min.css'
+      'https://rawgit.com/4mile/subtotal/multi-aggregate/dist/subtotal.min.css'
     ].forEach(url => {
       const link = document.createElement('link')
       link.rel = 'stylesheet'
@@ -72,11 +74,12 @@ looker.plugins.visualizations.add({
       }
     }
 
+    const count = $.pivotUtilities.aggregatorTemplates.count
     const sum = $.pivotUtilities.aggregatorTemplates.sum
     const numberFormat = $.pivotUtilities.numberFormat
     const intFormat = numberFormat({digitsAfterDecimal: 0})
 
-    const dataClass = $.pivotUtilities.SubtotalPivotData
+    const dataClass = $.pivotUtilities.SubtotalPivotDataMulti
     const renderer = $.pivotUtilities.subtotal_renderers['Table With Subtotal']
     const rendererOptions = {
       arrowExpanded: '▼',
@@ -89,7 +92,8 @@ looker.plugins.visualizations.add({
       dataClass,
       renderer,
       rendererOptions,
-      aggregator: sum(intFormat)([measures[0]])
+      aggregatorNames: ['Sum', 'Count'],
+      aggregators: [sum(intFormat)([measureName]), count()()]
     }
     $(element).pivot(ptData, options)
   }

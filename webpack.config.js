@@ -1,6 +1,7 @@
 var path = require('path')
 
-const UglifyJSPlugin = require('uglifyjs-webpack-plugin');
+const ExtraWatchWebpackPlugin = require('extra-watch-webpack-plugin') // XXX
+const WebpackNotifierPlugin = require('webpack-notifier') // XXX
 
 var webpackConfig = {
   entry: {
@@ -13,6 +14,16 @@ var webpackConfig = {
     treemap: './src/examples/treemap/treemap.ts',
     subtotal: './src/examples/subtotal/subtotal.js'
   },
+
+  // XXX
+  plugins: [
+    new WebpackNotifierPlugin(),
+    new ExtraWatchWebpackPlugin({
+      files: [ 'path/to/file', 'src/**/*.json' ],
+      dirs: [ 'path/to/dir' ],
+    }),
+  ],
+  
   output: {
     filename: '[name].js',
     path: path.join(__dirname, 'dist'),
@@ -22,9 +33,6 @@ var webpackConfig = {
   resolve: {
     extensions: ['.ts', '.tsx', '.js', '.jsx']
   },
-  plugins: [
-    new UglifyJSPlugin()
-  ],
   module: {
     loaders: [
       { test: /\.ts$/, loader: "ts-loader" }
