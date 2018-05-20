@@ -24,6 +24,7 @@ looker.plugins.visualizations.add({
   },
 
   update (data, element, config, queryResponse, details) {
+    console.clear() // XXX
     if (!config || !data) return
     if (details && details.changed && details.changed.size) return
 
@@ -34,12 +35,6 @@ looker.plugins.visualizations.add({
       return this.addError({
         title: 'A measure is required',
         messsage: 'Please make sure your explore has a measure'
-      })
-    }
-    if (measures.length > 1) {
-      return this.addError({
-        title: 'Multiple measures are unsupported',
-        messsage: 'Please make sure your explore only has one measure'
       })
     }
     const measureName = measures[0]
@@ -74,10 +69,7 @@ looker.plugins.visualizations.add({
       }
     }
 
-    const count = $.pivotUtilities.aggregatorTemplates.count
-    const sum = $.pivotUtilities.aggregatorTemplates.sum
-    const numberFormat = $.pivotUtilities.numberFormat
-    const intFormat = numberFormat({digitsAfterDecimal: 0})
+    // TODO: aggregates
 
     const dataClass = $.pivotUtilities.SubtotalPivotDataMulti
     const renderer = $.pivotUtilities.subtotal_renderers['Table With Subtotal']
@@ -91,9 +83,7 @@ looker.plugins.visualizations.add({
       cols: pivots,
       dataClass,
       renderer,
-      rendererOptions,
-      aggregatorNames: ['Sum', 'Count'],
-      aggregators: [sum(intFormat)([measureName]), count()()]
+      rendererOptions
     }
     $(element).pivot(ptData, options)
   }
