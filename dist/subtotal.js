@@ -10458,7 +10458,43 @@ window.$ = $ // XXX
 looker.plugins.visualizations.add({
   id: 'subtotal',
   label: 'Subtotal',
-  options: {},
+
+  options: {
+    color_range: {
+      type: "array",
+      label: "Color Range",
+      display: "colors"
+    },
+  },
+  
+  options: (() => {
+    const options = {}
+    for (let i = 0; i < 5; i++) {
+      options[`measure_${i+1}`] = {
+        order: i,
+        type: 'string',
+        label: `Measure ${i+1}`,
+        default: 'Sum',
+        display: 'select',
+        hidden: (config, queryResponse) => config.query_fields.measures.length < (i + 1), // XXX Never called!
+        values: [
+          // Must match the aggregators we define below.
+          'Count',
+          'Count Unique Values',
+          'Sum', 
+          'Integer Sum',
+          'Average',
+          'Median',
+          'Sample Variance',
+          'Sample Standard Deviation',
+          'Minimum',
+          'Maximum'
+        ].map(k => ({[k]: k}))
+      }
+    }
+    options.measure_2.default = 'Maximum' // XXX testing
+    return options
+  })(),
 
   create (element, config) {
     [
@@ -10474,9 +10510,9 @@ looker.plugins.visualizations.add({
   },
 
   update (data, element, config, queryResponse, details) {
-    console.clear() // XXX
     if (!config || !data) return
     if (details && details.changed && details.changed.size) return
+    console.clear() // XXX
 
     const dimensions = config.query_fields.dimensions.map(d => d.name)
 
@@ -10519,7 +10555,33 @@ looker.plugins.visualizations.add({
       }
     }
 
-    // TODO: aggregates
+    // We create our own aggregators instead of using
+    // $.pivotUtilities.aggregators because we want to use our own configurable
+    // number formatter for some of them.
+    const tpl = $.pivotUtilities.aggregatorTemplates
+    const intFormat = (x) => Math.trunc(x)
+    const customFormat = (x) => x // XXX TODO Make this configurable.
+
+    const aggregatorNames = []
+    const aggregators = []
+    for (let i = 0; i < measures.length; i++) {
+      aggName = config[`measure_${i+1}`] || this.options[`measure_${i+1}`].default
+      aggregatorNames.push(aggName)
+      switch (aggName) {
+        case 'Count': agg = tpl.count(intFormat); break;
+        case 'Count Unique Values': agg = tpl.countUnique(intFormat); break;
+        case 'Sum': agg = tpl.sum(customFormat); break; 
+        case 'Integer Sum': agg = tpl.sum(intFormat); break;
+        case 'Average': agg = tpl.average(customFormat); break;
+        case 'Median': agg = tpl.median(customFormat); break;
+        case 'Sample Variance': agg = tpl.var(1, customFormat); break;
+        case 'Sample Standard Deviation': agg = tpl.stdev(1, customFormat); break;
+        case 'Minimum': agg = tpl.min(customFormat); break;
+        case 'Maximum': agg = tpl.max(customFormat); break;
+        default: throw new Error(`Unknown aggregator: ${aggName}`)
+      }
+      aggregators.push(agg([measures[i]]))
+    }
 
     const dataClass = $.pivotUtilities.SubtotalPivotDataMulti
     const renderer = $.pivotUtilities.subtotal_renderers['Table With Subtotal']
@@ -10533,7 +10595,9 @@ looker.plugins.visualizations.add({
       cols: pivots,
       dataClass,
       renderer,
-      rendererOptions
+      rendererOptions,
+      aggregatorNames,
+      aggregators
     }
     $(element).pivot(ptData, options)
   }
@@ -12397,17 +12461,17 @@ looker.plugins.visualizations.add({
 
       class SubtotalPivotDataMulti extends $.pivotUtilities.PivotData {
         constructor(input, opts) {
-          var i, k, len, name, ref, ref1, ref2;
+          var i, l, len, name, ref, ref1, ref2;
           super(input, opts);
           // Multiple aggregator hack: Let clients pass in aggregators
           // (plural) and use the first one as the main value for each cell.
-          this.aggregatorNames = (ref = opts.aggregatorNames) != null ? ref : ['Integer Sum', 'Maximum'];
+          this.aggregatorNames = (ref = opts.aggregatorNames) != null ? ref : ['Count'];
           this.aggregators = (ref1 = opts.aggregators) != null ? ref1 : (function() {
-            var k, len, ref2, results;
+            var l, len, ref2, results;
             ref2 = this.aggregatorNames;
             results = [];
-            for (k = 0, len = ref2.length; k < len; k++) {
-              name = ref2[k];
+            for (l = 0, len = ref2.length; l < len; l++) {
+              name = ref2[l];
               results.push($.pivotUtilities.aggregators[name]({}));
             }
             return results;
@@ -12419,7 +12483,7 @@ looker.plugins.visualizations.add({
           }
           this.allTotal = {};
           ref2 = this.aggregatorNames;
-          for (i = k = 0, len = ref2.length; k < len; i = ++k) {
+          for (i = l = 0, len = ref2.length; l < len; i = ++l) {
             name = ref2[i];
             this.allTotal[name] = this.aggregators[i](this, [], []);
           }
@@ -12431,38 +12495,38 @@ looker.plugins.visualizations.add({
         }
 
         processRecord(record) { //this code is called in a tight loop
-          var addKey, aggregator, attr, colKey, fColKey, fRowKey, flatColKey, flatKey, flatRowKey, i, j, k, l, len, len1, len2, len3, len4, len5, len6, m, n, name, nameIndex, o, q, r, ref, ref1, ref2, ref3, ref4, ref5, ref6, ref7, ref8, ref9, results, rowKey, s, t, u;
-          
+          var addKey, aggregator, attr, base, base1, colKey, fColKey, fRowKey, flatColKey, flatKey, flatRowKey, i, j, k, l, len, len1, len2, len3, len4, len5, len6, len7, m, n, name, o, q, r, ref, ref1, ref10, ref11, ref2, ref3, ref4, ref5, ref6, ref7, ref8, ref9, rowKey, s, t, u, w, y, z;
+          console.log('XXX', record.max_elevation);
           // Since this gets called in the PivotData (superclass) constructor
           // but we haven't yet initialized @aggregators, don't do anything.
           if (!this.aggregators) {
             return;
           }
           ref = this.aggregatorNames;
-          for (k = 0, len = ref.length; k < len; k++) {
-            name = ref[k];
+          for (l = 0, len = ref.length; l < len; l++) {
+            name = ref[l];
             this.allTotal[name].push(record);
           }
           rowKey = [];
           addKey = false;
           ref1 = this.rowAttrs;
-          for (l = 0, len1 = ref1.length; l < len1; l++) {
-            attr = ref1[l];
+          for (o = 0, len1 = ref1.length; o < len1; o++) {
+            attr = ref1[o];
             rowKey.push((ref2 = record[attr]) != null ? ref2 : "null");
             flatKey = rowKey.join(String.fromCharCode(0));
             if (!this.rowTotals[flatKey]) {
               this.rowTotals[flatKey] = {};
               ref3 = this.aggregatorNames;
-              for (nameIndex = o = 0, len2 = ref3.length; o < len2; nameIndex = ++o) {
-                name = ref3[nameIndex];
-                aggregator = this.aggregators[nameIndex];
+              for (i = q = 0, len2 = ref3.length; q < len2; i = ++q) {
+                name = ref3[i];
+                aggregator = this.aggregators[i];
                 this.rowTotals[flatKey][name] = aggregator(this, rowKey.slice(), []);
                 addKey = true;
               }
             }
             ref4 = this.aggregatorNames;
-            for (q = 0, len3 = ref4.length; q < len3; q++) {
-              name = ref4[q];
+            for (r = 0, len3 = ref4.length; r < len3; r++) {
+              name = ref4[r];
               this.rowTotals[flatKey][name].push(record);
             }
           }
@@ -12472,23 +12536,23 @@ looker.plugins.visualizations.add({
           colKey = [];
           addKey = false;
           ref5 = this.colAttrs;
-          for (r = 0, len4 = ref5.length; r < len4; r++) {
-            attr = ref5[r];
+          for (s = 0, len4 = ref5.length; s < len4; s++) {
+            attr = ref5[s];
             colKey.push((ref6 = record[attr]) != null ? ref6 : "null");
             flatKey = colKey.join(String.fromCharCode(0));
             if (!this.colTotals[flatKey]) {
               this.colTotals[flatKey] = {};
               ref7 = this.aggregatorNames;
-              for (nameIndex = s = 0, len5 = ref7.length; s < len5; nameIndex = ++s) {
-                name = ref7[nameIndex];
-                aggregator = this.aggregators[nameIndex];
+              for (i = t = 0, len5 = ref7.length; t < len5; i = ++t) {
+                name = ref7[i];
+                aggregator = this.aggregators[i];
                 this.colTotals[flatKey][name] = aggregator(this, [], colKey.slice());
                 addKey = true;
               }
             }
             ref8 = this.aggregatorNames;
-            for (t = 0, len6 = ref8.length; t < len6; t++) {
-              name = ref8[t];
+            for (u = 0, len6 = ref8.length; u < len6; u++) {
+              name = ref8[u];
               this.colTotals[flatKey][name].push(record);
             }
           }
@@ -12500,38 +12564,39 @@ looker.plugins.visualizations.add({
           if (m < 0 || n < 0) {
             return;
           }
-          results = [];
-          for (i = u = 0, ref9 = m; (0 <= ref9 ? u <= ref9 : u >= ref9); i = 0 <= ref9 ? ++u : --u) {
+          for (i = w = 0, ref9 = m; (0 <= ref9 ? w <= ref9 : w >= ref9); i = 0 <= ref9 ? ++w : --w) {
             fRowKey = rowKey.slice(0, i + 1);
             flatRowKey = fRowKey.join(String.fromCharCode(0));
-            if (!this.tree[flatRowKey]) {
-              this.tree[flatRowKey] = {};
+            if ((base = this.tree)[flatRowKey] == null) {
+              base[flatRowKey] = {};
             }
-            results.push((function() {
-              var ref10, results1, w;
-              results1 = [];
-              for (j = w = 0, ref10 = n; (0 <= ref10 ? w <= ref10 : w >= ref10); j = 0 <= ref10 ? ++w : --w) {
-                fColKey = colKey.slice(0, j + 1);
-                flatColKey = fColKey.join(String.fromCharCode(0));
-                if (!this.tree[flatRowKey][flatColKey]) {
-                  this.tree[flatRowKey][flatColKey] = this.aggregator(this, fRowKey, fColKey);
-                }
-                results1.push(this.tree[flatRowKey][flatColKey].push(record));
+            for (j = y = 0, ref10 = n; (0 <= ref10 ? y <= ref10 : y >= ref10); j = 0 <= ref10 ? ++y : --y) {
+              fColKey = colKey.slice(0, j + 1);
+              flatColKey = fColKey.join(String.fromCharCode(0));
+              if ((base1 = this.tree[flatRowKey])[flatColKey] == null) {
+                base1[flatColKey] = {};
               }
-              return results1;
-            }).call(this));
+              ref11 = this.aggregatorNames;
+              for (k = z = 0, len7 = ref11.length; z < len7; k = ++z) {
+                name = ref11[k];
+                aggregator = this.aggregators[k];
+                if (!this.tree[flatRowKey][flatColKey][name]) {
+                  this.tree[flatRowKey][flatColKey][name] = aggregator(this, fRowKey, fColKey);
+                }
+                this.tree[flatRowKey][flatColKey][name].push(record);
+              }
+            }
           }
-          return results;
         }
 
       };
 
       processKey = function(record, totals, keys, attrs, getAggregator) {
-        var addKey, attr, flatKey, k, key, len, ref;
+        var addKey, attr, flatKey, key, l, len, ref;
         key = [];
         addKey = false;
-        for (k = 0, len = attrs.length; k < len; k++) {
-          attr = attrs[k];
+        for (l = 0, len = attrs.length; l < len; l++) {
+          attr = attrs[l];
           key.push((ref = record[attr]) != null ? ref : "null");
           flatKey = key.join(String.fromCharCode(0));
           if (!totals[flatKey]) {
@@ -12627,22 +12692,22 @@ looker.plugins.visualizations.add({
         return element.className.match(regExp) !== null;
       };
       removeClass = function(element, className) {
-        var k, len, name, ref, regExp, results;
+        var l, len, name, ref, regExp, results;
         ref = className.split(" ");
         results = [];
-        for (k = 0, len = ref.length; k < len; k++) {
-          name = ref[k];
+        for (l = 0, len = ref.length; l < len; l++) {
+          name = ref[l];
           regExp = new RegExp("(?:^|\\s)" + name + "(?!\\S)", "g");
           results.push(element.className = element.className.replace(regExp, ''));
         }
         return results;
       };
       addClass = function(element, className) {
-        var k, len, name, ref, results;
+        var l, len, name, ref, results;
         ref = className.split(" ");
         results = [];
-        for (k = 0, len = ref.length; k < len; k++) {
-          name = ref[k];
+        for (l = 0, len = ref.length; l < len; l++) {
+          name = ref[l];
           if (!hasClass(element, name)) {
             results.push(element.className += " " + name);
           } else {
@@ -12702,7 +12767,7 @@ looker.plugins.visualizations.add({
           var col;
           col = 0;
           k0.reduce((acc, curVal, curIdx, arr) => {
-            var i, k, key, node, ref;
+            var i, key, l, node, ref;
             if (!acc[curVal]) {
               key = k0.slice(0, col + 1);
               acc[curVal] = {
@@ -12727,7 +12792,7 @@ looker.plugins.visualizations.add({
             col++;
             if (curIdx === lastIdx) {
               node = headers;
-              for (i = k = 0, ref = lastIdx - 1; (0 <= ref ? k <= ref : k >= ref); i = 0 <= ref ? ++k : --k) {
+              for (i = l = 0, ref = lastIdx - 1; (0 <= ref ? l <= ref : l >= ref); i = 0 <= ref ? ++l : --l) {
                 if (!(lastIdx > 0)) {
                   continue;
                 }
@@ -12778,13 +12843,13 @@ looker.plugins.visualizations.add({
         return ah;
       };
       buildColAxisHeaders = function(thead, rowAttrs, colAttrs, opts) {
-        var ah, attr, axisHeaders, col, k, len;
+        var ah, attr, axisHeaders, col, l, len;
         axisHeaders = {
           collapseAttrHeader: collapseCol,
           expandAttrHeader: expandCol,
           ah: []
         };
-        for (col = k = 0, len = colAttrs.length; k < len; col = ++k) {
+        for (col = l = 0, len = colAttrs.length; l < len; col = ++l) {
           attr = colAttrs[col];
           ah = buildAxisHeader(axisHeaders, col, colAttrs, opts.colSubtotalDisplay);
           ah.tr = createElement("tr");
@@ -12800,14 +12865,14 @@ looker.plugins.visualizations.add({
         return axisHeaders;
       };
       buildRowAxisHeaders = function(thead, rowAttrs, colAttrs, opts) {
-        var ah, axisHeaders, col, k, ref, th;
+        var ah, axisHeaders, col, l, ref, th;
         axisHeaders = {
           collapseAttrHeader: collapseRow,
           expandAttrHeader: expandRow,
           ah: [],
           tr: createElement("tr")
         };
-        for (col = k = 0, ref = rowAttrs.length - 1; (0 <= ref ? k <= ref : k >= ref); col = 0 <= ref ? ++k : --k) {
+        for (col = l = 0, ref = rowAttrs.length - 1; (0 <= ref ? l <= ref : l >= ref); col = 0 <= ref ? ++l : --l) {
           ah = buildAxisHeader(axisHeaders, col, rowAttrs, opts.rowSubtotalDisplay);
           axisHeaders.tr.appendChild(ah.th);
         }
@@ -12827,10 +12892,10 @@ looker.plugins.visualizations.add({
         return `${arrow}${h.text}`;
       };
       buildColHeader = function(axisHeaders, attrHeaders, h, rowAttrs, colAttrs, node, opts) {
-        var ah, chKey, k, len, ref, ref1;
+        var ah, chKey, l, len, ref, ref1;
         ref = h.children;
-        for (k = 0, len = ref.length; k < len; k++) {
-          chKey = ref[k];
+        for (l = 0, len = ref.length; l < len; l++) {
+          chKey = ref[l];
           // DF Recurse
           buildColHeader(axisHeaders, attrHeaders, h[chKey], rowAttrs, colAttrs, node, opts);
         }
@@ -12874,18 +12939,18 @@ looker.plugins.visualizations.add({
         return node.counter++;
       };
       buildRowTotalsHeader = function(tr, colKeyHeaders, rowAttrs, colAttrs) {
-        var i, k, l, len, len1, name, o, ref, th;
-        if (colAttrs.length > 0) {
-          for (i = k = 0, ref = colKeyHeaders.children.length; (0 <= ref ? k <= ref : k >= ref); i = 0 <= ref ? ++k : --k) {
-            for (l = 0, len = aggregatorNames.length; l < len; l++) {
-              name = aggregatorNames[l];
+        var i, l, len, len1, name, o, q, ref, th;
+        if (colAttrs.length > 0 && colKeyHeaders) {
+          for (i = l = 0, ref = colKeyHeaders.children.length; (0 <= ref ? l < ref : l > ref); i = 0 <= ref ? ++l : --l) {
+            for (o = 0, len = aggregatorNames.length; o < len; o++) {
+              name = aggregatorNames[o];
               th = createElement("th", "rowTotal", name);
               tr.appendChild(th);
             }
           }
         } else {
-          for (o = 0, len1 = aggregatorNames.length; o < len1; o++) {
-            name = aggregatorNames[o];
+          for (q = 0, len1 = aggregatorNames.length; q < len1; q++) {
+            name = aggregatorNames[q];
             th = createElement("th", "pvtTotalLabel rowTotal", name, {
               rowspan: colAttrs.length === 0 ? 1 : colAttrs.length + (rowAttrs.length === 0 ? 0 : 1)
             });
@@ -12894,10 +12959,10 @@ looker.plugins.visualizations.add({
         }
       };
       buildRowHeader = function(tbody, axisHeaders, attrHeaders, h, rowAttrs, colAttrs, node, opts) {
-        var ah, chKey, firstChild, k, len, ref, ref1;
+        var ah, chKey, firstChild, l, len, ref, ref1;
         ref = h.children;
-        for (k = 0, len = ref.length; k < len; k++) {
-          chKey = ref[k];
+        for (l = 0, len = ref.length; l < len; l++) {
+          chKey = ref[l];
           // DF Recurse
           buildRowHeader(tbody, axisHeaders, attrHeaders, h[chKey], rowAttrs, colAttrs, node, opts);
         }
@@ -12991,10 +13056,10 @@ looker.plugins.visualizations.add({
         return eventHandlers;
       };
       buildValues = function(tbody, colAttrHeaders, rowAttrHeaders, rowAttrs, colAttrs, opts) {
-        var aggregator, ch, cls, k, l, len, len1, name, rCls, ref, results, rh, td, totalAggregator, tr, val;
+        var aggregator, ch, cls, l, len, len1, len2, name, o, q, rCls, ref, results, rh, td, totalAggregator, tr, val;
         results = [];
-        for (k = 0, len = rowAttrHeaders.length; k < len; k++) {
-          rh = rowAttrHeaders[k];
+        for (l = 0, len = rowAttrHeaders.length; l < len; l++) {
+          rh = rowAttrHeaders[l];
           if (!(rh.col === rowAttrs.length - 1 || (rh.children.length !== 0 && rh.col < opts.rowSubtotalDisplay.disableFrom))) {
             continue;
           }
@@ -13006,40 +13071,42 @@ looker.plugins.visualizations.add({
             rCls += ` ${classRowShow}`;
           }
           tr = rh.sTr ? rh.sTr : rh.tr;
-          for (l = 0, len1 = colAttrHeaders.length; l < len1; l++) {
-            ch = colAttrHeaders[l];
-            if (!(ch.col === colAttrs.length - 1 || (ch.children.length !== 0 && ch.col < opts.colSubtotalDisplay.disableFrom))) {
-              continue;
-            }
-            aggregator = (ref = tree[rh.flatKey][ch.flatKey]) != null ? ref : {
-              value: (function() {
-                return null;
-              }),
-              format: function() {
-                return "";
+          for (o = 0, len1 = colAttrHeaders.length; o < len1; o++) {
+            ch = colAttrHeaders[o];
+            if (ch.col === colAttrs.length - 1 || (ch.children.length !== 0 && ch.col < opts.colSubtotalDisplay.disableFrom)) {
+              for (q = 0, len2 = aggregatorNames.length; q < len2; q++) {
+                name = aggregatorNames[q];
+                aggregator = (ref = tree[rh.flatKey][ch.flatKey][name]) != null ? ref : {
+                  value: (function() {
+                    return null;
+                  }),
+                  format: function() {
+                    return "";
+                  }
+                };
+                val = aggregator.value();
+                cls = ` ${rCls} col${ch.row} colcol${ch.col} ${classColExpanded}`;
+                if (ch.children.length > 0) {
+                  cls += " pvtColSubtotal";
+                  cls += opts.colSubtotalDisplay.hideOnExpand ? ` ${classColHide}` : ` ${classColShow}`;
+                } else {
+                  cls += ` ${classColShow}`;
+                }
+                td = createElement("td", cls, aggregator.format(val), {
+                  "data-value": val,
+                  "data-rownode": rh.node,
+                  "data-colnode": ch.node
+                }, getTableEventHandlers(val, rh.key, ch.key, rowAttrs, colAttrs, opts));
+                tr.appendChild(td);
               }
-            };
-            val = aggregator.value();
-            cls = ` ${rCls} col${ch.row} colcol${ch.col} ${classColExpanded}`;
-            if (ch.children.length > 0) {
-              cls += " pvtColSubtotal";
-              cls += opts.colSubtotalDisplay.hideOnExpand ? ` ${classColHide}` : ` ${classColShow}`;
-            } else {
-              cls += ` ${classColShow}`;
             }
-            td = createElement("td", cls, aggregator.format(val), {
-              "data-value": val,
-              "data-rownode": rh.node,
-              "data-colnode": ch.node
-            }, getTableEventHandlers(val, rh.key, ch.key, rowAttrs, colAttrs, opts));
-            tr.appendChild(td);
           }
           results.push((function() {
-            var len2, o, results1;
+            var len3, r, results1;
 // buildRowTotal
             results1 = [];
-            for (o = 0, len2 = aggregatorNames.length; o < len2; o++) {
-              name = aggregatorNames[o];
+            for (r = 0, len3 = aggregatorNames.length; r < len3; r++) {
+              name = aggregatorNames[r];
               totalAggregator = rowTotals[rh.flatKey][name];
               val = totalAggregator.value();
               td = createElement("td", `pvtTotal rowTotal ${rCls}`, totalAggregator.format(val), {
@@ -13067,9 +13134,9 @@ looker.plugins.visualizations.add({
         return tr;
       };
       buildColTotals = function(tr, attrHeaders, rowAttrs, colAttrs, opts) {
-        var clsNames, h, k, len, td, totalAggregator, val;
-        for (k = 0, len = attrHeaders.length; k < len; k++) {
-          h = attrHeaders[k];
+        var clsNames, h, l, len, td, totalAggregator, val;
+        for (l = 0, len = attrHeaders.length; l < len; l++) {
+          h = attrHeaders[l];
           if (!(h.col === colAttrs.length - 1 || (h.children.length !== 0 && h.col < opts.colSubtotalDisplay.disableFrom))) {
             continue;
           }
@@ -13091,9 +13158,9 @@ looker.plugins.visualizations.add({
         }
       };
       buildGrandTotal = function(tbody, tr, rowAttrs, colAttrs, opts) {
-        var k, len, name, td, totalAggregator, val;
-        for (k = 0, len = aggregatorNames.length; k < len; k++) {
-          name = aggregatorNames[k];
+        var l, len, name, td, totalAggregator, val;
+        for (l = 0, len = aggregatorNames.length; l < len; l++) {
+          name = aggregatorNames[l];
           totalAggregator = allTotal[name];
           val = totalAggregator.value();
           td = createElement("td", "pvtGrandTotal", totalAggregator.format(val), {
@@ -13104,13 +13171,13 @@ looker.plugins.visualizations.add({
         return tbody.appendChild(tr);
       };
       collapseAxisHeaders = function(axisHeaders, col, opts) {
-        var ah, collapsible, i, k, ref, ref1, results;
+        var ah, collapsible, i, l, ref, ref1, results;
         collapsible = Math.min(axisHeaders.ah.length - 2, opts.disableFrom - 1);
         if (col > collapsible) {
           return;
         }
         results = [];
-        for (i = k = ref = col, ref1 = collapsible; (ref <= ref1 ? k <= ref1 : k >= ref1); i = ref <= ref1 ? ++k : --k) {
+        for (i = l = ref = col, ref1 = collapsible; (ref <= ref1 ? l <= ref1 : l >= ref1); i = ref <= ref1 ? ++l : --l) {
           ah = axisHeaders.ah[i];
           replaceClass(ah.th, classExpanded, classCollapsed);
           ah.th.textContent = ` ${arrowCollapsed} ${ah.text}`;
@@ -13149,10 +13216,10 @@ looker.plugins.visualizations.add({
         return h.th.colSpan = 1;
       };
       collapseChildCol = function(ch, h) {
-        var chKey, k, len, ref;
+        var chKey, l, len, ref;
         ref = ch.children;
-        for (k = 0, len = ref.length; k < len; k++) {
-          chKey = ref[k];
+        for (l = 0, len = ref.length; l < len; l++) {
+          chKey = ref[l];
           if (hasClass(ch[chKey].th, classColShow)) {
             collapseChildCol(ch[chKey], h);
           }
@@ -13160,11 +13227,11 @@ looker.plugins.visualizations.add({
         return hideChildCol(ch);
       };
       collapseCol = function(axisHeaders, h, opts) {
-        var chKey, colSpan, k, len, p, ref;
+        var chKey, colSpan, l, len, p, ref;
         colSpan = h.th.colSpan - 1;
         ref = h.children;
-        for (k = 0, len = ref.length; k < len; k++) {
-          chKey = ref[k];
+        for (l = 0, len = ref.length; l < len; l++) {
+          chKey = ref[l];
           if (hasClass(h[chKey].th, classColShow)) {
             collapseChildCol(h[chKey], h);
           }
@@ -13200,7 +13267,7 @@ looker.plugins.visualizations.add({
         return h.th.textContent = ` ${arrowExpanded} ${h.text}`;
       };
       expandChildCol = function(ch, opts) {
-        var chKey, k, len, ref, results;
+        var chKey, l, len, ref, results;
         if (ch.children.length !== 0 && opts.hideOnExpand && ch.clickStatus === clickStatusExpanded) {
           replaceClass(ch.th, classColHide, classColShow);
         } else {
@@ -13212,23 +13279,23 @@ looker.plugins.visualizations.add({
         if (ch.clickStatus === clickStatusExpanded || ch.col >= opts.disableFrom) {
           ref = ch.children;
           results = [];
-          for (k = 0, len = ref.length; k < len; k++) {
-            chKey = ref[k];
+          for (l = 0, len = ref.length; l < len; l++) {
+            chKey = ref[l];
             results.push(expandChildCol(ch[chKey], opts));
           }
           return results;
         }
       };
       expandCol = function(axisHeaders, h, opts) {
-        var ch, chKey, colSpan, k, len, p, ref;
+        var ch, chKey, colSpan, l, len, p, ref;
         if (h.clickStatus === clickStatusExpanded) {
           adjustAxisHeader(axisHeaders, h.col, opts);
           return;
         }
         colSpan = 0;
         ref = h.children;
-        for (k = 0, len = ref.length; k < len; k++) {
-          chKey = ref[k];
+        for (l = 0, len = ref.length; l < len; l++) {
+          chKey = ref[l];
           ch = h[chKey];
           expandChildCol(ch, opts);
           colSpan += ch.th.colSpan;
@@ -13253,36 +13320,36 @@ looker.plugins.visualizations.add({
         return adjustAxisHeader(axisHeaders, h.col, opts);
       };
       hideChildRow = function(ch, opts) {
-        var cell, k, l, len, len1, ref, ref1, results;
+        var cell, l, len, len1, o, ref, ref1, results;
         ref = ch.tr.querySelectorAll("th, td");
-        for (k = 0, len = ref.length; k < len; k++) {
-          cell = ref[k];
+        for (l = 0, len = ref.length; l < len; l++) {
+          cell = ref[l];
           replaceClass(cell, classRowShow, classRowHide);
         }
         if (ch.sTr) {
           ref1 = ch.sTr.querySelectorAll("th, td");
           results = [];
-          for (l = 0, len1 = ref1.length; l < len1; l++) {
-            cell = ref1[l];
+          for (o = 0, len1 = ref1.length; o < len1; o++) {
+            cell = ref1[o];
             results.push(replaceClass(cell, classRowShow, classRowHide));
           }
           return results;
         }
       };
       collapseShowRowSubtotal = function(h, opts) {
-        var cell, k, l, len, len1, ref, ref1, results;
+        var cell, l, len, len1, o, ref, ref1, results;
         h.th.textContent = ` ${arrowCollapsed} ${h.text}`;
         ref = h.tr.querySelectorAll("th, td");
-        for (k = 0, len = ref.length; k < len; k++) {
-          cell = ref[k];
+        for (l = 0, len = ref.length; l < len; l++) {
+          cell = ref[l];
           removeClass(cell, `${classRowExpanded} ${classRowHide}`);
           addClass(cell, `${classRowCollapsed} ${classRowShow}`);
         }
         if (h.sTr) {
           ref1 = h.sTr.querySelectorAll("th, td");
           results = [];
-          for (l = 0, len1 = ref1.length; l < len1; l++) {
-            cell = ref1[l];
+          for (o = 0, len1 = ref1.length; o < len1; o++) {
+            cell = ref1[o];
             removeClass(cell, `${classRowExpanded} ${classRowHide}`);
             results.push(addClass(cell, `${classRowCollapsed} ${classRowShow}`));
           }
@@ -13290,19 +13357,19 @@ looker.plugins.visualizations.add({
         }
       };
       collapseChildRow = function(ch, h, opts) {
-        var chKey, k, len, ref;
+        var chKey, l, len, ref;
         ref = ch.children;
-        for (k = 0, len = ref.length; k < len; k++) {
-          chKey = ref[k];
+        for (l = 0, len = ref.length; l < len; l++) {
+          chKey = ref[l];
           collapseChildRow(ch[chKey], h, opts);
         }
         return hideChildRow(ch, opts);
       };
       collapseRow = function(axisHeaders, h, opts) {
-        var chKey, k, len, ref;
+        var chKey, l, len, ref;
         ref = h.children;
-        for (k = 0, len = ref.length; k < len; k++) {
-          chKey = ref[k];
+        for (l = 0, len = ref.length; l < len; l++) {
+          chKey = ref[l];
           collapseChildRow(h[chKey], h, opts);
         }
         collapseShowRowSubtotal(h, opts);
@@ -13312,36 +13379,36 @@ looker.plugins.visualizations.add({
         return adjustAxisHeader(axisHeaders, h.col, opts);
       };
       showChildRow = function(ch, opts) {
-        var cell, k, l, len, len1, ref, ref1, results;
+        var cell, l, len, len1, o, ref, ref1, results;
         ref = ch.tr.querySelectorAll("th, td");
-        for (k = 0, len = ref.length; k < len; k++) {
-          cell = ref[k];
+        for (l = 0, len = ref.length; l < len; l++) {
+          cell = ref[l];
           replaceClass(cell, classRowHide, classRowShow);
         }
         if (ch.sTr) {
           ref1 = ch.sTr.querySelectorAll("th, td");
           results = [];
-          for (l = 0, len1 = ref1.length; l < len1; l++) {
-            cell = ref1[l];
+          for (o = 0, len1 = ref1.length; o < len1; o++) {
+            cell = ref1[o];
             results.push(replaceClass(cell, classRowHide, classRowShow));
           }
           return results;
         }
       };
       expandShowRowSubtotal = function(h, opts) {
-        var cell, k, l, len, len1, ref, ref1, results;
+        var cell, l, len, len1, o, ref, ref1, results;
         h.th.textContent = ` ${arrowExpanded} ${h.text}`;
         ref = h.tr.querySelectorAll("th, td");
-        for (k = 0, len = ref.length; k < len; k++) {
-          cell = ref[k];
+        for (l = 0, len = ref.length; l < len; l++) {
+          cell = ref[l];
           removeClass(cell, `${classRowCollapsed} ${classRowHide}`);
           addClass(cell, `${classRowExpanded} ${classRowShow}`);
         }
         if (h.sTr) {
           ref1 = h.sTr.querySelectorAll("th, td");
           results = [];
-          for (l = 0, len1 = ref1.length; l < len1; l++) {
-            cell = ref1[l];
+          for (o = 0, len1 = ref1.length; o < len1; o++) {
+            cell = ref1[o];
             removeClass(cell, `${classRowCollapsed} ${classRowHide}`);
             results.push(addClass(cell, `${classRowExpanded} ${classRowShow}`));
           }
@@ -13349,11 +13416,11 @@ looker.plugins.visualizations.add({
         }
       };
       expandHideRowSubtotal = function(h, opts) {
-        var cell, k, l, len, len1, ref, ref1, results;
+        var cell, l, len, len1, o, ref, ref1, results;
         h.th.textContent = ` ${arrowExpanded} ${h.text}`;
         ref = h.tr.querySelectorAll("th, td");
-        for (k = 0, len = ref.length; k < len; k++) {
-          cell = ref[k];
+        for (l = 0, len = ref.length; l < len; l++) {
+          cell = ref[l];
           removeClass(cell, `${classRowCollapsed} ${classRowShow}`);
           addClass(cell, `${classRowExpanded} ${classRowHide}`);
         }
@@ -13362,8 +13429,8 @@ looker.plugins.visualizations.add({
         if (h.sTr) {
           ref1 = h.sTr.querySelectorAll("th, td");
           results = [];
-          for (l = 0, len1 = ref1.length; l < len1; l++) {
-            cell = ref1[l];
+          for (o = 0, len1 = ref1.length; o < len1; o++) {
+            cell = ref1[o];
             removeClass(cell, `${classRowCollapsed} ${classRowShow}`);
             results.push(addClass(cell, `${classRowExpanded} ${classRowHide}`));
           }
@@ -13371,7 +13438,7 @@ looker.plugins.visualizations.add({
         }
       };
       expandChildRow = function(ch, opts) {
-        var chKey, k, len, ref, results;
+        var chKey, l, len, ref, results;
         if (ch.children.length !== 0 && opts.hideOnExpand && ch.clickStatus === clickStatusExpanded) {
           replaceClass(ch.th, classRowHide, classRowShow);
         } else {
@@ -13383,22 +13450,22 @@ looker.plugins.visualizations.add({
         if (ch.clickStatus === clickStatusExpanded || ch.col >= opts.disableFrom) {
           ref = ch.children;
           results = [];
-          for (k = 0, len = ref.length; k < len; k++) {
-            chKey = ref[k];
+          for (l = 0, len = ref.length; l < len; l++) {
+            chKey = ref[l];
             results.push(expandChildRow(ch[chKey], opts));
           }
           return results;
         }
       };
       expandRow = function(axisHeaders, h, opts) {
-        var ch, chKey, k, len, ref;
+        var ch, chKey, l, len, ref;
         if (h.clickStatus === clickStatusExpanded) {
           adjustAxisHeader(axisHeaders, h.col, opts);
           return;
         }
         ref = h.children;
-        for (k = 0, len = ref.length; k < len; k++) {
-          chKey = ref[k];
+        for (l = 0, len = ref.length; l < len; l++) {
+          chKey = ref[l];
           ch = h[chKey];
           expandChildRow(ch, opts);
         }
@@ -13415,19 +13482,19 @@ looker.plugins.visualizations.add({
         return adjustAxisHeader(axisHeaders, h.col, opts);
       };
       collapseAxis = function(axisHeaders, col, attrs, opts) {
-        var collapsible, h, i, k, ref, ref1, results;
+        var collapsible, h, i, l, ref, ref1, results;
         collapsible = Math.min(attrs.length - 2, opts.disableFrom - 1);
         if (col > collapsible) {
           return;
         }
         results = [];
-        for (i = k = ref = collapsible, ref1 = col; k >= ref1; i = k += -1) {
+        for (i = l = ref = collapsible, ref1 = col; l >= ref1; i = l += -1) {
           results.push((function() {
-            var l, len, ref2, results1;
+            var len, o, ref2, results1;
             ref2 = axisHeaders.ah[i].attrHeaders;
             results1 = [];
-            for (l = 0, len = ref2.length; l < len; l++) {
-              h = ref2[l];
+            for (o = 0, len = ref2.length; o < len; o++) {
+              h = ref2[o];
               if (h.clickStatus === clickStatusExpanded && h.children.length !== 0) {
                 results1.push(axisHeaders.collapseAttrHeader(axisHeaders, h, opts));
               }
@@ -13438,16 +13505,16 @@ looker.plugins.visualizations.add({
         return results;
       };
       expandAxis = function(axisHeaders, col, attrs, opts) {
-        var ah, h, i, k, ref, results;
+        var ah, h, i, l, ref, results;
         ah = axisHeaders.ah[col];
         results = [];
-        for (i = k = 0, ref = col; (0 <= ref ? k <= ref : k >= ref); i = 0 <= ref ? ++k : --k) {
+        for (i = l = 0, ref = col; (0 <= ref ? l <= ref : l >= ref); i = 0 <= ref ? ++l : --l) {
           results.push((function() {
-            var l, len, ref1, results1;
+            var len, o, ref1, results1;
             ref1 = axisHeaders.ah[i].attrHeaders;
             results1 = [];
-            for (l = 0, len = ref1.length; l < len; l++) {
-              h = ref1[l];
+            for (o = 0, len = ref1.length; o < len; o++) {
+              h = ref1[o];
               results1.push(axisHeaders.expandAttrHeader(axisHeaders, h, opts));
             }
             return results1;
@@ -13457,7 +13524,7 @@ looker.plugins.visualizations.add({
       };
       // when h.clickStatus is clickStatusCollapsed and h.children.length isnt 0 for i in [0..col]
       main = function(rowAttrs, rowKeys, colAttrs, colKeys) {
-        var chKey, colAttrHeaders, colAxisHeaders, colKeyHeaders, k, l, len, len1, node, ref, ref1, result, rowAttrHeaders, rowAxisHeaders, rowKeyHeaders, tbody, thead, tr;
+        var chKey, colAttrHeaders, colAxisHeaders, colKeyHeaders, l, len, len1, node, o, ref, ref1, result, rowAttrHeaders, rowAxisHeaders, rowKeyHeaders, tbody, thead, tr;
         rowAttrHeaders = [];
         colAttrHeaders = [];
         if (colAttrs.length !== 0 && colKeys.length !== 0) {
@@ -13477,11 +13544,11 @@ looker.plugins.visualizations.add({
             counter: 0
           };
           ref = colKeyHeaders.children;
-          for (k = 0, len = ref.length; k < len; k++) {
-            chKey = ref[k];
+          for (l = 0, len = ref.length; l < len; l++) {
+            chKey = ref[l];
             buildColHeader(colAxisHeaders, colAttrHeaders, colKeyHeaders[chKey], rowAttrs, colAttrs, node, opts);
           }
-          buildRowTotalsHeader(colAxisHeaders.ah[0].tr, colKeyHeaders, rowAttrs, colAttrs);
+          buildRowTotalsHeader(colAxisHeaders.ah[0].tr, null, rowAttrs, colAttrs);
         }
         tbody = createElement("tbody");
         result.appendChild(tbody);
@@ -13492,8 +13559,8 @@ looker.plugins.visualizations.add({
             counter: 0
           };
           ref1 = rowKeyHeaders.children;
-          for (l = 0, len1 = ref1.length; l < len1; l++) {
-            chKey = ref1[l];
+          for (o = 0, len1 = ref1.length; o < len1; o++) {
+            chKey = ref1[o];
             buildRowHeader(tbody, rowAxisHeaders, rowAttrHeaders, rowKeyHeaders[chKey], rowAttrs, colAttrs, node, opts);
           }
         }

@@ -8,7 +8,43 @@ window.$ = $ // XXX
 looker.plugins.visualizations.add({
   id: 'subtotal',
   label: 'Subtotal',
-  options: {},
+
+  options: {
+    color_range: {
+      type: "array",
+      label: "Color Range",
+      display: "colors"
+    },
+  },
+  
+  options: (() => {
+    const options = {}
+    for (let i = 0; i < 5; i++) {
+      options[`measure_${i+1}`] = {
+        order: i,
+        type: 'string',
+        label: `Measure ${i+1}`,
+        default: 'Sum',
+        display: 'select',
+        hidden: (config, queryResponse) => config.query_fields.measures.length < (i + 1), // XXX Never called!
+        values: [
+          // Must match the aggregators we define below.
+          'Count',
+          'Count Unique Values',
+          'Sum', 
+          'Integer Sum',
+          'Average',
+          'Median',
+          'Sample Variance',
+          'Sample Standard Deviation',
+          'Minimum',
+          'Maximum'
+        ].map(k => ({[k]: k}))
+      }
+    }
+    options.measure_2.default = 'Maximum' // XXX testing
+    return options
+  })(),
 
   create (element, config) {
     [
@@ -24,9 +60,9 @@ looker.plugins.visualizations.add({
   },
 
   update (data, element, config, queryResponse, details) {
-    console.clear() // XXX
     if (!config || !data) return
     if (details && details.changed && details.changed.size) return
+    console.clear() // XXX
 
     const dimensions = config.query_fields.dimensions.map(d => d.name)
 
@@ -69,7 +105,33 @@ looker.plugins.visualizations.add({
       }
     }
 
-    // TODO: aggregates
+    // We create our own aggregators instead of using
+    // $.pivotUtilities.aggregators because we want to use our own configurable
+    // number formatter for some of them.
+    const tpl = $.pivotUtilities.aggregatorTemplates
+    const intFormat = (x) => Math.trunc(x)
+    const customFormat = (x) => x // XXX TODO Make this configurable.
+
+    const aggregatorNames = []
+    const aggregators = []
+    for (let i = 0; i < measures.length; i++) {
+      aggName = config[`measure_${i+1}`] || this.options[`measure_${i+1}`].default
+      aggregatorNames.push(aggName)
+      switch (aggName) {
+        case 'Count': agg = tpl.count(intFormat); break;
+        case 'Count Unique Values': agg = tpl.countUnique(intFormat); break;
+        case 'Sum': agg = tpl.sum(customFormat); break; 
+        case 'Integer Sum': agg = tpl.sum(intFormat); break;
+        case 'Average': agg = tpl.average(customFormat); break;
+        case 'Median': agg = tpl.median(customFormat); break;
+        case 'Sample Variance': agg = tpl.var(1, customFormat); break;
+        case 'Sample Standard Deviation': agg = tpl.stdev(1, customFormat); break;
+        case 'Minimum': agg = tpl.min(customFormat); break;
+        case 'Maximum': agg = tpl.max(customFormat); break;
+        default: throw new Error(`Unknown aggregator: ${aggName}`)
+      }
+      aggregators.push(agg([measures[i]]))
+    }
 
     const dataClass = $.pivotUtilities.SubtotalPivotDataMulti
     const renderer = $.pivotUtilities.subtotal_renderers['Table With Subtotal']
@@ -83,7 +145,9 @@ looker.plugins.visualizations.add({
       cols: pivots,
       dataClass,
       renderer,
-      rendererOptions
+      rendererOptions,
+      aggregatorNames,
+      aggregators
     }
     $(element).pivot(ptData, options)
   }
