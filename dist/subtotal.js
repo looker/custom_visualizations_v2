@@ -10523,7 +10523,6 @@ looker.plugins.visualizations.add({
         messsage: 'Please make sure your explore has a measure'
       })
     }
-    const measureName = measures[0]
 
     const pivots = config.query_fields.pivots.map(d => d.name)
     if (pivots.length > 1) {
@@ -10546,10 +10545,12 @@ looker.plugins.visualizations.add({
         ptData.push(ptRow)
       } else {
         // Fan out each row using the pivot.
-        for (const [pivotKey, pivotObj] of Object.entries(row[measureName])) {
+        for (const pivotKey of Object.keys(row[measures[0]])) {
           const pivotRow = Object.assign({}, ptRow)
           pivotRow[pivotName] = pivotKey
-          pivotRow[measureName] = pivotObj.value
+          for (const measureName of measures) {
+            pivotRow[measureName] = row[measureName][pivotKey].value
+          }
           ptData.push(pivotRow)
         }
       }
@@ -12496,7 +12497,7 @@ looker.plugins.visualizations.add({
 
         processRecord(record) { //this code is called in a tight loop
           var addKey, aggregator, attr, base, base1, colKey, fColKey, fRowKey, flatColKey, flatKey, flatRowKey, i, j, k, l, len, len1, len2, len3, len4, len5, len6, len7, m, n, name, o, q, r, ref, ref1, ref10, ref11, ref2, ref3, ref4, ref5, ref6, ref7, ref8, ref9, rowKey, s, t, u, w, y, z;
-          console.log('XXX', record.max_elevation);
+          
           // Since this gets called in the PivotData (superclass) constructor
           // but we haven't yet initialized @aggregators, don't do anything.
           if (!this.aggregators) {

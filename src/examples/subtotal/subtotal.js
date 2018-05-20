@@ -73,7 +73,6 @@ looker.plugins.visualizations.add({
         messsage: 'Please make sure your explore has a measure'
       })
     }
-    const measureName = measures[0]
 
     const pivots = config.query_fields.pivots.map(d => d.name)
     if (pivots.length > 1) {
@@ -96,10 +95,12 @@ looker.plugins.visualizations.add({
         ptData.push(ptRow)
       } else {
         // Fan out each row using the pivot.
-        for (const [pivotKey, pivotObj] of Object.entries(row[measureName])) {
+        for (const pivotKey of Object.keys(row[measures[0]])) {
           const pivotRow = Object.assign({}, ptRow)
           pivotRow[pivotName] = pivotKey
-          pivotRow[measureName] = pivotObj.value
+          for (const measureName of measures) {
+            pivotRow[measureName] = row[measureName][pivotKey].value
+          }
           ptData.push(pivotRow)
         }
       }
