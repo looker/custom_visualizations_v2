@@ -22976,7 +22976,7 @@ var vis = {
             min_measures: 1, max_measures: undefined
         }))
             return;
-        var gaugeConfig = _.extend(LiquidFillGauge.liquidFillGaugeDefaultSettings(), config);
+        var gaugeConfig = Object.assign(LiquidFillGauge.liquidFillGaugeDefaultSettings(), config);
         var datumField = queryResponse.fields.measure_like[0];
         var datum = data[0][datumField.name];
         var value = datum.value;

@@ -22779,6 +22779,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__common_utils__ = __webpack_require__(464);
 
 
+var defaultFormatter = function (x) { return x.toString(); };
 var vis = {
     id: 'chord',
     label: 'Chord',
@@ -22845,7 +22846,6 @@ var vis = {
         // Set dimensions
         var width = element.clientWidth;
         var height = element.clientHeight;
-        var margin = 10;
         var thickness = 15;
         var outerRadius = Math.min(width, height) * 0.5;
         var innerRadius = outerRadius - thickness;
@@ -22854,11 +22854,10 @@ var vis = {
         // TODO: Set a min-radius ???
         if (innerRadius < 0)
             return;
-        var valueFormatter = Object(__WEBPACK_IMPORTED_MODULE_1__common_utils__["a" /* formatType */])(measure.value_format) || (function (s) { return s.toString(); });
+        var valueFormatter = Object(__WEBPACK_IMPORTED_MODULE_1__common_utils__["a" /* formatType */])(measure.value_format) || defaultFormatter;
         var tooltip = this.tooltip;
         // Set color scale
         var color = __WEBPACK_IMPORTED_MODULE_0_d3__["l" /* scaleOrdinal */]().range(config.color_range);
-        // const color = d3.scaleOrdinal().range(config.color_range || this.options.color_range.default) // DNR
         // Set chord layout
         var chord = __WEBPACK_IMPORTED_MODULE_0_d3__["b" /* chord */]()
             .padAngle(0.025)
@@ -22873,9 +22872,9 @@ var vis = {
             .outerRadius(outerRadius);
         // Turn data into matrix
         var matrix = this.computeMatrix(data, dimensions.map(function (d) { return d.name; }), measure.name);
+        var svg = this.svg;
         // draw
-        var svg = this.svg
-            .html('')
+        svg.html('')
             .attr('width', '100%')
             .attr('height', '100%')
             .append('g')
@@ -22884,6 +22883,19 @@ var vis = {
             .datum(chord(matrix.matrix));
         svg.append('circle')
             .attr('r', outerRadius);
+        var ribbons = svg.append('g')
+            .attr('class', 'ribbons')
+            .selectAll('path')
+            .data(function (chords) { return chords; })
+            .enter().append('path')
+            .style('opacity', 0.8)
+            .attr('d', ribbon)
+            .style('fill', function (d) { return color(d.target.index); })
+            .style('stroke', function (d) { return __WEBPACK_IMPORTED_MODULE_0_d3__["i" /* rgb */]('blue').darker(); })
+            .on('mouseenter', function (d) {
+            tooltip.html(_this.titleText(matrix.nameByIndex, d.source, d.target, valueFormatter));
+        })
+            .on('mouseleave', function (d) { return tooltip.html(''); });
         var group = svg.append('g')
             .attr('class', 'groups')
             .selectAll('g')
@@ -22917,22 +22929,8 @@ var vis = {
             return groupPathNodes[i].getTotalLength() / 2 - 16 < this.getComputedTextLength();
         })
             .remove();
-        var ribbons = svg.append('g')
-            .attr('class', 'ribbons')
-            .selectAll('path')
-            .data(function (chords) { return chords; })
-            .enter().append('path')
-            .style('opacity', 0.8)
-            .attr('d', ribbon)
-            .style('fill', function (d) { return color(d.target.index); })
-            .style('stroke', function (d) { return __WEBPACK_IMPORTED_MODULE_0_d3__["i" /* rgb */]('blue').darker(); })
-            .on('mouseenter', function (d) {
-            tooltip.html(_this.titleText(matrix.nameByIndex, d.source, d.target, valueFormatter));
-        })
-            .on('mouseleave', function (d) { return tooltip.html(''); });
     },
     titleText: function (lookup, source, target, formatter) {
-        if (formatter === void 0) { formatter = function (s) { return s; }; }
         var sourceName = lookup.get(source.index);
         var sourceValue = formatter(source.value);
         var targetName = lookup.get(target.index);

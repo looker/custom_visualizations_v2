@@ -22846,10 +22846,10 @@ var vis = {
         var dimensions = queryResponse.fields.dimension_like;
         var measure = queryResponse.fields.measure_like[0];
         var format = Object(__WEBPACK_IMPORTED_MODULE_1__common_utils__["a" /* formatType */])(measure.value_format) || (function (s) { return s.toString(); });
+        // TODO: lint-fix points out that these are unused. what were they meant for?
         var x = __WEBPACK_IMPORTED_MODULE_0_d3__["k" /* scaleLinear */]().range([0, 2 * Math.PI]);
         var y = __WEBPACK_IMPORTED_MODULE_0_d3__["m" /* scaleSqrt */]().range([0, radius]);
         var color = __WEBPACK_IMPORTED_MODULE_0_d3__["l" /* scaleOrdinal */]().range(config.color_range);
-        // const color = d3.scaleOrdinal().range(config.color_range || this.options.color_range.default) // DNR
         data.forEach(function (row) {
             row.taxonomy = {
                 value: dimensions.map(function (dimension) { return row[dimension.name].value; })

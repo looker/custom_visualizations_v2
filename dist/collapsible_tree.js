@@ -22988,7 +22988,7 @@ var vis = {
                 .duration(duration)
                 .attr('d', function (d) { return diagonal(d, d.parent); });
             // Remove any exiting links
-            var linkExit = (link
+            link
                 .exit()
                 .transition()
                 .duration(duration)
@@ -22996,7 +22996,7 @@ var vis = {
                 var o = { x: source.x, y: source.y };
                 return diagonal(o, o);
             })
-                .remove());
+                .remove();
             // Store the old positions for transition.
             nodes.forEach(function (d) {
                 d.x0 = d.x;

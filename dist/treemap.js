@@ -22849,7 +22849,6 @@ var vis = {
         var measure = queryResponse.fields.measure_like[0];
         var format = Object(__WEBPACK_IMPORTED_MODULE_1__common_utils__["a" /* formatType */])(measure.value_format) || (function (s) { return s.toString(); });
         var color = __WEBPACK_IMPORTED_MODULE_0_d3__["l" /* scaleOrdinal */]().range(config.color_range);
-        // const color = d3.scaleOrdinal().range(config.color_range || this.options.color_range.default) // DNR
         data.forEach(function (row) {
             row.taxonomy = {
                 value: dimensions.map(function (dimension) { return row[dimension.name].value; })
@@ -22921,8 +22920,7 @@ var vis = {
             .attr('id', function (d, i) { return 'clip-' + i; })
             .append('use')
             .attr('xlink:href', function (d, i) { return '#rect-' + i; });
-        var label = cell
-            .append('text')
+        cell.append('text')
             .style('opacity', function (d) {
             if (d.depth === 1)
                 return 1;

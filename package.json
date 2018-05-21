@@ -10,6 +10,7 @@
   },
   "scripts": {
     "build": "webpack --config webpack.config.js",
+    "watch": "webpack --config webpack.config.js --watch --progress",
     "lint": "tslint --project tsconfig.json --format stylish 'src/**/*.ts'",
     "lint-fix": "tslint --fix --project tsconfig.json  --format stylish 'src/**/*.ts'",
     "test": "mocha"
@@ -32,8 +33,6 @@
   "dependencies": {
     "@types/d3": "^5.0.0",
     "@types/d3-sankey": "^0.7.2",
-    "d3-sankey": "^0.7.1",
-    "global": "^4.3.2",
-    "watch": "^1.0.2"
+    "d3-sankey": "^0.7.1"
   }
 }

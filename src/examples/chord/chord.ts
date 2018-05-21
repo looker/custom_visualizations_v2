@@ -1,22 +1,30 @@
 import * as d3 from 'd3'
-import { formatType, handleErrors, log } from '../common/utils'
+import { formatType, handleErrors } from '../common/utils'
 
 import {
   Looker,
-  LookerChartUtils,
   VisualizationDefinition,
   VisData
 } from '../types/types'
 
 // Global values provided via the API
 declare var looker: Looker
-declare var LookerCharts: LookerChartUtils
+
+type Formatter = ((s: any) => string)
+
+const defaultFormatter: Formatter = (x) => x.toString()
+
+interface Matrix {
+  matrix: any[],
+  indexByName: d3.Map<string>,
+  nameByIndex: d3.Map<number>,
+}
 
 interface ChordVisualization extends VisualizationDefinition {
   svg?: any,
   tooltip?: any,
-  computeMatrix: (data: VisData, dimensions: string[], measure: string) => any,
-  titleText: (lookup: any, source: any, target: any, formatter: any) => string,
+  computeMatrix: (data: VisData, dimensions: string[], measure: string) => Matrix,
+  titleText: (lookup: d3.Map<number>, source: any, target: any, formatter: Formatter) => string,
 }
 
 const vis: ChordVisualization = {
@@ -87,7 +95,7 @@ const vis: ChordVisualization = {
     }
 
     // Fill matrix
-    data.forEach(function(d) {
+    data.forEach(function (d) {
       const row = indexByName.get(d[dimensions[1]].value)
       const col = indexByName.get(d[dimensions[0]].value)
       const val = d[measure].value
@@ -115,7 +123,6 @@ const vis: ChordVisualization = {
     // Set dimensions
     const width = element.clientWidth
     const height = element.clientHeight
-    const margin = 10
     const thickness = 15
     const outerRadius = Math.min(width, height) * 0.5
     const innerRadius = outerRadius - thickness
@@ -125,13 +132,12 @@ const vis: ChordVisualization = {
     // TODO: Set a min-radius ???
     if (innerRadius < 0) return
 
-    const valueFormatter = formatType(measure.value_format) || ((s: any): string => s.toString())
+    const valueFormatter = formatType(measure.value_format) || defaultFormatter
 
     const tooltip = this.tooltip
 
     // Set color scale
     const color = d3.scaleOrdinal().range(config.color_range)
-    // const color = d3.scaleOrdinal().range(config.color_range || this.options.color_range.default) // DNR
 
     // Set chord layout
     const chord = d3.chord()
@@ -151,9 +157,10 @@ const vis: ChordVisualization = {
     // Turn data into matrix
     const matrix = this.computeMatrix(data, dimensions.map(d => d.name), measure.name)
 
-    // draw
     const svg = this.svg!
-      .html('')
+
+    // draw
+    svg.html('')
       .attr('width', '100%')
       .attr('height', '100%')
       .append('g')
@@ -163,48 +170,6 @@ const vis: ChordVisualization = {
 
     svg.append('circle')
       .attr('r', outerRadius)
-
-    const group = svg.append('g')
-      .attr('class', 'groups')
-      .selectAll('g')
-      .data((chords: any) => chords.groups)
-      .enter().append('g')
-      .on('mouseover', (d: any, i: number) => {
-        ribbons.classed('chord-fade', (p: any) => {
-          return (
-            p.source.index !== i
-            && p.target.index !== i
-          )
-        })
-      }
-  )
-
-    const groupPath = group.append('path')
-      .style('opacity', 0.8)
-      .style('fill', (d: any) => color(d.index))
-      .style('stroke', (d: any) => d3.rgb('red').darker())
-      .attr('id', (d: any, i: number) => `group${i}`)
-      .attr('d', arc)
-
-    const groupPathNodes = groupPath.nodes()
-
-    const groupText = group.append('text').attr('dy', 11)
-
-    groupText.append('textPath')
-      .attr('xlink:href', (d: any, i: number) => `#group${i}`)
-      .attr('startOffset',(d: any, i: number) => (groupPathNodes[i].getTotalLength() - (thickness * 2)) / 4)
-      .style('text-anchor','middle')
-      .text((d: any) => {
-        const txt = matrix.nameByIndex.get(d.index.toString())
-        return txt
-      })
-
-    // Remove the labels that don't fit. :(
-    groupText
-      .filter(function (this: SVGTextElement, d: any, i: number) {
-        return groupPathNodes[i].getTotalLength() / 2 - 16 < this.getComputedTextLength()
-      })
-      .remove()
 
     const ribbons = svg.append('g')
       .attr('class', 'ribbons')
@@ -220,9 +185,50 @@ const vis: ChordVisualization = {
       })
       .on('mouseleave', (d: any) => tooltip.html(''))
 
+    const group = svg.append('g')
+      .attr('class', 'groups')
+      .selectAll('g')
+      .data((chords: any) => chords.groups)
+      .enter().append('g')
+      .on('mouseover', (d: any, i: number) => {
+        ribbons.classed('chord-fade', (p: any) => {
+          return (
+            p.source.index !== i
+            && p.target.index !== i
+          )
+        })
+      })
+
+    const groupPath = group.append('path')
+      .style('opacity', 0.8)
+      .style('fill', (d: any) => color(d.index))
+      .style('stroke', (d: any) => d3.rgb('red').darker())
+      .attr('id', (d: any, i: number) => `group${i}`)
+      .attr('d', arc)
+
+    const groupPathNodes = groupPath.nodes()
+
+    const groupText = group.append('text').attr('dy', 11)
+
+    groupText.append('textPath')
+      .attr('xlink:href', (d: any, i: number) => `#group${i}`)
+      .attr('startOffset', (d: any, i: number) => (groupPathNodes[i].getTotalLength() - (thickness * 2)) / 4)
+      .style('text-anchor', 'middle')
+      .text((d: any) => {
+        const txt = matrix.nameByIndex.get(d.index.toString())
+        return txt
+      })
+
+    // Remove the labels that don't fit. :(
+    groupText
+      .filter(function (this: SVGTextElement, d: any, i: number) {
+        return groupPathNodes[i].getTotalLength() / 2 - 16 < this.getComputedTextLength()
+      })
+      .remove()
+
   },
 
-  titleText: function(lookup, source, target, formatter = (s: string) => s) {
+  titleText: function (lookup, source, target, formatter) {
     const sourceName = lookup.get(source.index)
     const sourceValue = formatter(source.value)
     const targetName = lookup.get(target.index)
