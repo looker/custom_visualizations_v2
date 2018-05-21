@@ -10,11 +10,15 @@ import {
 // Global values provided via the API
 declare var looker: Looker
 
+type Formatter = ((s: any) => string)
+
+const defaultFormatter: Formatter = (x) => x.toString()
+
 interface ChordVisualization extends VisualizationDefinition {
   svg?: any,
   tooltip?: any,
   computeMatrix: (data: VisData, dimensions: string[], measure: string) => any,
-  titleText: (lookup: any, source: any, target: any, formatter: any) => string,
+  titleText: (lookup: d3.Map<string>, source: any, target: any, formatter: Formatter) => string,
 }
 
 const vis: ChordVisualization = {
@@ -122,7 +126,7 @@ const vis: ChordVisualization = {
     // TODO: Set a min-radius ???
     if (innerRadius < 0) return
 
-    const valueFormatter = formatType(measure.value_format) || ((s: any): string => s.toString())
+    const valueFormatter = formatType(measure.value_format) || defaultFormatter
 
     const tooltip = this.tooltip
 
@@ -219,7 +223,7 @@ const vis: ChordVisualization = {
 
   },
 
-  titleText: function (lookup, source, target, formatter = (s: string) => s) {
+  titleText: function (lookup, source, target, formatter) {
     const sourceName = lookup.get(source.index)
     const sourceValue = formatter(source.value)
     const targetName = lookup.get(target.index)

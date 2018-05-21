@@ -22779,6 +22779,7 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__common_utils__ = __webpack_require__(464);
 
 
+var defaultFormatter = function (x) { return x.toString(); };
 var vis = {
     id: 'chord',
     label: 'Chord',
@@ -22853,7 +22854,7 @@ var vis = {
         // TODO: Set a min-radius ???
         if (innerRadius < 0)
             return;
-        var valueFormatter = Object(__WEBPACK_IMPORTED_MODULE_1__common_utils__["a" /* formatType */])(measure.value_format) || (function (s) { return s.toString(); });
+        var valueFormatter = Object(__WEBPACK_IMPORTED_MODULE_1__common_utils__["a" /* formatType */])(measure.value_format) || defaultFormatter;
         var tooltip = this.tooltip;
         // Set color scale
         var color = __WEBPACK_IMPORTED_MODULE_0_d3__["l" /* scaleOrdinal */]().range(config.color_range);
@@ -22931,7 +22932,6 @@ var vis = {
             .on('mouseleave', function (d) { return tooltip.html(''); });
     },
     titleText: function (lookup, source, target, formatter) {
-        if (formatter === void 0) { formatter = function (s) { return s; }; }
         var sourceName = lookup.get(source.index);
         var sourceValue = formatter(source.value);
         var targetName = lookup.get(target.index);
