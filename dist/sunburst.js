@@ -22850,7 +22850,6 @@ var vis = {
         var x = __WEBPACK_IMPORTED_MODULE_0_d3__["k" /* scaleLinear */]().range([0, 2 * Math.PI]);
         var y = __WEBPACK_IMPORTED_MODULE_0_d3__["m" /* scaleSqrt */]().range([0, radius]);
         var color = __WEBPACK_IMPORTED_MODULE_0_d3__["l" /* scaleOrdinal */]().range(config.color_range);
-        // const color = d3.scaleOrdinal().range(config.color_range || this.options.color_range.default) // DNR
         data.forEach(function (row) {
             row.taxonomy = {
                 value: dimensions.map(function (dimension) { return row[dimension.name].value; })
