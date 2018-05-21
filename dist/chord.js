@@ -22872,9 +22872,9 @@ var vis = {
             .outerRadius(outerRadius);
         // Turn data into matrix
         var matrix = this.computeMatrix(data, dimensions.map(function (d) { return d.name; }), measure.name);
+        var svg = this.svg;
         // draw
-        var svg = this.svg
-            .html('')
+        svg.html('')
             .attr('width', '100%')
             .attr('height', '100%')
             .append('g')

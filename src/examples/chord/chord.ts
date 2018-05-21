@@ -85,7 +85,7 @@ const vis: ChordVisualization = {
     }
 
     // Fill matrix
-    data.forEach(function(d) {
+    data.forEach(function (d) {
       const row = indexByName.get(d[dimensions[1]].value)
       const col = indexByName.get(d[dimensions[0]].value)
       const val = d[measure].value
@@ -148,9 +148,10 @@ const vis: ChordVisualization = {
     // Turn data into matrix
     const matrix = this.computeMatrix(data, dimensions.map(d => d.name), measure.name)
 
+    const svg = this.svg!
+
     // draw
-    const svg = this.svg
-      .html('')
+    svg.html('')
       .attr('width', '100%')
       .attr('height', '100%')
       .append('g')
@@ -173,8 +174,7 @@ const vis: ChordVisualization = {
             && p.target.index !== i
           )
         })
-      }
-  )
+      })
 
     const groupPath = group.append('path')
       .style('opacity', 0.8)
@@ -189,8 +189,8 @@ const vis: ChordVisualization = {
 
     groupText.append('textPath')
       .attr('xlink:href', (d: any, i: number) => `#group${i}`)
-      .attr('startOffset',(d: any, i: number) => (groupPathNodes[i].getTotalLength() - (thickness * 2)) / 4)
-      .style('text-anchor','middle')
+      .attr('startOffset', (d: any, i: number) => (groupPathNodes[i].getTotalLength() - (thickness * 2)) / 4)
+      .style('text-anchor', 'middle')
       .text((d: any) => {
         const txt = matrix.nameByIndex.get(d.index.toString())
         return txt
@@ -219,7 +219,7 @@ const vis: ChordVisualization = {
 
   },
 
-  titleText: function(lookup, source, target, formatter = (s: string) => s) {
+  titleText: function (lookup, source, target, formatter = (s: string) => s) {
     const sourceName = lookup.get(source.index)
     const sourceValue = formatter(source.value)
     const targetName = lookup.get(target.index)
