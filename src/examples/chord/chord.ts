@@ -14,11 +14,17 @@ type Formatter = ((s: any) => string)
 
 const defaultFormatter: Formatter = (x) => x.toString()
 
+interface Matrix {
+  matrix: any[],
+  indexByName: d3.Map<string>,
+  nameByIndex: d3.Map<number>,
+}
+
 interface ChordVisualization extends VisualizationDefinition {
   svg?: any,
   tooltip?: any,
-  computeMatrix: (data: VisData, dimensions: string[], measure: string) => any,
-  titleText: (lookup: d3.Map<string>, source: any, target: any, formatter: Formatter) => string,
+  computeMatrix: (data: VisData, dimensions: string[], measure: string) => Matrix,
+  titleText: (lookup: d3.Map<number>, source: any, target: any, formatter: Formatter) => string,
 }
 
 const vis: ChordVisualization = {
