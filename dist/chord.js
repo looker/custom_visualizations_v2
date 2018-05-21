@@ -22883,6 +22883,19 @@ var vis = {
             .datum(chord(matrix.matrix));
         svg.append('circle')
             .attr('r', outerRadius);
+        var ribbons = svg.append('g')
+            .attr('class', 'ribbons')
+            .selectAll('path')
+            .data(function (chords) { return chords; })
+            .enter().append('path')
+            .style('opacity', 0.8)
+            .attr('d', ribbon)
+            .style('fill', function (d) { return color(d.target.index); })
+            .style('stroke', function (d) { return __WEBPACK_IMPORTED_MODULE_0_d3__["i" /* rgb */]('blue').darker(); })
+            .on('mouseenter', function (d) {
+            tooltip.html(_this.titleText(matrix.nameByIndex, d.source, d.target, valueFormatter));
+        })
+            .on('mouseleave', function (d) { return tooltip.html(''); });
         var group = svg.append('g')
             .attr('class', 'groups')
             .selectAll('g')
@@ -22916,19 +22929,6 @@ var vis = {
             return groupPathNodes[i].getTotalLength() / 2 - 16 < this.getComputedTextLength();
         })
             .remove();
-        var ribbons = svg.append('g')
-            .attr('class', 'ribbons')
-            .selectAll('path')
-            .data(function (chords) { return chords; })
-            .enter().append('path')
-            .style('opacity', 0.8)
-            .attr('d', ribbon)
-            .style('fill', function (d) { return color(d.target.index); })
-            .style('stroke', function (d) { return __WEBPACK_IMPORTED_MODULE_0_d3__["i" /* rgb */]('blue').darker(); })
-            .on('mouseenter', function (d) {
-            tooltip.html(_this.titleText(matrix.nameByIndex, d.source, d.target, valueFormatter));
-        })
-            .on('mouseleave', function (d) { return tooltip.html(''); });
     },
     titleText: function (lookup, source, target, formatter) {
         var sourceName = lookup.get(source.index);

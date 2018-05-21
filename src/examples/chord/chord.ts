@@ -165,6 +165,20 @@ const vis: ChordVisualization = {
     svg.append('circle')
       .attr('r', outerRadius)
 
+    const ribbons = svg.append('g')
+      .attr('class', 'ribbons')
+      .selectAll('path')
+      .data((chords: any) => chords)
+      .enter().append('path')
+      .style('opacity', 0.8)
+      .attr('d', ribbon)
+      .style('fill', (d: any) => color(d.target.index))
+      .style('stroke', (d: any) => d3.rgb('blue').darker())
+      .on('mouseenter', (d: any) => {
+        tooltip.html(this.titleText(matrix.nameByIndex, d.source, d.target, valueFormatter))
+      })
+      .on('mouseleave', (d: any) => tooltip.html(''))
+
     const group = svg.append('g')
       .attr('class', 'groups')
       .selectAll('g')
@@ -205,20 +219,6 @@ const vis: ChordVisualization = {
         return groupPathNodes[i].getTotalLength() / 2 - 16 < this.getComputedTextLength()
       })
       .remove()
-
-    const ribbons = svg.append('g')
-      .attr('class', 'ribbons')
-      .selectAll('path')
-      .data((chords: any) => chords)
-      .enter().append('path')
-      .style('opacity', 0.8)
-      .attr('d', ribbon)
-      .style('fill', (d: any) => color(d.target.index))
-      .style('stroke', (d: any) => d3.rgb('blue').darker())
-      .on('mouseenter', (d: any) => {
-        tooltip.html(this.titleText(matrix.nameByIndex, d.source, d.target, valueFormatter))
-      })
-      .on('mouseleave', (d: any) => tooltip.html(''))
 
   },
 
