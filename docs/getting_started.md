@@ -1,13 +1,13 @@
 
-The Looker Visualization API is a pure-JavaScript API that runs in a [sandboxed iframe](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe#attr-sandbox) and will be hosted within the Looker application.
+The Looker Visualization API is a pure-JavaScript API that runs in a [sandboxed iframe](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe#attr-sandbox) and is hosted within the Looker application.
 
-The same visualization code can provide a visualization anywhere in Looker: Explore, Looks, dashboards, embed or in PDF or rendered images.
+The same visualization code can provide a visualization anywhere in Looker: Explores, Looks, dashboards, embeds, or in PDF or rendered images.
 
-Each visualization represents a view of a single Looker query. Looker will handle running the query, and will pass it to your visualization code. You'll also get passed a DOM element that your visualization code can draw into.
+Each visualization represents a view of a single Looker query. Looker handles running the query, and passes it to your visualization code. You'll also get passed a DOM element that your visualization code can draw into.
 
 ### Requirements
 
-- Some knowledge of JavaScript and web development
+- Some knowledge of JavaScript and web development is necessary. 
 - Looker Admin access is required to create and update manifests, but otherwise is not required.
 
 ## Hello World
@@ -16,26 +16,26 @@ Let's walk thorough creating a simple visualization script.
 
 > For more details on each parameter consult the [Visualization API Reference](api_reference.md).
 
-We'll be creating a simple "Hello World" visualization that displays the first dimension of a given query. The final result should look like this:
+We'll create a simple "Hello World" visualization that displays the first dimension of a given query. The final result should look like this:
 
 ![](../src/examples/hello_world/hello_world.png)
 
 ### Setup
 
-To develop and test a visualization in Looker, you will need to host your visualization over https and create a manifest with a "Main" file pointing at your IP address and hosting port.
+To develop and test a visualization in Looker, you need to host your visualization over https and create a manifest with a "Main" file pointing at your IP address and hosting port.
 
 1. `pip install pyhttps` to install a simple https server.
 2. `pyhttps` in whichever folder you wish to develop.
-3. In Looker, navigate to the Admin page. In the left hand navigation pane, find the "Platform" section and select "Visualizations".
+3. In Looker, navigate to the Admin page. In the left-hand navigation pane, find the "Platform" section and select "Visualizations".
 4. Click "Add Visualization" to create a new manifest.
-5. Add a unique id, a label for your visualization (we suggest prefixing it with DEV ONLY so no one creates and saves content with it.
-6. Finally your "Main" file should point at `https://localhost:4443/hello_world.js`
+5. Add a unique id, a label for your visualization (we suggest prefixing it with DEV ONLY so no one creates and saves content with it).
+6. Finally, your "Main" file should point at `https://localhost:4443/hello_world.js`.
 
-Now let's actually create `hello_world.js`
+Now let's actually create `hello_world.js`.
 
 ### Just The Bones
 
-If you want to just jump to the final source code for this example, [that's available here](../src/examples/hello_world/hello_world.js).
+If you want to jump to the final source code for this example, [that's available here](../src/examples/hello_world/hello_world.js).
 
 In the folder you are hosting via `pyhttps` open a new blank JavaScript file on your computer and call it `hello_world.js`.
 
@@ -73,7 +73,7 @@ The `create` function gives us the opportunity to do the initial setup of our el
 </div>
 ```
 
-Using JavaScript we can start to insert stuff into our DOM Element to match the structure we're looking for above.
+Using JavaScript, we can start to insert stuff into our DOM Element to match the structure we're looking for above.
 
 Here's what that looks like fleshed out:
 
@@ -106,7 +106,7 @@ create: function(element, config) {
 
 So we've now got some CSS in there, and we've made our `hello-world-vis` container, and a div inside there.
 
-We've also assigned `this._textElement` to the container we want to render into. That's just a convenience so we don't have to look it up again later when the chart begins to render.
+We've also assigned `this._textElement` to the container we want to render into. That's a convenience so we don't have to look it up again later when the chart begins to render.
 
 That's all we need to do in our `create` function – it's just a convenient place to do setup that only needs to happen once.
 
@@ -114,21 +114,21 @@ That's all we need to do in our `create` function – it's just a convenient pla
 
 It's time to visualize! We'll flesh out our `updateAsync` method now. This method gets called any time the chart is supposed to visualize changes, or when any other event happens that might affect how your chart is rendered. (For example, the chart may have been resized or a configuration option changed.)
 
-In our case, we just need to find the first dimension in the first cell. We can do so using `data`, which is an array of every row of the dataset, and `queryResponse`, which contains metadata about the query, such as field names and types.
+In our case, we only need to find the first dimension in the first cell. We can do so using `data`, which is an array of every row of the dataset, and `queryResponse`, which contains metadata about the query, such as field names and types.
 
 We can also use a helper method called `LookerCharts.Utils.htmlForCell` to give us the proper HTML representation of the data point in that cell, which automatically handles things like drill links, formatting, and data actions:
 
 ```js
   updateAsync: function(data, element, config, queryResponse, done) {
 
-    // Grab the first cell of the data
+    // Grab the first cell of the data.
     var firstRow = data[0];
     var firstCell = firstRow[queryResponse.fields.dimensions[0].name];
 
-    // Insert the data into the page
+    // Insert the data into the page.
     this._textElement.innerHTML = LookerCharts.Utils.htmlForCell(firstCell);
 
-    // Always call done to indicate a visualization has finished rendering
+    // Always call done to indicate a visualization has finished rendering.
     done()
   }
 ```
@@ -141,21 +141,21 @@ Let's press on though, and improve the user experience a bit...
 
 Our `updateAsync` code is grabbing the first row of data, but what happens if the query returns no results or doesn't contain any dimensions?
 
-Well, currently you'll get an ugly JavaScript error in the browser console, but most users will be confused when the chart doesn't render.
+Well, currently you'll get an ugly JavaScript error in the browser console, and most users will be confused when the chart doesn't render.
 
-It's easy for charts to display custom error messages if they encounter problems while trying to render. Looker will add two functions to your visualization object: `addError` and `clearErrors` that can be used to display a nice error message to the user.
+However, it's easy for charts to display custom error messages if they encounter problems while trying to render. Looker will add two functions to your visualization object: `addError` and `clearErrors` that can be used to display a nice error message to the user.
 
 Because they're added to the visualization object, they're available from the context of your `updateAsync` function via the `this` object.
 
-We can just modify the beginning of our `updateAsync` method to detect an error condition and let the user know there's an issue, and bail out instead of trying to render:
+We can just modify the beginning of our `updateAsync` method to detect an error condition, let the user know there's an issue, and bail out instead of trying to render:
 
 ```js
   updateAsync: function(data, element, config, queryResponse, done) {
 
-    // Clear any errors from previous updates
+    // Clear any errors from previous updates.
     this.clearErrors();
 
-    // Throw some errors and exit if the shape of the data isn't what this chart needs
+    // Throw some errors and exit if the shape of the data isn't what this chart needs.
     if (queryResponse.fields.dimensions.length == 0) {
       this.addError({title: "No Dimensions", message: "This chart requires dimensions."});
       return;
@@ -170,7 +170,7 @@ That's it! If the user creates a query that only has measures, they'll now see t
 
 ### Configuration
 
-The final step is to allow the users to customize aspects of their visualization.
+The final step is to allow users to customize aspects of their visualization.
 
 That's really easy – in addition to the other properties of your visualization object, there's a special property called `options`.
 
@@ -213,7 +213,7 @@ That `config` object looks something like this:
 {font_size: "large"}
 ```
 
-So when we're updating the chart we can easily just check that and do stuff in response to it. Here's a check we can add to the end of the update method to implement the font size changes:
+So when we're updating the chart we can easily check that and do stuff in response to it. Here's a check we can add to the end of the update method to implement the font size changes:
 
 ```js
 if (config.font_size == "small") {
@@ -223,7 +223,7 @@ if (config.font_size == "small") {
 }
 ```
 
-We should also update the `<style>` tag we add in the `create` method to define the `hello-world-text-small` and `hello-world-text-large` CSS classes:
+We should also update the `<style>` tag we added in the `create` method to define the `hello-world-text-small` and `hello-world-text-large` CSS classes:
 
 ```css
 .hello-world-text-large {
