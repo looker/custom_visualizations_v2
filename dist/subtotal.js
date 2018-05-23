@@ -12452,7 +12452,8 @@ looker.plugins.visualizations.add({
   };
 
   callWithJQuery(function($) {
-    var SubtotalPivotDataMulti, SubtotalRenderer, aggregatorTemplates, subtotalAggregatorTemplates, usFmtPct;
+    var LOOKER_ROW_TOTAL_KEY, SubtotalPivotDataMulti, SubtotalRenderer, aggregatorTemplates, subtotalAggregatorTemplates, usFmtPct;
+    LOOKER_ROW_TOTAL_KEY = '$$$_row_total_$$$';
     SubtotalPivotDataMulti = (function() {
       var processKey;
 
@@ -12460,6 +12461,7 @@ looker.plugins.visualizations.add({
         constructor(input, opts) {
           var i, l, len, name, ref, ref1, ref2, ref3, ref4;
           super(input, opts);
+          window.p = this; // XXX
           this.hasColTotals = (ref = opts.hasColTotals) != null ? ref : true;
           this.hasRowTotals = (ref1 = opts.hasRowTotals) != null ? ref1 : true;
           // Multiple aggregator hack: Let clients pass in aggregators
@@ -12949,16 +12951,23 @@ looker.plugins.visualizations.add({
               tr.appendChild(th);
             }
           }
-        } else {
           for (q = 0, len1 = aggregatorNames.length; q < len1; q++) {
             name = aggregatorNames[q];
-            th = createElement("th", "pvtTotalLabel rowTotal", name, {
-              rowspan: colAttrs.length === 0 ? 1 : colAttrs.length + (rowAttrs.length === 0 ? 0 : 1)
-            });
+            th = createElement("th", "rowTotal", name);
             tr.appendChild(th);
           }
+        } else {
+          th = createElement("th", "pvtColLabel", opts.localeStrings.totals, {
+            colspan: aggregatorNames.length
+          });
+          tr.appendChild(th);
         }
       };
+      // for name in aggregatorNames
+      //     th = createElement "th", "pvtTotalLabel rowTotal", name,
+      //         rowspan: if colAttrs.length is 0 then 1 else colAttrs.length + (if rowAttrs.length is 0 then 0 else 1)
+      //     console.log 'XXX', 'BBB', th
+      //     tr.appendChild th
       buildRowHeader = function(tbody, axisHeaders, attrHeaders, h, rowAttrs, colAttrs, node, opts) {
         var ah, chKey, firstChild, l, len, ref, ref1;
         ref = h.children;
