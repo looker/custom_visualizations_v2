@@ -13135,7 +13135,7 @@ looker.plugins.visualizations.add({
         return tr;
       };
       buildColTotals = function(tr, attrHeaders, rowAttrs, colAttrs, opts) {
-        var clsNames, h, l, len, td, totalAggregator, val;
+        var clsNames, h, i, l, len, len1, name, o, td, totalAggregator, val;
         for (l = 0, len = attrHeaders.length; l < len; l++) {
           h = attrHeaders[l];
           if (!(h.col === colAttrs.length - 1 || (h.children.length !== 0 && h.col < opts.colSubtotalDisplay.disableFrom))) {
@@ -13148,14 +13148,17 @@ looker.plugins.visualizations.add({
           } else {
             clsNames += ` ${classColShow}`;
           }
-          totalAggregator = colTotals[h.flatKey][aggregatorNames[0]];
-          val = totalAggregator.value();
-          td = createElement("td", clsNames, totalAggregator.format(val), {
-            "data-value": val,
-            "data-for": `col${h.col}`,
-            "data-colnode": `${h.node}`
-          }, getTableEventHandlers(val, [], h.key, rowAttrs, colAttrs, opts));
-          tr.appendChild(td);
+          for (i = o = 0, len1 = aggregatorNames.length; o < len1; i = ++o) {
+            name = aggregatorNames[i];
+            totalAggregator = colTotals[h.flatKey][aggregatorNames[i]];
+            val = totalAggregator.value();
+            td = createElement("td", clsNames, totalAggregator.format(val), {
+              "data-value": val,
+              "data-for": `col${h.col}`,
+              "data-colnode": `${h.node}`
+            }, getTableEventHandlers(val, [], h.key, rowAttrs, colAttrs, opts));
+            tr.appendChild(td);
+          }
         }
       };
       buildGrandTotal = function(tbody, tr, rowAttrs, colAttrs, opts) {
