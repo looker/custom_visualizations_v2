@@ -10460,7 +10460,13 @@ looker.plugins.visualizations.add({
   label: 'Subtotal',
 
   options: (() => {
-    const options = {}
+    const options = {
+      use_looker_row_totals: {
+        type: 'boolean',
+        label: "Use Looker's row totals",
+        default: true
+      }
+    }
     for (let i = 0; i < 5; i++) {
       options[`measure_${i + 1}`] = {
         order: i,
@@ -12951,10 +12957,12 @@ looker.plugins.visualizations.add({
               tr.appendChild(th);
             }
           }
-          for (q = 0, len1 = aggregatorNames.length; q < len1; q++) {
-            name = aggregatorNames[q];
-            th = createElement("th", "rowTotal", name);
-            tr.appendChild(th);
+          if (hasRowTotals) {
+            for (q = 0, len1 = aggregatorNames.length; q < len1; q++) {
+              name = aggregatorNames[q];
+              th = createElement("th", "rowTotal", name);
+              tr.appendChild(th);
+            }
           }
         } else {
           th = createElement("th", "pvtColLabel", opts.localeStrings.totals, {

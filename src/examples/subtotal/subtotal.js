@@ -10,7 +10,13 @@ looker.plugins.visualizations.add({
   label: 'Subtotal',
 
   options: (() => {
-    const options = {}
+    const options = {
+      use_looker_row_totals: {
+        type: 'boolean',
+        label: "Use Looker's row totals",
+        default: true
+      }
+    }
     for (let i = 0; i < 5; i++) {
       options[`measure_${i + 1}`] = {
         order: i,
