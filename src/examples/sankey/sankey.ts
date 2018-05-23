@@ -10,13 +10,13 @@ import {
   VisualizationDefinition
 } from '../types/types'
 
-interface Sankey extends VisualizationDefinition {
-  svg?: any
-}
-
 // Global values provided via the API
 declare var looker: Looker
 declare var LookerCharts: LookerChartUtils
+
+interface Sankey extends VisualizationDefinition {
+  svg?: any
+}
 
 const vis: Sankey = {
   id: 'sankey', // id/label not required, but nice for testing and keeping manifests in sync
@@ -30,7 +30,7 @@ const vis: Sankey = {
     }
   },
   // Set up the initial state of the visualization
-  create: (element, config) => {
+  create (element, config) {
     element.innerHTML = `
       <style>
       .node,
@@ -39,7 +39,7 @@ const vis: Sankey = {
       }
       </style>
     `
-    vis.svg = d3.select(element).append('svg')
+    this.svg = d3.select(element).append('svg')
   },
   // Render in response to the data or settings changing
   updateAsync (data, element, config, queryResponse, details, doneRendering) {
@@ -96,10 +96,10 @@ const vis: Sankey = {
     data.forEach(function (d: any) {
       // variable number of dimensions
       const path: any = dimensions.map(function (dim) { return d[dim.name].value + '' })
-      path.forEach(function (p: any,i: number) {
+      path.forEach(function (p: any, i: number) {
         if (i === path.length - 1) return
-        const source: any = path.slice(i,i + 1)[0] + i
-        const target: any = path.slice(i + 1,i + 2)[0] + (i + 1)
+        const source: any = path.slice(i, i + 1)[0] + i
+        const target: any = path.slice(i + 1, i + 2)[0] + (i + 1)
         nodes.add(source)
         nodes.add(target)
         // Setup drill links
@@ -126,9 +126,9 @@ const vis: Sankey = {
       d.target = nodesArray.indexOf(d.target)
     })
 
-    graph.nodes = nodes.values().map(function (d) {
+    graph.nodes = nodes.values().map((d: any) => {
       return {
-        name: d.slice(0,-1)
+        name: d.slice(0, -1)
       }
     })
 
@@ -143,14 +143,14 @@ const vis: Sankey = {
       .attr('stroke-width', function (d: Cell) { return Math.max(1, d.width) })
       .on('mouseenter', function (this: any, d: Cell) {
         svg.selectAll('.link')
-        .style('opacity', 0.05)
+          .style('opacity', 0.05)
         d3.select(this)
-        .style('opacity', 0.7)
+          .style('opacity', 0.7)
         svg.selectAll('.node')
-        .style('opacity', function (p: any) {
-          if (p === d.source) return 1
+          .style('opacity', function (p: any) {
+            if (p === d.source) return 1
             if (p === d.target) return 1
-              return 0.5
+            return 0.5
           })
       })
       .on('click', function (this: any, d: Cell) {
@@ -167,72 +167,72 @@ const vis: Sankey = {
         d3.selectAll('.link').style('opacity', 0.4)
       })
 
-		// gradients https://bl.ocks.org/micahstubbs/bf90fda6717e243832edad6ed9f82814
+    // gradients https://bl.ocks.org/micahstubbs/bf90fda6717e243832edad6ed9f82814
     link.style('stroke', function (d: Cell, i: number) {
 
-			// make unique gradient ids
+      // make unique gradient ids
       const gradientID = 'gradient' + i
 
       const startColor = color(d.source.name.replace(/ .*/, ''))
       const stopColor = color(d.target.name.replace(/ .*/, ''))
 
       const linearGradient = defs.append('linearGradient')
-      .attr('id', gradientID)
+        .attr('id', gradientID)
 
       linearGradient.selectAll('stop')
-      .data([
-        { offset: '10%', color: startColor },
-        { offset: '90%', color: stopColor }
-      ])
-      .enter().append('stop')
-      .attr('offset', function (d: Cell) {
-        return d.offset
-      })
-      .attr('stop-color', function (d: Cell) {
-        return d.color
-      })
+        .data([
+          { offset: '10%', color: startColor },
+          { offset: '90%', color: stopColor }
+        ])
+        .enter().append('stop')
+        .attr('offset', function (d: Cell) {
+          return d.offset
+        })
+        .attr('stop-color', function (d: Cell) {
+          return d.color
+        })
 
       return 'url(#' + gradientID + ')'
     })
 
     node = node
-    .data(graph.nodes)
-    .enter().append('g')
-    .attr('class', 'node')
-    .on('mouseenter', function (d: Cell) {
-      svg.selectAll('.link')
-      .style('opacity', function (p: any) {
-        if (p.source === d) return 0.7
-          if (p.target === d) return 0.7
+      .data(graph.nodes)
+      .enter().append('g')
+      .attr('class', 'node')
+      .on('mouseenter', function (d: Cell) {
+        svg.selectAll('.link')
+          .style('opacity', function (p: any) {
+            if (p.source === d) return 0.7
+            if (p.target === d) return 0.7
             return 0.05
-        })
-    })
-    .on('mouseleave', function (d: Cell) {
-      d3.selectAll('.link').style('opacity', 0.4)
-    })
+          })
+      })
+      .on('mouseleave', function (d: Cell) {
+        d3.selectAll('.link').style('opacity', 0.4)
+      })
 
     node.append('rect')
-    .attr('x', function (d: Cell) { return d.x0 })
-    .attr('y', function (d: Cell) { return d.y0 })
-    .attr('height', function (d: Cell) { return Math.abs(d.y1 - d.y0) })
-    .attr('width', function (d: Cell) { return Math.abs(d.x1 - d.x0) })
-    .attr('fill', function (d: Cell) { return color(d.name.replace(/ .*/, '')) })
-    .attr('stroke', '#555')
+      .attr('x', function (d: Cell) { return d.x0 })
+      .attr('y', function (d: Cell) { return d.y0 })
+      .attr('height', function (d: Cell) { return Math.abs(d.y1 - d.y0) })
+      .attr('width', function (d: Cell) { return Math.abs(d.x1 - d.x0) })
+      .attr('fill', function (d: Cell) { return color(d.name.replace(/ .*/, '')) })
+      .attr('stroke', '#555')
 
     node.append('text')
-    .attr('x', function (d: Cell) { return d.x0 - 6 })
-    .attr('y', function (d: Cell) { return (d.y1 + d.y0) / 2 })
-    .attr('dy', '0.35em')
-    .style('font-weight', 'bold')
-    .attr('text-anchor', 'end')
-    .style('fill', '#222')
-    .text(function (d: Cell) { return d.name })
-    .filter(function (d: Cell) { return d.x0 < width / 2 })
-    .attr('x', function (d: Cell) { return d.x1 + 6 })
-    .attr('text-anchor', 'start')
+      .attr('x', function (d: Cell) { return d.x0 - 6 })
+      .attr('y', function (d: Cell) { return (d.y1 + d.y0) / 2 })
+      .attr('dy', '0.35em')
+      .style('font-weight', 'bold')
+      .attr('text-anchor', 'end')
+      .style('fill', '#222')
+      .text(function (d: Cell) { return d.name })
+      .filter(function (d: Cell) { return d.x0 < width / 2 })
+      .attr('x', function (d: Cell) { return d.x1 + 6 })
+      .attr('text-anchor', 'start')
 
     node.append('title')
-    .text(function (d: Cell) { return d.name + '\n' + d.value })
+      .text(function (d: Cell) { return d.name + '\n' + d.value })
     doneRendering()
   }
 }
