@@ -10513,6 +10513,7 @@ looker.plugins.visualizations.add({
     if (!config || !data) return
     if (details && details.changed && details.changed.size) return
     console.clear() // XXX
+    window.x = { data, element, config, queryResponse, details } // XXX
 
     const dimensions = config.query_fields.dimensions.map(d => d.name)
 
@@ -10598,7 +10599,9 @@ looker.plugins.visualizations.add({
       renderer,
       rendererOptions,
       aggregatorNames,
-      aggregators
+      aggregators,
+      hasColTotals: queryResponse.has_totals,
+      hasRowTotals: queryResponse.has_row_totals
     }
     $(element).pivot(ptData, options)
   }
@@ -12462,17 +12465,19 @@ looker.plugins.visualizations.add({
 
       class SubtotalPivotDataMulti extends $.pivotUtilities.PivotData {
         constructor(input, opts) {
-          var i, l, len, name, ref, ref1, ref2;
+          var i, l, len, name, ref, ref1, ref2, ref3, ref4;
           super(input, opts);
+          this.hasColTotals = (ref = opts.hasColTotals) != null ? ref : true;
+          this.hasRowTotals = (ref1 = opts.hasRowTotals) != null ? ref1 : true;
           // Multiple aggregator hack: Let clients pass in aggregators
           // (plural) and use the first one as the main value for each cell.
-          this.aggregatorNames = (ref = opts.aggregatorNames) != null ? ref : ['Count'];
-          this.aggregators = (ref1 = opts.aggregators) != null ? ref1 : (function() {
-            var l, len, ref2, results;
-            ref2 = this.aggregatorNames;
+          this.aggregatorNames = (ref2 = opts.aggregatorNames) != null ? ref2 : ['Count'];
+          this.aggregators = (ref3 = opts.aggregators) != null ? ref3 : (function() {
+            var l, len, ref4, results;
+            ref4 = this.aggregatorNames;
             results = [];
-            for (l = 0, len = ref2.length; l < len; l++) {
-              name = ref2[l];
+            for (l = 0, len = ref4.length; l < len; l++) {
+              name = ref4[l];
               results.push($.pivotUtilities.aggregators[name]({}));
             }
             return results;
@@ -12483,9 +12488,9 @@ looker.plugins.visualizations.add({
             throw new Error('aggregators and aggregatorNames must be the same length');
           }
           this.allTotal = {};
-          ref2 = this.aggregatorNames;
-          for (i = l = 0, len = ref2.length; l < len; i = ++l) {
-            name = ref2[i];
+          ref4 = this.aggregatorNames;
+          for (i = l = 0, len = ref4.length; l < len; i = ++l) {
+            name = ref4[i];
             this.allTotal[name] = this.aggregators[i](this, [], []);
           }
           SubtotalPivotDataMulti.forEachRecord(this.input, this.derivedAttributes, (record) => {
@@ -12617,7 +12622,7 @@ looker.plugins.visualizations.add({
     }).call(this);
     $.pivotUtilities.SubtotalPivotDataMulti = SubtotalPivotDataMulti;
     SubtotalRenderer = function(pivotData, opts) {
-      var addClass, adjustAxisHeader, aggregatorNames, aggregators, allTotal, arrowCollapsed, arrowExpanded, buildAxisHeader, buildColAxisHeaders, buildColHeader, buildColTotals, buildColTotalsHeader, buildGrandTotal, buildRowAxisHeaders, buildRowHeader, buildRowTotalsHeader, buildValues, classColCollapsed, classColExpanded, classColHide, classColShow, classCollapsed, classExpanded, classRowCollapsed, classRowExpanded, classRowHide, classRowShow, clickStatusCollapsed, clickStatusExpanded, colAttrs, colKeys, colTotals, collapseAxis, collapseAxisHeaders, collapseChildCol, collapseChildRow, collapseCol, collapseHiddenColSubtotal, collapseRow, collapseShowColSubtotal, collapseShowRowSubtotal, createElement, defaults, expandAxis, expandChildCol, expandChildRow, expandCol, expandHideColSubtotal, expandHideRowSubtotal, expandRow, expandShowColSubtotal, expandShowRowSubtotal, getHeaderText, getTableEventHandlers, hasClass, hideChildCol, hideChildRow, main, processKeys, removeClass, replaceClass, rowAttrs, rowKeys, rowTotals, setAttributes, showChildCol, showChildRow, tree;
+      var addClass, adjustAxisHeader, aggregatorNames, aggregators, allTotal, arrowCollapsed, arrowExpanded, buildAxisHeader, buildColAxisHeaders, buildColHeader, buildColTotals, buildColTotalsHeader, buildGrandTotal, buildRowAxisHeaders, buildRowHeader, buildRowTotalsHeader, buildValues, classColCollapsed, classColExpanded, classColHide, classColShow, classCollapsed, classExpanded, classRowCollapsed, classRowExpanded, classRowHide, classRowShow, clickStatusCollapsed, clickStatusExpanded, colAttrs, colKeys, colTotals, collapseAxis, collapseAxisHeaders, collapseChildCol, collapseChildRow, collapseCol, collapseHiddenColSubtotal, collapseRow, collapseShowColSubtotal, collapseShowRowSubtotal, createElement, defaults, expandAxis, expandChildCol, expandChildRow, expandCol, expandHideColSubtotal, expandHideRowSubtotal, expandRow, expandShowColSubtotal, expandShowRowSubtotal, getHeaderText, getTableEventHandlers, hasClass, hasColTotals, hasRowTotals, hideChildCol, hideChildRow, main, processKeys, removeClass, replaceClass, rowAttrs, rowKeys, rowTotals, setAttributes, showChildCol, showChildRow, tree;
       defaults = {
         table: {
           clickCallback: null
@@ -12672,6 +12677,8 @@ looker.plugins.visualizations.add({
       allTotal = pivotData.allTotal;
       aggregators = pivotData.aggregators;
       aggregatorNames = pivotData.aggregatorNames;
+      hasColTotals = pivotData.hasColTotals;
+      hasRowTotals = pivotData.hasRowTotals;
       classRowHide = "rowhide";
       classRowShow = "rowshow";
       classColHide = "colhide";
@@ -13057,8 +13064,7 @@ looker.plugins.visualizations.add({
         return eventHandlers;
       };
       buildValues = function(tbody, colAttrHeaders, rowAttrHeaders, rowAttrs, colAttrs, opts) {
-        var aggregator, ch, cls, l, len, len1, len2, name, o, q, rCls, ref, results, rh, td, totalAggregator, tr, val;
-        results = [];
+        var aggregator, ch, cls, l, len, len1, len2, len3, name, o, q, r, rCls, ref, rh, td, totalAggregator, tr, val;
         for (l = 0, len = rowAttrHeaders.length; l < len; l++) {
           rh = rowAttrHeaders[l];
           if (!(rh.col === rowAttrs.length - 1 || (rh.children.length !== 0 && rh.col < opts.rowSubtotalDisplay.disableFrom))) {
@@ -13102,10 +13108,8 @@ looker.plugins.visualizations.add({
               }
             }
           }
-          results.push((function() {
-            var len3, r, results1;
-// buildRowTotal
-            results1 = [];
+          // buildRowTotal
+          if (hasRowTotals) {
             for (r = 0, len3 = aggregatorNames.length; r < len3; r++) {
               name = aggregatorNames[r];
               totalAggregator = rowTotals[rh.flatKey][name];
@@ -13117,12 +13121,10 @@ looker.plugins.visualizations.add({
                 "data-rownode": rh.node
               });
               getTableEventHandlers(val, rh.key, [], rowAttrs, colAttrs, opts);
-              results1.push(tr.appendChild(td));
+              tr.appendChild(td);
             }
-            return results1;
-          })());
+          }
         }
-        return results;
       };
       buildColTotalsHeader = function(rowAttrs, colAttrs) {
         var colspan, th, tr;
@@ -13162,7 +13164,8 @@ looker.plugins.visualizations.add({
         }
       };
       buildGrandTotal = function(tbody, tr, rowAttrs, colAttrs, opts) {
-        var l, len, name, td, totalAggregator, val;
+        var l, len, name, results, td, totalAggregator, val;
+        results = [];
         for (l = 0, len = aggregatorNames.length; l < len; l++) {
           name = aggregatorNames[l];
           totalAggregator = allTotal[name];
@@ -13170,9 +13173,9 @@ looker.plugins.visualizations.add({
           td = createElement("td", "pvtGrandTotal", totalAggregator.format(val), {
             "data-value": val
           }, getTableEventHandlers(val, [], [], rowAttrs, colAttrs, opts));
-          tr.appendChild(td);
+          results.push(tr.appendChild(td));
         }
-        return tbody.appendChild(tr);
+        return results;
       };
       collapseAxisHeaders = function(axisHeaders, col, opts) {
         var ah, collapsible, i, l, ref, ref1, results;
@@ -13552,7 +13555,9 @@ looker.plugins.visualizations.add({
             chKey = ref[l];
             buildColHeader(colAxisHeaders, colAttrHeaders, colKeyHeaders[chKey], rowAttrs, colAttrs, node, opts);
           }
-          buildRowTotalsHeader(colAxisHeaders.ah[0].tr, null, rowAttrs, colAttrs);
+          if (hasRowTotals) {
+            buildRowTotalsHeader(colAxisHeaders.ah[0].tr, null, rowAttrs, colAttrs);
+          }
         }
         tbody = createElement("tbody");
         result.appendChild(tbody);
@@ -13569,11 +13574,16 @@ looker.plugins.visualizations.add({
           }
         }
         buildValues(tbody, colAttrHeaders, rowAttrHeaders, rowAttrs, colAttrs, opts);
-        tr = buildColTotalsHeader(rowAttrs, colAttrs);
-        if (colAttrs.length > 0) {
-          buildColTotals(tr, colAttrHeaders, rowAttrs, colAttrs, opts);
+        if (hasColTotals) {
+          tr = buildColTotalsHeader(rowAttrs, colAttrs);
+          if (colAttrs.length > 0) {
+            buildColTotals(tr, colAttrHeaders, rowAttrs, colAttrs, opts);
+          }
+          if (hasRowTotals) {
+            buildGrandTotal(tbody, tr, rowAttrs, colAttrs, opts);
+          }
+          tbody.appendChild(tr);
         }
-        buildGrandTotal(tbody, tr, rowAttrs, colAttrs, opts);
         collapseAxis(colAxisHeaders, opts.colSubtotalDisplay.collapseAt, colAttrs, opts.colSubtotalDisplay);
         collapseAxis(rowAxisHeaders, opts.rowSubtotalDisplay.collapseAt, rowAttrs, opts.rowSubtotalDisplay);
         result.setAttribute("data-numrows", rowKeys.length);

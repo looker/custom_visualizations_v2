@@ -63,6 +63,7 @@ looker.plugins.visualizations.add({
     if (!config || !data) return
     if (details && details.changed && details.changed.size) return
     console.clear() // XXX
+    window.x = { data, element, config, queryResponse, details } // XXX
 
     const dimensions = config.query_fields.dimensions.map(d => d.name)
 
@@ -148,7 +149,9 @@ looker.plugins.visualizations.add({
       renderer,
       rendererOptions,
       aggregatorNames,
-      aggregators
+      aggregators,
+      hasColTotals: queryResponse.has_totals,
+      hasRowTotals: queryResponse.has_row_totals
     }
     $(element).pivot(ptData, options)
   }
