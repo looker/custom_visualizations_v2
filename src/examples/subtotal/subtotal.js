@@ -9,41 +9,13 @@ looker.plugins.visualizations.add({
   id: 'subtotal',
   label: 'Subtotal',
 
-  options: (() => {
-    const options = {
-      use_looker_row_totals: {
-        type: 'boolean',
-        label: "Use Looker's row totals",
-        default: true
-      }
+  options: {
+    use_looker_row_totals: {
+      type: 'boolean',
+      label: "Use Looker's row totals",
+      default: true
     }
-    return options
-    for (let i = 0; i < 5; i++) {
-      options[`measure_${i + 1}`] = {
-        order: i,
-        type: 'string',
-        label: `Measure ${i + 1}`,
-        default: 'Sum',
-        display: 'select',
-        hidden: (config, queryResponse) => config.query_fields.measures.length < (i + 1), // XXX Never called!
-        values: [
-          // Must match the aggregators we define below.
-          'Count',
-          'Count Unique Values',
-          'Sum',
-          'Integer Sum',
-          'Average',
-          'Median',
-          'Sample Variance',
-          'Sample Standard Deviation',
-          'Minimum',
-          'Maximum'
-        ].map(k => ({[k]: k}))
-      }
-    }
-    options.measure_2.default = 'Maximum' // XXX testing
-    return options
-  })(),
+  },
 
   create (element, config) {
     [
@@ -66,7 +38,7 @@ looker.plugins.visualizations.add({
 
     const dimensions = config.query_fields.dimensions.map(d => d.name)
 
-    const measures = config.query_fields.measures.map(m => m.name)
+    const measures = config.query_fields.measures
     if (measures.length < 1) {
       return this.addError({
         title: 'A measure is required',
@@ -95,11 +67,11 @@ looker.plugins.visualizations.add({
         ptData.push(ptRow)
       } else {
         // Fan out each row using the pivot.
-        for (const pivotKey of Object.keys(row[measures[0]])) {
+        for (const pivotKey of Object.keys(row[measures[0].name])) {
           const pivotRow = Object.assign({}, ptRow)
           pivotRow[pivotName] = pivotKey
-          for (const measureName of measures) {
-            pivotRow[measureName] = row[measureName][pivotKey].value
+          for (const measure of measures) {
+            pivotRow[measure.name] = row[measure.name][pivotKey].value
           }
           ptData.push(pivotRow)
         }
@@ -116,23 +88,24 @@ looker.plugins.visualizations.add({
     const aggregatorNames = []
     const aggregators = []
     for (let i = 0; i < measures.length; i++) {
-      let aggName = config[`measure_${i + 1}`] || this.options[`measure_${i + 1}`].default
-      aggregatorNames.push(aggName)
+      const type = measures[i].type
       let agg
-      switch (aggName) {
-        case 'Count': agg = tpl.count(intFormat); break
-        case 'Count Unique Values': agg = tpl.countUnique(intFormat); break
-        case 'Sum': agg = tpl.sum(customFormat); break
-        case 'Integer Sum': agg = tpl.sum(intFormat); break
-        case 'Average': agg = tpl.average(customFormat); break
-        case 'Median': agg = tpl.median(customFormat); break
-        case 'Sample Variance': agg = tpl.var(1, customFormat); break
-        case 'Sample Standard Deviation': agg = tpl.stdev(1, customFormat); break
-        case 'Minimum': agg = tpl.min(customFormat); break
-        case 'Maximum': agg = tpl.max(customFormat); break
-        default: throw new Error(`Unknown aggregator: ${aggName}`)
+      switch (type) {
+        case 'count': agg = tpl.sum(intFormat); break
+        case 'count_distinct': agg = tpl.sum(intFormat); break
+        case 'sum': agg = tpl.sum(customFormat); break
+        case 'average': agg = tpl.average(customFormat); break
+        case 'median': agg = tpl.median(customFormat); break
+        case 'min': agg = tpl.min(customFormat); break
+        case 'max': agg = tpl.max(customFormat); break
+        case 'list': agg = tpl.listUnique(', '); break
+        case 'percent_of_total': agg = tpl.fractionOf(tpl.sum(), 'total', customFormat); break
+        default:
+          this.addError({ title: `Measure type ${type} is unsupported` })
+          return
       }
-      aggregators.push(agg([measures[i]]))
+      aggregatorNames.push(type)
+      aggregators.push(agg([measures[i].name]))
     }
 
     const dataClass = $.pivotUtilities.SubtotalPivotDataMulti
