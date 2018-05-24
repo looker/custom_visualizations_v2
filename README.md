@@ -21,6 +21,10 @@
 * `yarn lint` - Runs TSLint across the codebase.
 * `yarn lint-fix` - Runs TSLint and attempts to fix any linter errors automatically.
 
+# Contributing
+
+Please note that Looker does NOT accept any Pull Requests for our custom visualizations. If you have a suggested bug fix or addition, please email blocks@looker.com.
+
 ----
 
 **A Note on Support**
