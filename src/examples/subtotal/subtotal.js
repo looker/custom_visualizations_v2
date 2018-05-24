@@ -85,6 +85,8 @@ looker.plugins.visualizations.add({
         }
       }
     }
+    window.data = data // XXX
+    window.ptData = ptData // XXX
 
     // We create our own aggregators instead of using
     // $.pivotUtilities.aggregators because we want to use our own configurable
@@ -112,7 +114,9 @@ looker.plugins.visualizations.add({
           this.addError({ title: `Measure type ${type} is unsupported` })
           return
       }
-      aggregatorNames.push(`${label1} <em>${label2}</em>`)
+      const aggName = `measure_${i}`
+      labels[aggName] = `${label1} <em>${label2}</em>`
+      aggregatorNames.push(aggName)
       aggregators.push(agg([name]))
     }
 

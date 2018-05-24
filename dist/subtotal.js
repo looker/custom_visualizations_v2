@@ -10535,6 +10535,8 @@ looker.plugins.visualizations.add({
         }
       }
     }
+    window.data = data // XXX
+    window.ptData = ptData // XXX
 
     // We create our own aggregators instead of using
     // $.pivotUtilities.aggregators because we want to use our own configurable
@@ -10562,7 +10564,9 @@ looker.plugins.visualizations.add({
           this.addError({ title: `Measure type ${type} is unsupported` })
           return
       }
-      aggregatorNames.push(`${label1} <em>${label2}</em>`)
+      const aggName = `measure_${i}`
+      labels[aggName] = `${label1} <em>${label2}</em>`
+      aggregatorNames.push(aggName)
       aggregators.push(agg([name]))
     }
 
@@ -12451,9 +12455,9 @@ looker.plugins.visualizations.add({
         constructor(input, opts) {
           var i, l, len, name, ref, ref1, ref2, ref3, ref4, ref5, ref6;
           super(input, opts);
-          window.p = this; // XXX
+          window.pivotData = this; // XXX
           this.hasColTotals = (ref = opts.hasColTotals) != null ? ref : true;
-          this.hasRowTotals = (ref1 = opts.hasRowTotals) != null ? ref1 : true;
+          this.hasRowTotals = this.colAttrs.length ? (ref1 = opts.hasRowTotals) != null ? ref1 : true : true;
           this.labels = (ref2 = opts.labels) != null ? ref2 : {};
           // Multiple aggregator hack: Let clients pass in aggregators
           // (plural) and use the first one as the main value for each cell.
@@ -12944,42 +12948,48 @@ looker.plugins.visualizations.add({
         return node.counter++;
       };
       buildRowTotalsHeader = function(tr, colKeyHeaders, rowAttrs, colAttrs) {
-        var i, l, len, len1, name, o, q, ref, th;
-        if (colAttrs.length > 0 && colKeyHeaders) {
-          for (i = l = 0, ref = colKeyHeaders.children.length; (0 <= ref ? l < ref : l > ref); i = 0 <= ref ? ++l : --l) {
-            if (colKeyHeaders.children[i] === LOOKER_ROW_TOTAL_KEY && !useLookerRowTotals) {
-              continue;
+        var i, l, len, len1, len2, name, o, q, r, ref, th;
+        if (colAttrs.length > 0) {
+          // We have pivots.
+          if (colKeyHeaders) {
+            for (i = l = 0, ref = colKeyHeaders.children.length; (0 <= ref ? l < ref : l > ref); i = 0 <= ref ? ++l : --l) {
+              if (colKeyHeaders.children[i] === LOOKER_ROW_TOTAL_KEY && !useLookerRowTotals) {
+                continue;
+              }
+              for (o = 0, len = aggregatorNames.length; o < len; o++) {
+                name = aggregatorNames[o];
+                th = createElement("th", "rowTotal", {
+                  html: labels[name]
+                });
+                tr.appendChild(th);
+              }
             }
-            for (o = 0, len = aggregatorNames.length; o < len; o++) {
-              name = aggregatorNames[o];
-              th = createElement("th", "rowTotal", {
-                html: name
-              });
-              tr.appendChild(th);
+            if (hasRowTotals && !useLookerRowTotals) {
+              for (q = 0, len1 = aggregatorNames.length; q < len1; q++) {
+                name = aggregatorNames[q];
+                th = createElement("th", "rowTotal", {
+                  html: labels[name]
+                });
+                tr.appendChild(th);
+              }
             }
-          }
-          if (hasRowTotals && !useLookerRowTotals) {
-            for (q = 0, len1 = aggregatorNames.length; q < len1; q++) {
-              name = aggregatorNames[q];
-              th = createElement("th", "rowTotal", {
-                html: name
-              });
-              tr.appendChild(th);
-            }
-          }
-        } else {
-          if (!useLookerRowTotals) {
+          } else {
             th = createElement("th", "pvtColLabel", 'Total*', { // XXX Asterix
               colspan: aggregatorNames.length
             });
             tr.appendChild(th);
           }
+        } else {
+// No pivots, but we still need to add column headers.
+          for (r = 0, len2 = aggregatorNames.length; r < len2; r++) {
+            name = aggregatorNames[r];
+            th = createElement("th", "rowTotal", {
+              html: labels[name]
+            });
+            tr.appendChild(th);
+          }
         }
       };
-      // for name in aggregatorNames
-      //     th = createElement "th", "pvtTotalLabel rowTotal", name,
-      //         rowspan: if colAttrs.length is 0 then 1 else colAttrs.length + (if rowAttrs.length is 0 then 0 else 1)
-      //     tr.appendChild th
       buildRowHeader = function(tbody, axisHeaders, attrHeaders, h, rowAttrs, colAttrs, node, opts) {
         var ah, chKey, firstChild, l, len, ref, ref1;
         ref = h.children;
@@ -13554,7 +13564,7 @@ looker.plugins.visualizations.add({
         if (rowAttrs.length !== 0 && rowKeys.length !== 0) {
           rowKeyHeaders = processKeys(rowKeys, "pvtRowLabel");
         }
-        if (!useLookerRowTotals) {
+        if (colKeyHeaders && !useLookerRowTotals) {
           delete colKeyHeaders[LOOKER_ROW_TOTAL_KEY];
           colKeyHeaders.children = colKeyHeaders.children.filter(function(k) {
             return k !== LOOKER_ROW_TOTAL_KEY;
