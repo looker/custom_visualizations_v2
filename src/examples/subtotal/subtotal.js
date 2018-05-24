@@ -55,6 +55,14 @@ looker.plugins.visualizations.add({
     }
     const pivotName = pivots[0]
 
+    const labels = {}
+    for (const obj of Object.values(config.query_fields)) {
+      for (const field of obj) {
+        const { name, view_label: label1, label_short: label2 } = field
+        labels[name] = `${label1} <em>${label2}</em>`
+      }
+    }
+
     const ptData = []
     for (const row of data) {
       const ptRow = {}
@@ -88,7 +96,7 @@ looker.plugins.visualizations.add({
     const aggregatorNames = []
     const aggregators = []
     for (let i = 0; i < measures.length; i++) {
-      const type = measures[i].type
+      const { type, name, view_label: label1, label_short: label2 } = measures[i]
       let agg
       switch (type) {
         case 'count': agg = tpl.sum(intFormat); break
@@ -104,8 +112,8 @@ looker.plugins.visualizations.add({
           this.addError({ title: `Measure type ${type} is unsupported` })
           return
       }
-      aggregatorNames.push(type)
-      aggregators.push(agg([measures[i].name]))
+      aggregatorNames.push(`${label1} <em>${label2}</em>`)
+      aggregators.push(agg([name]))
     }
 
     const dataClass = $.pivotUtilities.SubtotalPivotDataMulti
@@ -118,6 +126,7 @@ looker.plugins.visualizations.add({
     const options = {
       rows: dimensions,
       cols: pivots,
+      labels,
       dataClass,
       renderer,
       rendererOptions,
