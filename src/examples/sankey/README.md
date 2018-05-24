@@ -3,7 +3,12 @@
 
 ![](sankey.png)
 
-This diagram creates a [sankey diagram](https://en.wikipedia.org/wiki/Sankey_diagram) to display sequences of transitions.
+This diagram creates a [sankey diagram](https://en.wikipedia.org/wiki/Sankey_diagram) to display sequences of transitions. Sankey diagrams are a specific type of flow diagram, in which the width of each arrow is shown proportionally to the flow quantity. Sankey diagrams are often used in scientific fields, especially physics. They are used to represent energy inputs, useful output, and wasted output. Sankeys can also be used to understand how users arrive at and navigate through an application or website.
+
+Good use cases include: 
+- Event Analytics
+- Energy Flows
+- Order Stages
 
 ![](sankey.mov)
 
