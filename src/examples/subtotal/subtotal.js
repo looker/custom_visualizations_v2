@@ -17,6 +17,7 @@ looker.plugins.visualizations.add({
         default: true
       }
     }
+    return options
     for (let i = 0; i < 5; i++) {
       options[`measure_${i + 1}`] = {
         order: i,
@@ -150,7 +151,8 @@ looker.plugins.visualizations.add({
       aggregatorNames,
       aggregators,
       hasColTotals: queryResponse.has_totals,
-      hasRowTotals: queryResponse.has_row_totals
+      hasRowTotals: queryResponse.has_row_totals,
+      useLookerRowTotals: config.use_looker_row_totals
     }
     $(element).pivot(ptData, options)
   }

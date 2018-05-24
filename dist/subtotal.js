@@ -10467,6 +10467,7 @@ looker.plugins.visualizations.add({
         default: true
       }
     }
+    return options
     for (let i = 0; i < 5; i++) {
       options[`measure_${i + 1}`] = {
         order: i,
@@ -10600,7 +10601,8 @@ looker.plugins.visualizations.add({
       aggregatorNames,
       aggregators,
       hasColTotals: queryResponse.has_totals,
-      hasRowTotals: queryResponse.has_row_totals
+      hasRowTotals: queryResponse.has_row_totals,
+      useLookerRowTotals: config.use_looker_row_totals
     }
     $(element).pivot(ptData, options)
   }
@@ -12465,7 +12467,7 @@ looker.plugins.visualizations.add({
 
       class SubtotalPivotDataMulti extends $.pivotUtilities.PivotData {
         constructor(input, opts) {
-          var i, l, len, name, ref, ref1, ref2, ref3, ref4;
+          var i, l, len, name, ref, ref1, ref2, ref3, ref4, ref5;
           super(input, opts);
           window.p = this; // XXX
           this.hasColTotals = (ref = opts.hasColTotals) != null ? ref : true;
@@ -12499,6 +12501,8 @@ looker.plugins.visualizations.add({
               return this.processRecord(record);
             }
           });
+          this.hasLookerRowTotals = this.getColKeys().flatten().includes(LOOKER_ROW_TOTAL_KEY);
+          this.useLookerRowTotals = ((ref5 = opts.useLookerRowTotals) != null ? ref5 : true) && this.hasLookerRowTotals;
         }
 
         processRecord(record) { //this code is called in a tight loop
@@ -12623,7 +12627,7 @@ looker.plugins.visualizations.add({
     }).call(this);
     $.pivotUtilities.SubtotalPivotDataMulti = SubtotalPivotDataMulti;
     SubtotalRenderer = function(pivotData, opts) {
-      var addClass, adjustAxisHeader, aggregatorNames, aggregators, allTotal, arrowCollapsed, arrowExpanded, buildAxisHeader, buildColAxisHeaders, buildColHeader, buildColTotals, buildColTotalsHeader, buildGrandTotal, buildRowAxisHeaders, buildRowHeader, buildRowTotalsHeader, buildValues, classColCollapsed, classColExpanded, classColHide, classColShow, classCollapsed, classExpanded, classRowCollapsed, classRowExpanded, classRowHide, classRowShow, clickStatusCollapsed, clickStatusExpanded, colAttrs, colKeys, colTotals, collapseAxis, collapseAxisHeaders, collapseChildCol, collapseChildRow, collapseCol, collapseHiddenColSubtotal, collapseRow, collapseShowColSubtotal, collapseShowRowSubtotal, createElement, defaults, expandAxis, expandChildCol, expandChildRow, expandCol, expandHideColSubtotal, expandHideRowSubtotal, expandRow, expandShowColSubtotal, expandShowRowSubtotal, getHeaderText, getTableEventHandlers, hasClass, hasColTotals, hasRowTotals, hideChildCol, hideChildRow, main, processKeys, removeClass, replaceClass, rowAttrs, rowKeys, rowTotals, setAttributes, showChildCol, showChildRow, tree;
+      var addClass, adjustAxisHeader, aggregatorNames, aggregators, allTotal, arrowCollapsed, arrowExpanded, buildAxisHeader, buildColAxisHeaders, buildColHeader, buildColTotals, buildColTotalsHeader, buildGrandTotal, buildRowAxisHeaders, buildRowHeader, buildRowTotalsHeader, buildValues, classColCollapsed, classColExpanded, classColHide, classColShow, classCollapsed, classExpanded, classRowCollapsed, classRowExpanded, classRowHide, classRowShow, clickStatusCollapsed, clickStatusExpanded, colAttrs, colKeys, colTotals, collapseAxis, collapseAxisHeaders, collapseChildCol, collapseChildRow, collapseCol, collapseHiddenColSubtotal, collapseRow, collapseShowColSubtotal, collapseShowRowSubtotal, createElement, defaults, expandAxis, expandChildCol, expandChildRow, expandCol, expandHideColSubtotal, expandHideRowSubtotal, expandRow, expandShowColSubtotal, expandShowRowSubtotal, getHeaderText, getTableEventHandlers, hasClass, hasColTotals, hasLookerRowTotals, hasRowTotals, hideChildCol, hideChildRow, main, processKeys, removeClass, replaceClass, rowAttrs, rowKeys, rowTotals, setAttributes, showChildCol, showChildRow, tree, useLookerRowTotals;
       defaults = {
         table: {
           clickCallback: null
@@ -12680,6 +12684,8 @@ looker.plugins.visualizations.add({
       aggregatorNames = pivotData.aggregatorNames;
       hasColTotals = pivotData.hasColTotals;
       hasRowTotals = pivotData.hasRowTotals;
+      hasLookerRowTotals = pivotData.hasLookerRowTotals;
+      useLookerRowTotals = pivotData.useLookerRowTotals;
       classRowHide = "rowhide";
       classRowShow = "rowshow";
       classColHide = "colhide";
@@ -12951,13 +12957,16 @@ looker.plugins.visualizations.add({
         var i, l, len, len1, name, o, q, ref, th;
         if (colAttrs.length > 0 && colKeyHeaders) {
           for (i = l = 0, ref = colKeyHeaders.children.length; (0 <= ref ? l < ref : l > ref); i = 0 <= ref ? ++l : --l) {
+            if (colKeyHeaders.children[i] === LOOKER_ROW_TOTAL_KEY && !useLookerRowTotals) {
+              continue;
+            }
             for (o = 0, len = aggregatorNames.length; o < len; o++) {
               name = aggregatorNames[o];
               th = createElement("th", "rowTotal", name);
               tr.appendChild(th);
             }
           }
-          if (hasRowTotals) {
+          if (hasRowTotals && !useLookerRowTotals) {
             for (q = 0, len1 = aggregatorNames.length; q < len1; q++) {
               name = aggregatorNames[q];
               th = createElement("th", "rowTotal", name);
@@ -12965,16 +12974,17 @@ looker.plugins.visualizations.add({
             }
           }
         } else {
-          th = createElement("th", "pvtColLabel", opts.localeStrings.totals, {
-            colspan: aggregatorNames.length
-          });
-          tr.appendChild(th);
+          if (!useLookerRowTotals) {
+            th = createElement("th", "pvtColLabel", opts.localeStrings.totals + "*", { // XXX Asterix
+              colspan: aggregatorNames.length
+            });
+            tr.appendChild(th);
+          }
         }
       };
       // for name in aggregatorNames
       //     th = createElement "th", "pvtTotalLabel rowTotal", name,
       //         rowspan: if colAttrs.length is 0 then 1 else colAttrs.length + (if rowAttrs.length is 0 then 0 else 1)
-      //     console.log 'XXX', 'BBB', th
       //     tr.appendChild th
       buildRowHeader = function(tbody, axisHeaders, attrHeaders, h, rowAttrs, colAttrs, node, opts) {
         var ah, chKey, firstChild, l, len, ref, ref1;
@@ -13119,7 +13129,7 @@ looker.plugins.visualizations.add({
             }
           }
           // buildRowTotal
-          if (hasRowTotals) {
+          if (hasRowTotals && !useLookerRowTotals) {
             for (r = 0, len3 = aggregatorNames.length; r < len3; r++) {
               name = aggregatorNames[r];
               totalAggregator = rowTotals[rh.flatKey][name];
@@ -13550,6 +13560,12 @@ looker.plugins.visualizations.add({
         if (rowAttrs.length !== 0 && rowKeys.length !== 0) {
           rowKeyHeaders = processKeys(rowKeys, "pvtRowLabel");
         }
+        if (!useLookerRowTotals) {
+          delete colKeyHeaders[LOOKER_ROW_TOTAL_KEY];
+          colKeyHeaders.children = colKeyHeaders.children.filter(function(k) {
+            return k !== LOOKER_ROW_TOTAL_KEY;
+          });
+        }
         result = createElement("table", "pvtTable", null, {
           style: "display: none;"
         });
@@ -13565,7 +13581,7 @@ looker.plugins.visualizations.add({
             chKey = ref[l];
             buildColHeader(colAxisHeaders, colAttrHeaders, colKeyHeaders[chKey], rowAttrs, colAttrs, node, opts);
           }
-          if (hasRowTotals) {
+          if (hasRowTotals && !useLookerRowTotals) {
             buildRowTotalsHeader(colAxisHeaders.ah[0].tr, null, rowAttrs, colAttrs);
           }
         }
@@ -13589,7 +13605,7 @@ looker.plugins.visualizations.add({
           if (colAttrs.length > 0) {
             buildColTotals(tr, colAttrHeaders, rowAttrs, colAttrs, opts);
           }
-          if (hasRowTotals) {
+          if (hasRowTotals && !useLookerRowTotals) {
             buildGrandTotal(tbody, tr, rowAttrs, colAttrs, opts);
           }
           tbody.appendChild(tr);
