@@ -1,6 +1,5 @@
 #  Sankey
 
-
 ![](sankey.png)
 
 This diagram creates a [sankey diagram](https://en.wikipedia.org/wiki/Sankey_diagram) to display sequences of transitions.

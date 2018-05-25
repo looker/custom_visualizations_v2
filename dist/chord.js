@@ -23201,7 +23201,8 @@ var vis = {
         var valueFormatter = Object(__WEBPACK_IMPORTED_MODULE_1__common_utils__["a" /* formatType */])(measure.value_format) || defaultFormatter;
         var tooltip = this.tooltip;
         // Set color scale
-        var color = __WEBPACK_IMPORTED_MODULE_0_d3__["scaleOrdinal"]().range(config.color_range);
+        var colorScale = __WEBPACK_IMPORTED_MODULE_0_d3__["scaleOrdinal"]();
+        var color = colorScale.range(config.color_range);
         // Set chord layout
         var chord = __WEBPACK_IMPORTED_MODULE_0_d3__["chord"]()
             .padAngle(0.025)

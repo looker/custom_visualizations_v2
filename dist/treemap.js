@@ -23192,7 +23192,8 @@ var vis = {
         var dimensions = queryResponse.fields.dimension_like;
         var measure = queryResponse.fields.measure_like[0];
         var format = Object(__WEBPACK_IMPORTED_MODULE_1__common_utils__["a" /* formatType */])(measure.value_format) || (function (s) { return s.toString(); });
-        var color = __WEBPACK_IMPORTED_MODULE_0_d3__["scaleOrdinal"]().range(config.color_range);
+        var colorScale = __WEBPACK_IMPORTED_MODULE_0_d3__["scaleOrdinal"]();
+        var color = colorScale.range(config.color_range);
         data.forEach(function (row) {
             row.taxonomy = {
                 value: dimensions.map(function (dimension) { return row[dimension.name].value; })

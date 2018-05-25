@@ -90,11 +90,8 @@ const vis: SunburstVisualization = {
     const measure = queryResponse.fields.measure_like[0]
     const format = formatType(measure.value_format) || ((s: any): string => s.toString())
 
-    // TODO: lint-fix points out that these are unused. what were they meant for?
-    const x = d3.scaleLinear().range([0, 2 * Math.PI])
-    const y = d3.scaleSqrt().range([0, radius])
-
-    const color = d3.scaleOrdinal().range(config.color_range)
+    const colorScale: d3.ScaleOrdinal<string, null> = d3.scaleOrdinal()
+    const color = colorScale.range(config.color_range)
 
     data.forEach(row => {
       row.taxonomy = {

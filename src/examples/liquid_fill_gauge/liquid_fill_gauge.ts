@@ -1,6 +1,5 @@
 // Global values provided via the API
 declare var looker: Looker
-declare var require: any
 
 import * as d3 from 'd3'
 import { handleErrors } from '../common/utils'
@@ -218,7 +217,6 @@ const vis: LiquidFillGaugeVisualization = {
   },
   // Render in response to the data or settings changing
   update(data, element, config, queryResponse) {
-    // TODO error handling
     if (!handleErrors(this, queryResponse, {
       min_pivots: 0, max_pivots: 0,
       min_dimensions: 0, max_dimensions: undefined,
