@@ -23314,7 +23314,6 @@ var vis = {
     },
     // Render in response to the data or settings changing
     update: function (data, element, config, queryResponse) {
-        // TODO error handling
         if (!Object(__WEBPACK_IMPORTED_MODULE_1__common_utils__["b" /* handleErrors */])(this, queryResponse, {
             min_pivots: 0, max_pivots: 0,
             min_dimensions: 0, max_dimensions: undefined,
