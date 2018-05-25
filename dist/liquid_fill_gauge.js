@@ -23072,52 +23072,33 @@ var formatType = function (valueFormat) {
     }
     return __WEBPACK_IMPORTED_MODULE_0_d3__["format"](format);
 };
-var handleErrors = function (vis, resp, options) {
-    if (!vis.addError || !vis.clearErrors)
-        return undefined;
-    function messageFromLimits(min, max, field) {
-        var message = 'You need ' + min;
-        if (max) {
-            message += ' to ' + max;
+var handleErrors = function (vis, res, options) {
+    var check = function (group, noun, count, min, max) {
+        if (!vis.addError || !vis.clearErrors)
+            return false;
+        if (count < min) {
+            vis.addError({
+                title: "Not Enough " + noun + "s",
+                message: "This visualization requires " + (min === max ? 'exactly' : 'at least') + " " + min + " " + noun.toLowerCase() + (min === 1 ? '' : 's') + ".",
+                group: group
+            });
+            return false;
         }
-        message += ' ' + field;
-        return message;
-    }
-    if ((resp.fields.pivots.length < options.min_pivots) ||
-        (resp.fields.pivots.length > options.max_pivots)) {
-        vis.addError({
-            group: 'pivot-req',
-            title: 'Incompatible Pivot Data',
-            message: messageFromLimits(options.min_pivots, options.max_pivots, 'pivots')
-        });
-        return false;
-    }
-    else {
-        vis.clearErrors('pivot-req');
-    }
-    if ((resp.fields.dimensions.length < options.min_dimensions) || (resp.fields.dimensions.length > options.max_dimensions)) {
-        vis.addError({
-            group: 'dim-req',
-            title: 'Incompatible Dimension Data',
-            message: messageFromLimits(options.min_dimensions, options.max_dimensions, 'dimensions')
-        });
-        return false;
-    }
-    else {
-        vis.clearErrors('dim-req');
-    }
-    if ((resp.fields.measure_like.length < options.min_measures) || (resp.fields.measure_like.length > options.max_measures)) {
-        vis.addError({
-            group: 'mes-req',
-            title: 'Incompatible Measure Data',
-            message: messageFromLimits(options.min_measures, options.max_measures, 'measures')
-        });
-        return false;
-    }
-    else {
-        vis.clearErrors('mes-req');
-    }
-    return true;
+        if (count > max) {
+            vis.addError({
+                title: "Too Many " + noun + "s",
+                message: "This visualization requires " + (min === max ? 'exactly' : 'no more than') + " " + max + " " + noun.toLowerCase() + (min === 1 ? '' : 's') + ".",
+                group: group
+            });
+            return false;
+        }
+        vis.clearErrors(group);
+        return true;
+    };
+    var _a = res.fields, pivots = _a.pivots, dimensions = _a.dimensions, measures = _a.measure_like;
+    return (check('pivot-req', 'Pivot', pivots.length, options.min_pivots, options.max_pivots)
+        && check('dim-req', 'Dimension', dimensions.length, options.min_dimensions, options.max_dimensions)
+        && check('mes-req', 'Measure', measures.length, options.min_measures, options.max_measures));
 };
 
 
