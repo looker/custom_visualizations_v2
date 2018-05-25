@@ -1,6 +1,6 @@
 # API 2.0 Reference
 
-The entry point into the Visualization API is a call to the `looker.plugins.visualizations.add` function. This function accepts a _visualization object_ which fully defines your custom visualization.
+The entry point into the Visualization API is a call to the `looker.plugins.visualizations.add` function. This function accepts a _visualization object_, which fully defines your custom visualization.
 
 Here's a dead simple (and very boring) visualization:
 
@@ -32,7 +32,7 @@ Just like all web development, supporting different web browsers (Chrome, Edge, 
 
 ### Installation
 
-Custom visualizations are installed by defining a manifest via the Admin > Platform > Visualizations form. A manifest consists of a unique string id, a human readable label, the URI of your visualization and links to any dependencies that you require (ex: d3, jQuery, underscore).
+Custom visualizations are installed by defining a manifest via the Admin > Platform > Visualizations form. A manifest consists of a unique string id, a human readable label, the URI of your visualization, and links to any dependencies that you require (ex: d3, jQuery, underscore).
 
 Custom Visualizations should be served as https content externally to looker. If you are migrating from the first version of the custom visualization API, you may have files in your `looker/plugins/visualizations` directory. This location is still accessible and a relative path to your visualization can be supplied, but it is recommended that you migrate your content to a different location. Since the /plugins directory is not in the Shared File System, clustered environments will not have access to your visualization files on all nodes.
 
@@ -48,11 +48,11 @@ Custom Visualizations should be served as https content externally to looker. If
 
 - `updateAsync` / `update` _function_
 
-	A function that is called every time the state of your visualization may need to change. It will always be called after `create`, and may be called many times, so should be as fast as possible.
+	A function that is called every time the state of your visualization may need to change. It will always be called after `create`, and may be called many times, so it should be as fast as possible.
 
 	This function can be called for many reasons, but usually it's when the query to visualize changes, a configuration option was changed, or the visualization was resized.
 
-	There is a synchronous and asynchronous version of this function – you'll only need to specify one. (It's an error to define both). The async method is more reliable for pdf rendering due to the nature of iframes.
+	There is a synchronous and asynchronous version of this function – you'll only need to specify one. (It's an error to define both.) The async method is more reliable for pdf rendering due to the nature of iframes.
 
 	[See details about these `update` functions &rarr;](#the-updateasync-and-update-functions)
 
@@ -138,7 +138,7 @@ create: function(element, config){
 
 The preferred method of updating your visualization is the `updateAsync` method. This method allows your visualization to perform an asynchronous action, such as loading a file or sending a web request.
 
-This version of the function has an additional parameter which is a callback to be called when rendering is complete:
+This version of the function has an additional parameter, which is a callback to be called when rendering is complete:
 
 ```js
 updateAsync: function(data, element, config, queryResponse, details, done){
@@ -196,7 +196,7 @@ update: function(data, element, config, queryResponse, details){
 
 Looker has a rich set of data formatting tools in LookML that can be used to customize the appearance and behavior of data points. This includes field-level LookML settings like custom value formats, HTML, drill links, and data actions.
 
-Cells have a `value` property which is the only property guaranteed to exist in all cases. This property is a native JavaScript type that matches the type of the field the cell belongs to. However, it's not safe to insert directly into HTML or SVG, as no HTML escaping has been performed, and some field values are complex JavaScript objects or arrays that will render in undesirable or confusing ways.
+Cells have a `value` property, which is the only property guaranteed to exist in all cases. This property is a native JavaScript type that matches the type of the field the cell belongs to. However, it's not safe to insert directly into HTML or SVG, as no HTML escaping has been performed, and some field values are complex JavaScript objects or arrays that will render in undesirable or confusing ways.
 
 To ensure that all visualizations render these items consistently and safely, there are a number of utility functions for turning the cell metadata passed to your chart in `data` into different representations for different purposes. The cell metadata may compress or omit certain fields in some cases, and these helper functions will let you provide a consistent experience.
 
@@ -219,7 +219,7 @@ These are all available on the global `LookerCharts.Utils` object.
 
 - `LookerCharts.Utils.openDrillMenu(options)`
 
-	The output of `htmlForCell` will automatically show the drill menu if needed, but that may not be appropriate for certain types of rendering. (For example, SVG cannot render HTML but you may want to capture a click event to begin a drill).
+	The output of `htmlForCell` will automatically show the drill menu if needed, but that may not be appropriate for certain types of rendering. (For example, SVG cannot render HTML but you may want to capture a click event to begin a drill.)
 
 	The `options` object has the following parameters:
 
@@ -330,7 +330,7 @@ options: {
 
 	When `display` is `radio` or `select`, an array containing labels and values that will be listed in the interface.
 
-	Each item in the array should be an object with a single key value pair, representing the label and the value of the option. The label will only be presented in the UI, at render time you'll only receive the value.
+	Each item in the array should be an object with a single key-value pair, representing the label and the value of the option. The label will only be presented in the UI, at render time you'll only receive the value.
 
 	**Example:**
 
