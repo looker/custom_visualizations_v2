@@ -4,12 +4,11 @@ declare var require: any
 
 import * as d3 from 'd3'
 import { handleErrors } from '../common/utils'
-/**
- * TODO install this version?
- * https://github.com/ugomeda/d3-liquid-fill-gauge
- * hmm, it's not published on npm
- */
-const LiquidFillGauge = require('./liquid_fill_gauge.js')
+
+import * as LiquidFillGauge from './liquid_fill_gauge.js'
+
+// @ts-ignore
+LiquidFillGauge.initialize(d3)
 
 import {
   Looker,
@@ -19,11 +18,11 @@ import {
 } from '../types/types'
 
 interface LiquidFillGaugeVisualization extends VisualizationDefinition {
-  svg?: any,
-  gauge?: any,
+  svg?: any
 }
 
-const defaults = LiquidFillGauge.liquidFillGaugeDefaultSettings()
+// @ts-ignore
+const defaults: any = LiquidFillGauge.defaultConfig
 
 const vis: LiquidFillGaugeVisualization = {
   id: 'liquid_fill_gauge', // id/label not required, but nice for testing and keeping manifests in sync
@@ -115,7 +114,7 @@ const vis: LiquidFillGaugeVisualization = {
       min: 0,
       max: 5000,
       step: 50,
-      default: 1800,
+      default: defaults.waveAnimateTime,
       section: 'Waves',
       type: 'number',
       display: 'range'
@@ -205,12 +204,12 @@ const vis: LiquidFillGaugeVisualization = {
   // Set up the initial state of the visualization
   create(element, config) {
     element.style.margin = '10px'
+    element.style.fontFamily = `"Open Sans", "Helvetica", sans-serif`
     element.innerHTML = `
       <style>
-      .node,
-      .link {
-        transition: 0.5s opacity;
-      }
+        .node, .link {
+          transition: 0.5s opacity;
+        }
       </style>
     `
     const elementId = `fill-gauge-${Date.now()}`
@@ -226,7 +225,8 @@ const vis: LiquidFillGaugeVisualization = {
       min_measures: 1, max_measures: undefined
     })) return
 
-    const gaugeConfig = Object.assign(LiquidFillGauge.liquidFillGaugeDefaultSettings(), config)
+    // @ts-ignore
+    const gaugeConfig = Object.assign(LiquidFillGauge.defaultConfig, config)
 
     const datumField = queryResponse.fields.measure_like[0]
     const datum = data[0][datumField.name]
@@ -247,7 +247,8 @@ const vis: LiquidFillGaugeVisualization = {
     this.svg.attr('width', element.clientWidth - 20)
     this.svg.attr('height', element.clientHeight - 20)
 
-    this.gauge = LiquidFillGauge.loadLiquidFillGauge(this.svg.attr('id'), value, gaugeConfig)
+    // @ts-ignore
+    d3.liquidfillgauge(this.svg, value, gaugeConfig)
 
   }
 }

@@ -23,6 +23,9 @@ var webpackConfig = {
     loaders: [
       { test: /\.ts$/, loader: "ts-loader" }
     ]
+  },
+  stats: {
+    warningsFilter: /export.*liquidfillgauge.*was not found/
   }
 }
 
