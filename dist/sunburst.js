@@ -23174,6 +23174,7 @@ var vis = {
     },
     // Set up the initial state of the visualization
     create: function (element, config) {
+        element.style.fontFamily = "\"Open Sans\", \"Helvetica\", sans-serif";
         this.svg = __WEBPACK_IMPORTED_MODULE_0_d3__["select"](element).append('svg');
     },
     // Render in response to the data or settings changing
