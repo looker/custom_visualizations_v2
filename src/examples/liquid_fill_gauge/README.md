@@ -6,7 +6,7 @@ This diagram displays a liquid fill gauge (LFG), displaying either a single meas
 
 
 
-![](/Users/4mile/Documents/github/custom_visualizations_v2/src/examples/liquid_fill_gauge/liquid_fill_gauge.mov)
+![](liquid_fill_gauge.mov)
 
 
 **How it Works**
