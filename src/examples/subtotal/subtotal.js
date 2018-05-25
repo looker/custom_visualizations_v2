@@ -5,6 +5,8 @@ require('pivottable')
 require('subtotal')($)
 window.$ = $ // XXX
 
+const LOOKER_ROW_TOTAL_KEY = '$$$_row_total_$$$'
+
 looker.plugins.visualizations.add({
   id: 'subtotal',
   label: 'Subtotal',
@@ -36,6 +38,7 @@ looker.plugins.visualizations.add({
     console.clear() // XXX
     window.x = { data, element, config, queryResponse, details } // XXX
 
+    const pivots = config.query_fields.pivots.map(d => d.name)
     const dimensions = config.query_fields.dimensions.map(d => d.name)
 
     const measures = config.query_fields.measures
@@ -46,15 +49,6 @@ looker.plugins.visualizations.add({
       })
     }
 
-    const pivots = config.query_fields.pivots.map(d => d.name)
-    if (pivots.length > 1) {
-      return this.addError({
-        title: 'Multiple pivots are unsupported',
-        messsage: 'Please make sure your explore only has one pivot'
-      })
-    }
-    const pivotName = pivots[0]
-
     const labels = {}
     for (const obj of Object.values(config.query_fields)) {
       for (const field of obj) {
@@ -63,24 +57,43 @@ looker.plugins.visualizations.add({
       }
     }
 
+    console.log('XXX', 'pivots', pivots)
     const ptData = []
     for (const row of data) {
+      console.log('XXX', 'row', row)
       const ptRow = {}
       for (const [key, obj] of Object.entries(row)) {
-        if (key === pivotName) continue
+        if (pivots.includes(key)) continue
         ptRow[key] = obj.value
       }
       if (pivots.length === 0) {
         // No pivoting, just add each data row.
         ptData.push(ptRow)
       } else {
-        // Fan out each row using the pivot.
-        for (const pivotKey of Object.keys(row[measures[0].name])) {
+        // Fan out each row using the pivot. Multiple pivots are joined by `|FIELD|`.
+        for (const flatKey of Object.keys(row[measures[0].name])) {
           const pivotRow = Object.assign({}, ptRow)
-          pivotRow[pivotName] = pivotKey
-          for (const measure of measures) {
-            pivotRow[measure.name] = row[measure.name][pivotKey].value
+          if (flatKey === LOOKER_ROW_TOTAL_KEY) {
+            console.log('XXX', 'here')
+            for (const pivotKey of Object.keys(row[measures[0].name])) {
+              for (const pivot of pivots) {
+                pivotRow[pivot] = LOOKER_ROW_TOTAL_KEY
+              }
+              for (const measure of measures) {
+                pivotRow[measure.name] = row[measure.name][pivotKey].value
+              }
+            }
+          } else {
+            console.log('XXX', 'there')
+            const pivotValues = flatKey.split(/\|FIELD\|/g)
+            for (let i = 0; i < pivots.length; i++) {
+              pivotRow[pivots[i]] = pivotValues[i]
+            }
+            for (const measure of measures) {
+              pivotRow[measure.name] = row[measure.name][flatKey].value
+            }
           }
+          console.log('XXX', 'pivotRow', pivotRow)
           ptData.push(pivotRow)
         }
       }
