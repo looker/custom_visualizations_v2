@@ -23166,14 +23166,7 @@ function burrow(table, taxonomy) {
 var vis = {
     id: 'collapsible_tree',
     label: 'Collapsible Tree',
-    options: {
-        color_range: {
-            type: 'array',
-            label: 'Color Range',
-            display: 'colors',
-            default: ['#dd3333', '#80ce5d', '#f78131', '#369dc1', '#c572d3', '#36c1b3', '#b57052', '#ed69af']
-        }
-    },
+    options: {},
     // Set up the initial state of the visualization
     create: function (element, config) {
         element.innerHTML = "\n      <style>\n        .node circle {\n          fill: " + config.color_empty + ";\n          stroke: " + config.color_with_children + ";\n          stroke-width: 1.5px;\n        }\n\n        .node text {\n          font-family: sans-serif;\n          fill: #333;\n        }\n\n        .link {\n          fill: none;\n          stroke: #ccc;\n          stroke-width: 1.5px;\n        }\n      </style>\n    ";
