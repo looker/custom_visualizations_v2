@@ -137,7 +137,8 @@ const vis: ChordVisualization = {
     const tooltip = this.tooltip
 
     // Set color scale
-    const color = d3.scaleOrdinal().range(config.color_range)
+    const colorScale: d3.ScaleOrdinal<string, null> = d3.scaleOrdinal()
+    const color = colorScale.range(config.color_range)
 
     // Set chord layout
     const chord = d3.chord()
@@ -157,7 +158,7 @@ const vis: ChordVisualization = {
     // Turn data into matrix
     const matrix = this.computeMatrix(data, dimensions.map(d => d.name), measure.name)
 
-    const svg = this.svg!
+    const svg = this.svg
 
     // draw
     svg.html('')

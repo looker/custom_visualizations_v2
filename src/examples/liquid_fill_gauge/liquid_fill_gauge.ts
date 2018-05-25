@@ -1,6 +1,5 @@
 // Global values provided via the API
 declare var looker: Looker
-declare var require: any
 
 import * as d3 from 'd3'
 import { handleErrors } from '../common/utils'

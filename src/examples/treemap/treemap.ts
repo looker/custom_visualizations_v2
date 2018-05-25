@@ -89,7 +89,8 @@ const vis: TreemapVisualization = {
 
     const format = formatType(measure.value_format) || ((s: any): string => s.toString())
 
-    const color = d3.scaleOrdinal().range(config.color_range)
+    const colorScale: d3.ScaleOrdinal<string, null> = d3.scaleOrdinal()
+    const color = colorScale.range(config.color_range)
 
     data.forEach((row: Row) => {
       row.taxonomy = {
