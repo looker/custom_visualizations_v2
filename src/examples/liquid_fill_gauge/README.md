@@ -4,10 +4,7 @@
 
 This diagram displays a liquid fill gauge (LFG), displaying either a single measure value as a percentage, or a comparison of one measure to another measure.
 
-
-
 ![](liquid_fill_gauge.mov)
-
 
 **How it Works**
 
