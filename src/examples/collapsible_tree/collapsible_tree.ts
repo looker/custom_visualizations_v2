@@ -62,14 +62,7 @@ function burrow(table: any, taxonomy: any[]) {
 const vis: CollapsibleTreeVisualization = {
   id: 'collapsible_tree', // id/label not required, but nice for testing and keeping manifests in sync
   label: 'Collapsible Tree',
-  options: {
-    color_range: {
-      type: 'array',
-      label: 'Color Range',
-      display: 'colors',
-      default: ['#dd3333', '#80ce5d', '#f78131', '#369dc1', '#c572d3', '#36c1b3', '#b57052', '#ed69af']
-    }
-  },
+  options: {},
   // Set up the initial state of the visualization
   create(element, config) {
     element.innerHTML = `
