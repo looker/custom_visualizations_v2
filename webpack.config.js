@@ -1,7 +1,6 @@
 var path = require('path')
 
 const ExtraWatchWebpackPlugin = require('extra-watch-webpack-plugin') // XXX
-const WebpackNotifierPlugin = require('webpack-notifier') // XXX
 
 var webpackConfig = {
   entry: {
@@ -17,7 +16,6 @@ var webpackConfig = {
 
   // XXX
   plugins: [
-    new WebpackNotifierPlugin(),
     new ExtraWatchWebpackPlugin({
       files: [ 'path/to/file', 'src/**/*.json' ],
       dirs: [ 'path/to/dir' ],
