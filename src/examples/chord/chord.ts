@@ -1,11 +1,7 @@
 import * as d3 from 'd3'
 import { formatType, handleErrors } from '../common/utils'
 
-import {
-  Looker,
-  VisualizationDefinition,
-  VisData
-} from '../types/types'
+import { Looker, VisualizationDefinition, VisData } from '../types/types'
 
 // Global values provided via the API
 declare var looker: Looker
@@ -38,6 +34,7 @@ const vis: ChordVisualization = {
       default: ['#dd3333', '#80ce5d', '#f78131', '#369dc1', '#c572d3', '#36c1b3', '#b57052', '#ed69af']
     }
   },
+
   // Set up the initial state of the visualization
   create(element, config) {
     element.innerHTML = `
@@ -55,6 +52,10 @@ const vis: ChordVisualization = {
           font-size: 12px;
         }
 
+        .chordchart, .chord-tip {
+          font-family: "Open Sans", "Helvetica", sans-serif;
+        }
+
         .chord-tip {
           position: absolute;
           top: 0;
@@ -65,7 +66,6 @@ const vis: ChordVisualization = {
     `
 
     this.tooltip = d3.select(element).append('div').attr('class', 'chord-tip')
-
     this.svg = d3.select(element).append('svg')
   },
 
@@ -76,8 +76,8 @@ const vis: ChordVisualization = {
     let n = 0
 
     // Compute a unique index for each package name.
-    dimensions.forEach((dimension) => {
-      data.forEach((d) => {
+    dimensions.forEach(dimension => {
+      data.forEach(d => {
         const value = d[dimension].value
         if (!indexByName.has(value)) {
           nameByIndex.set(n.toString(), value)
@@ -95,7 +95,7 @@ const vis: ChordVisualization = {
     }
 
     // Fill matrix
-    data.forEach(function (d) {
+    data.forEach(d => {
       const row = indexByName.get(d[dimensions[1]].value)
       const col = indexByName.get(d[dimensions[0]].value)
       const val = d[measure].value
@@ -137,8 +137,12 @@ const vis: ChordVisualization = {
     const tooltip = this.tooltip
 
     // Set color scale
-    const colorScale: d3.ScaleOrdinal<string, null> = d3.scaleOrdinal()
-    const color = colorScale.range(config.color_range)
+    const colorScale: d3.ScaleOrdinal<string, d3.ColorSpaceObject> = d3.scaleOrdinal()
+    if (config.color_range == null || !(/^#/).test(config.color_range[0])) {
+      // Workaround for Looker bug where we don't get custom colors.
+      config.color_range = this.options.color_range.default
+    }
+    const color: d3.ScaleOrdinal<string, d3.ColorSpaceObject> = colorScale.range(config.color_range)
 
     // Set chord layout
     const chord = d3.chord()
@@ -158,10 +162,9 @@ const vis: ChordVisualization = {
     // Turn data into matrix
     const matrix = this.computeMatrix(data, dimensions.map(d => d.name), measure.name)
 
-    const svg = this.svg
-
     // draw
-    svg.html('')
+    const svg = this.svg
+      .html('')
       .attr('width', '100%')
       .attr('height', '100%')
       .append('g')
@@ -180,7 +183,7 @@ const vis: ChordVisualization = {
       .style('opacity', 0.8)
       .attr('d', ribbon)
       .style('fill', (d: any) => color(d.target.index))
-      .style('stroke', (d: any) => d3.rgb('blue').darker())
+      .style('stroke', (d: any) => d3.rgb(color(d.index)).darker())
       .on('mouseenter', (d: any) => {
         tooltip.html(this.titleText(matrix.nameByIndex, d.source, d.target, valueFormatter))
       })
@@ -203,7 +206,7 @@ const vis: ChordVisualization = {
     const groupPath = group.append('path')
       .style('opacity', 0.8)
       .style('fill', (d: any) => color(d.index))
-      .style('stroke', (d: any) => d3.rgb('red').darker())
+      .style('stroke', (d: any) => d3.rgb(color(d.index)).darker())
       .attr('id', (d: any, i: number) => `group${i}`)
       .attr('d', arc)
 
@@ -215,10 +218,7 @@ const vis: ChordVisualization = {
       .attr('xlink:href', (d: any, i: number) => `#group${i}`)
       .attr('startOffset', (d: any, i: number) => (groupPathNodes[i].getTotalLength() - (thickness * 2)) / 4)
       .style('text-anchor', 'middle')
-      .text((d: any) => {
-        const txt = matrix.nameByIndex.get(d.index.toString())
-        return txt
-      })
+      .text((d: any) => matrix.nameByIndex.get(d.index.toString()))
 
     // Remove the labels that don't fit. :(
     groupText
@@ -226,7 +226,6 @@ const vis: ChordVisualization = {
         return groupPathNodes[i].getTotalLength() / 2 - 16 < this.getComputedTextLength()
       })
       .remove()
-
   },
 
   titleText: function (lookup, source, target, formatter) {
@@ -234,13 +233,10 @@ const vis: ChordVisualization = {
     const sourceValue = formatter(source.value)
     const targetName = lookup.get(target.index)
     const targetValue = formatter(target.value)
-
-    const output = `
+    return `
       <p>${sourceName} → ${targetName}: ${sourceValue}</p>
       <p>${targetName} → ${sourceName}: ${targetValue}</p>
     `
-
-    return output
   }
 }
 
