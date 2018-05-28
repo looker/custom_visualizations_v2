@@ -119,7 +119,12 @@ looker.plugins.visualizations.add({
         case 'list': agg = tpl.listUnique(', '); break
         case 'percent_of_total': agg = tpl.fractionOf(tpl.sum(), 'total', customFormat); break
         default:
-          this.addError({ title: `Measure type ${type} is unsupported` })
+          this.clearErrors('measure-type')
+          this.addError({
+            group: 'measure-type',
+            title: `Cannot Show "${label1} ${label2}"`,
+            message: `Measure types of '${type}' are unsupported by this visualization.`
+          })
           return
       }
       const aggName = `measure_${i}`
