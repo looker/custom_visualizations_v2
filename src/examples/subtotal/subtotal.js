@@ -57,10 +57,8 @@ looker.plugins.visualizations.add({
       }
     }
 
-    console.log('XXX', 'pivots', pivots)
     const ptData = []
     for (const row of data) {
-      console.log('XXX', 'row', row)
       const ptRow = {}
       for (const [key, obj] of Object.entries(row)) {
         if (pivots.includes(key)) continue
@@ -74,7 +72,6 @@ looker.plugins.visualizations.add({
         for (const flatKey of Object.keys(row[measures[0].name])) {
           const pivotRow = Object.assign({}, ptRow)
           if (flatKey === LOOKER_ROW_TOTAL_KEY) {
-            console.log('XXX', 'here')
             for (const pivotKey of Object.keys(row[measures[0].name])) {
               for (const pivot of pivots) {
                 pivotRow[pivot] = LOOKER_ROW_TOTAL_KEY
@@ -84,7 +81,6 @@ looker.plugins.visualizations.add({
               }
             }
           } else {
-            console.log('XXX', 'there')
             const pivotValues = flatKey.split(/\|FIELD\|/g)
             for (let i = 0; i < pivots.length; i++) {
               pivotRow[pivots[i]] = pivotValues[i]
@@ -93,7 +89,6 @@ looker.plugins.visualizations.add({
               pivotRow[measure.name] = row[measure.name][flatKey].value
             }
           }
-          console.log('XXX', 'pivotRow', pivotRow)
           ptData.push(pivotRow)
         }
       }
