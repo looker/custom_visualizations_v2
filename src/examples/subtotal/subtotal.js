@@ -5,6 +5,8 @@ require('pivottable')
 require('subtotal')($)
 window.$ = $ // XXX
 
+const XXXCSS = require('../../../../subtotal/dist/looker-classic.css')
+
 const LOOKER_ROW_TOTAL_KEY = '$$$_row_total_$$$'
 
 looker.plugins.visualizations.add({
@@ -20,16 +22,16 @@ looker.plugins.visualizations.add({
   },
 
   create (element, config) {
-    [
-      'https://unpkg.com/pivottable@2.20.0/dist/pivot.min.css',
-      // 'https://unpkg.com/subtotal@1.11.0-alpha.0/dist/subtotal.min.css'
-      'https://rawgit.com/4mile/subtotal/multi-aggregate/dist/subtotal.min.css'
-    ].forEach(url => {
-      const link = document.createElement('link')
-      link.rel = 'stylesheet'
-      link.href = url
-      document.head.appendChild(link)
-    })
+    // [
+    //   'https://unpkg.com/pivottable@2.20.0/dist/pivot.min.css',
+    //   'https://unpkg.com/subtotal@1.11.0-alpha.0/dist/subtotal.min.css'
+    // ].forEach(url => {
+    //   const link = document.createElement('link')
+    //   link.rel = 'stylesheet'
+    //   link.href = url
+    //   document.head.appendChild(link)
+    // })
+    document.head.innerHTML += `<style>${XXXCSS}</style>` // XXX
   },
 
   update (data, element, config, queryResponse, details) {
@@ -53,7 +55,7 @@ looker.plugins.visualizations.add({
     for (const obj of Object.values(config.query_fields)) {
       for (const field of obj) {
         const { name, view_label: label1, label_short: label2 } = field
-        labels[name] = `${label1} <em>${label2}</em>`
+        labels[name] = { label: label1, sublabel: label2 }
       }
     }
 
@@ -128,7 +130,7 @@ looker.plugins.visualizations.add({
           return
       }
       const aggName = `measure_${i}`
-      labels[aggName] = `${label1} <em>${label2}</em>`
+      labels[aggName] = { label: label1, sublabel: label2 }
       aggregatorNames.push(aggName)
       aggregators.push(agg([name]))
     }

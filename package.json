@@ -31,10 +31,12 @@
   "dependencies": {
     "@types/d3": "^5.0.0",
     "@types/d3-sankey": "^0.7.2",
+    "css-loader": "^0.28.11",
     "d3-sankey": "^0.7.1",
     "extra-watch-webpack-plugin": "^1.0.3",
     "jquery": "^3.3.1",
     "pivottable": "^2.20.0",
+    "style-loader": "^0.21.0",
     "subtotal": "^1.11.0-alpha.0",
     "webpack-notifier": "^1.6.0"
   }

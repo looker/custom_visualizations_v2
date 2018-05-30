@@ -34,6 +34,12 @@ var webpackConfig = {
   module: {
     loaders: [
       { test: /\.ts$/, loader: "ts-loader" }
+    ],
+    rules: [
+      {
+        test: /\.css$/,
+        use: [ 'style-loader', 'css-loader' ]
+      }
     ]
   },
   stats: {

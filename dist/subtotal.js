@@ -10455,6 +10455,8 @@ __webpack_require__(2)
 __webpack_require__(3)($)
 window.$ = $ // XXX
 
+const XXXCSS = __webpack_require__(5)
+
 const LOOKER_ROW_TOTAL_KEY = '$$$_row_total_$$$'
 
 looker.plugins.visualizations.add({
@@ -10470,16 +10472,16 @@ looker.plugins.visualizations.add({
   },
 
   create (element, config) {
-    [
-      'https://unpkg.com/pivottable@2.20.0/dist/pivot.min.css',
-      // 'https://unpkg.com/subtotal@1.11.0-alpha.0/dist/subtotal.min.css'
-      'https://rawgit.com/4mile/subtotal/multi-aggregate/dist/subtotal.min.css'
-    ].forEach(url => {
-      const link = document.createElement('link')
-      link.rel = 'stylesheet'
-      link.href = url
-      document.head.appendChild(link)
-    })
+    // [
+    //   'https://unpkg.com/pivottable@2.20.0/dist/pivot.min.css',
+    //   'https://unpkg.com/subtotal@1.11.0-alpha.0/dist/subtotal.min.css'
+    // ].forEach(url => {
+    //   const link = document.createElement('link')
+    //   link.rel = 'stylesheet'
+    //   link.href = url
+    //   document.head.appendChild(link)
+    // })
+    document.head.innerHTML += `<style>${XXXCSS}</style>` // XXX
   },
 
   update (data, element, config, queryResponse, details) {
@@ -10503,7 +10505,7 @@ looker.plugins.visualizations.add({
     for (const obj of Object.values(config.query_fields)) {
       for (const field of obj) {
         const { name, view_label: label1, label_short: label2 } = field
-        labels[name] = `${label1} <em>${label2}</em>`
+        labels[name] = { label: label1, sublabel: label2 }
       }
     }
 
@@ -10569,11 +10571,16 @@ looker.plugins.visualizations.add({
         case 'list': agg = tpl.listUnique(', '); break
         case 'percent_of_total': agg = tpl.fractionOf(tpl.sum(), 'total', customFormat); break
         default:
-          this.addError({ title: `Measure type ${type} is unsupported` })
+          this.clearErrors('measure-type')
+          this.addError({
+            group: 'measure-type',
+            title: `Cannot Show "${label1} ${label2}"`,
+            message: `Measure types of '${type}' are unsupported by this visualization.`
+          })
           return
       }
       const aggName = `measure_${i}`
-      labels[aggName] = `${label1} <em>${label2}</em>`
+      labels[aggName] = { label: label1, sublabel: label2 }
       aggregatorNames.push(aggName)
       aggregators.push(agg([name]))
     }
@@ -12439,8 +12446,10 @@ looker.plugins.visualizations.add({
 /***/ (function(module, exports, __webpack_require__) {
 
 (function() {
-  var callWithJQuery,
+  var callWithJQuery, flatten,
     hasProp = {}.hasOwnProperty;
+
+  flatten = __webpack_require__(4);
 
   callWithJQuery = function(pivotModule) {
     if (true) { // CommonJS
@@ -12496,7 +12505,7 @@ looker.plugins.visualizations.add({
               return this.processRecord(record);
             }
           });
-          this.hasLookerRowTotals = this.getColKeys().flatten().includes(LOOKER_ROW_TOTAL_KEY);
+          this.hasLookerRowTotals = flatten(this.getColKeys()).includes(LOOKER_ROW_TOTAL_KEY);
           this.useLookerRowTotals = ((ref6 = opts.useLookerRowTotals) != null ? ref6 : true) && this.hasLookerRowTotals;
         }
 
@@ -12628,7 +12637,7 @@ looker.plugins.visualizations.add({
     }).call(this);
     $.pivotUtilities.SubtotalPivotDataMulti = SubtotalPivotDataMulti;
     SubtotalRenderer = function(pivotData, opts) {
-      var addClass, adjustAxisHeader, aggregatorNames, aggregators, allTotal, arrowCollapsed, arrowExpanded, buildAxisHeader, buildColAxisHeaders, buildColHeader, buildColTotals, buildColTotalsHeader, buildGrandTotal, buildRowAxisHeaders, buildRowHeader, buildRowTotalsHeader, buildValues, classColCollapsed, classColExpanded, classColHide, classColShow, classCollapsed, classExpanded, classRowCollapsed, classRowExpanded, classRowHide, classRowShow, clickStatusCollapsed, clickStatusExpanded, colAttrs, colKeys, colTotals, collapseAxis, collapseAxisHeaders, collapseChildCol, collapseChildRow, collapseCol, collapseHiddenColSubtotal, collapseRow, collapseShowColSubtotal, collapseShowRowSubtotal, createElement, defaults, expandAxis, expandChildCol, expandChildRow, expandCol, expandHideColSubtotal, expandHideRowSubtotal, expandRow, expandShowColSubtotal, expandShowRowSubtotal, getHeaderText, getTableEventHandlers, hasClass, hasColTotals, hasLookerRowTotals, hasRowTotals, hideChildCol, hideChildRow, labels, main, processKeys, removeClass, replaceClass, rowAttrs, rowKeys, rowTotals, setAttributes, showChildCol, showChildRow, tree, useLookerRowTotals;
+      var addClass, adjustAxisHeader, aggregatorNames, aggregators, allTotal, arrowCollapsed, arrowExpanded, buildAxisHeader, buildColAxisHeaders, buildColHeader, buildColTotals, buildColTotalsHeader, buildGrandTotal, buildRowAxisHeaders, buildRowHeader, buildRowTotalsHeader, buildValues, classColCollapsed, classColExpanded, classColHide, classColShow, classCollapsed, classExpanded, classRowCollapsed, classRowExpanded, classRowHide, classRowShow, clickStatusCollapsed, clickStatusExpanded, colAttrs, colKeys, colTotals, collapseAxis, collapseAxisHeaders, collapseChildCol, collapseChildRow, collapseCol, collapseHiddenColSubtotal, collapseRow, collapseShowColSubtotal, collapseShowRowSubtotal, createElement, defaults, escapeHtml, expandAxis, expandChildCol, expandChildRow, expandCol, expandHideColSubtotal, expandHideRowSubtotal, expandRow, expandShowColSubtotal, expandShowRowSubtotal, getHeaderText, getTableEventHandlers, hasClass, hasColTotals, hasLookerRowTotals, hasRowTotals, hideChildCol, hideChildRow, labels, lastPivotHeader, main, parseLabel, processKeys, removeClass, replaceClass, rowAttrs, rowKeys, rowTotals, setAttributes, showChildCol, showChildRow, tree, useLookerRowTotals;
       defaults = {
         table: {
           clickCallback: null
@@ -12648,8 +12657,8 @@ looker.plugins.visualizations.add({
         },
         colSubtotalDisplay: {
           displayOnTop: true,
-          disableFrom: 99999,
-          collapseAt: 99999,
+          disableFrom: 0,
+          collapseAt: 0,
           hideOnExpand: false,
           disableExpandCollapse: false
         }
@@ -12672,6 +12681,9 @@ looker.plugins.visualizations.add({
       }
       if (typeof opts.colSubtotalDisplay.collapseAt !== 'undefined' && opts.collapseColsAt !== null) {
         opts.colSubtotalDisplay.collapseAt = opts.collapseColsAt;
+      }
+      if (opts.colSubtotalDisplay.disableFrom > 0) {
+        throw new Error('Column subtotals are unimplemented');
       }
       colAttrs = pivotData.colAttrs;
       rowAttrs = pivotData.rowAttrs;
@@ -12738,18 +12750,41 @@ looker.plugins.visualizations.add({
         return addClass(element, byClassName);
       };
       // Based on http://stackoverflow.com/questions/195951/change-an-elements-class-with-javascript -- End
-      createElement = function(elementType, className, content, attributes, eventHandlers) {
+      escapeHtml = function(unsafe) {
+        return unsafe.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+      };
+      parseLabel = function(parts) {
+        var append, out;
+        // Safe way to insert stylized labels. Parts can be a string or object { label, subabel }, or array as such.
+        out = '';
+        append = function(value) {
+          var l, len, results, x;
+          if (Array.isArray(value)) {
+            results = [];
+            for (l = 0, len = value.length; l < len; l++) {
+              x = value[l];
+              results.push(append(x));
+            }
+            return results;
+          } else if (value != null ? value.label : void 0) {
+            out += escapeHtml(value.label);
+            if (value.sublabel) {
+              return out += ` <em>${escapeHtml(value.sublabel)}</em>`;
+            }
+          } else if (value !== null && value !== void 0) {
+            return out += escapeHtml(String(value));
+          }
+        };
+        append(parts);
+        return out;
+      };
+      createElement = function(elementType, className, label, attributes, eventHandlers) {
         var attr, e, event, handler, val;
         e = document.createElement(elementType);
         if (className != null) {
           e.className = className;
         }
-        if ((content != null ? content.html : void 0) != null) {
-          e.innerHTML = content.html;
-        }
-        if ((content != null) && ((content != null ? content.html : void 0) == null)) {
-          e.textContent = content;
-        }
+        e.innerHTML = parseLabel(label);
         if (attributes != null) {
           for (attr in attributes) {
             if (!hasProp.call(attributes, attr)) continue;
@@ -12852,9 +12887,7 @@ looker.plugins.visualizations.add({
         if (col === attrs.length - 1 || col >= opts.disableFrom || opts.disableExpandCollapse) {
           arrow = "";
         }
-        ah.th = createElement("th", `pvtAxisLabel ${hClass}`, {
-          html: `${arrow}${ah.text}`
-        });
+        ah.th = createElement("th", `pvtAxisLabel ${hClass}`, [arrow, ah.text]);
         if (col < attrs.length - 1 && col < opts.disableFrom && !opts.disableExpandCollapse) {
           ah.th.onclick = function(event) {
             event = event || window.event;
@@ -12874,33 +12907,24 @@ looker.plugins.visualizations.add({
         for (col = l = 0, len = colAttrs.length; l < len; col = ++l) {
           attr = colAttrs[col];
           ah = buildAxisHeader(axisHeaders, col, colAttrs, opts.colSubtotalDisplay);
-          ah.tr = createElement("tr");
-          if (col === 0 && rowAttrs.length !== 0) {
-            ah.tr.appendChild(createElement("th", null, null, {
-              colspan: rowAttrs.length,
-              rowspan: colAttrs.length
-            }));
-          }
+          ah.th.colSpan = colAttrs.length;
+          ah.tr = createElement("tr", "pvtColAxisHeaders");
           ah.tr.appendChild(ah.th);
           thead.appendChild(ah.tr);
         }
         return axisHeaders;
       };
       buildRowAxisHeaders = function(thead, rowAttrs, colAttrs, opts) {
-        var ah, axisHeaders, col, l, ref, th;
+        var ah, axisHeaders, col, l, ref;
         axisHeaders = {
           collapseAttrHeader: collapseRow,
           expandAttrHeader: expandRow,
           ah: [],
-          tr: createElement("tr")
+          tr: createElement("tr", "pvtRowAxisHeaders")
         };
         for (col = l = 0, ref = rowAttrs.length - 1; (0 <= ref ? l <= ref : l >= ref); col = 0 <= ref ? ++l : --l) {
           ah = buildAxisHeader(axisHeaders, col, rowAttrs, opts.rowSubtotalDisplay);
           axisHeaders.tr.appendChild(ah.th);
-        }
-        if (colAttrs.length !== 0) {
-          th = createElement("th");
-          axisHeaders.tr.appendChild(th);
         }
         thead.appendChild(axisHeaders.tr);
         return axisHeaders;
@@ -12946,8 +12970,8 @@ looker.plugins.visualizations.add({
           }
           h.sTh = createElement("th", `pvtColLabelFiller ${classColShow} col${h.row} colcol${h.col} ${classColExpanded}`);
           h.sTh.setAttribute("data-colnode", h.node);
-          h.sTh.rowSpan = colAttrs.length - h.col;
           if (opts.colSubtotalDisplay.hideOnExpand) {
+            // h.sTh.rowSpan = colAttrs.length-h.col
             replaceClass(h.sTh, classColShow, classColHide);
           }
           h[h.children[0]].tr.appendChild(h.sTh);
@@ -12956,54 +12980,90 @@ looker.plugins.visualizations.add({
           ref1.childrenSpan += h.th.colSpan;
         }
         h.clickStatus = clickStatusExpanded;
-        ah.tr.appendChild(h.th);
-        h.tr = ah.tr;
+        if (h.text === LOOKER_ROW_TOTAL_KEY) {
+          if (!h.children.length) {
+            //h.th.rowSpan = colAttrs.length
+            addClass(h.th, "pvtColTotal");
+            ah.tr.appendChild(h.th);
+            h.tr = ah.tr;
+          } else {
+            ah.tr.appendChild(createElement("th", null, null, {
+              colspan: aggregatorNames.length
+            }));
+          }
+        } else {
+          ah.tr.appendChild(h.th);
+          h.tr = ah.tr;
+        }
         attrHeaders.push(h);
         return node.counter++;
       };
       buildRowTotalsHeader = function(tr, colKeyHeaders, rowAttrs, colAttrs) {
-        var i, l, len, len1, len2, name, o, q, r, ref, th;
+        var addHeaders, child, l, len, len1, len2, len3, name, o, q, r, ref, th;
         if (colAttrs.length > 0) {
           // We have pivots.
           if (colKeyHeaders) {
-            for (i = l = 0, ref = colKeyHeaders.children.length; (0 <= ref ? l < ref : l > ref); i = 0 <= ref ? ++l : --l) {
-              if (colKeyHeaders.children[i] === LOOKER_ROW_TOTAL_KEY && !useLookerRowTotals) {
-                continue;
+            addHeaders = function(headers) {
+              var child, l, len, len1, name, o, ref, results, results1, th;
+              if (headers.children.length > 0) {
+                ref = headers.children;
+                results = [];
+                for (l = 0, len = ref.length; l < len; l++) {
+                  child = ref[l];
+                  if (child === LOOKER_ROW_TOTAL_KEY) {
+                    continue;
+                  }
+                  results.push(addHeaders(headers[child]));
+                }
+                return results;
+              } else {
+                results1 = [];
+                for (o = 0, len1 = aggregatorNames.length; o < len1; o++) {
+                  name = aggregatorNames[o];
+                  th = createElement("th", "rowTotal", labels[name]);
+                  results1.push(tr.appendChild(th));
+                }
+                return results1;
               }
-              for (o = 0, len = aggregatorNames.length; o < len; o++) {
-                name = aggregatorNames[o];
-                th = createElement("th", "rowTotal", {
-                  html: labels[name]
-                });
-                tr.appendChild(th);
+            };
+            addHeaders(colKeyHeaders);
+            if (useLookerRowTotals) {
+              ref = colKeyHeaders.children;
+              for (l = 0, len = ref.length; l < len; l++) {
+                child = ref[l];
+                if (child === LOOKER_ROW_TOTAL_KEY) {
+                  continue;
+                }
+                for (o = 0, len1 = aggregatorNames.length; o < len1; o++) {
+                  name = aggregatorNames[o];
+                  th = createElement("th", "rowTotal", labels[name]);
+                  tr.appendChild(th);
+                }
               }
             }
             if (hasRowTotals && !useLookerRowTotals) {
-              for (q = 0, len1 = aggregatorNames.length; q < len1; q++) {
+              for (q = 0, len2 = aggregatorNames.length; q < len2; q++) {
                 name = aggregatorNames[q];
-                th = createElement("th", "rowTotal", {
-                  html: labels[name]
-                });
+                th = createElement("th", "rowTotal", labels[name]);
                 tr.appendChild(th);
               }
             }
           } else {
-            th = createElement("th", "pvtColLabel", 'Total*', { // XXX Asterix
+            th = createElement("th", "pvtColLabel pvtColTotal", 'Total*', { // XXX Asterix
               colspan: aggregatorNames.length
             });
             tr.appendChild(th);
           }
         } else {
 // No pivots, but we still need to add column headers.
-          for (r = 0, len2 = aggregatorNames.length; r < len2; r++) {
+          for (r = 0, len3 = aggregatorNames.length; r < len3; r++) {
             name = aggregatorNames[r];
-            th = createElement("th", "rowTotal", {
-              html: labels[name]
-            });
+            th = createElement("th", "rowTotal", labels[name]);
             tr.appendChild(th);
           }
         }
       };
+      lastPivotHeader = null;
       buildRowHeader = function(tbody, axisHeaders, attrHeaders, h, rowAttrs, colAttrs, node, opts) {
         var ah, chKey, firstChild, l, len, ref, ref1;
         ref = h.children;
@@ -13020,12 +13080,14 @@ looker.plugins.visualizations.add({
         if (h.children.length !== 0) {
           firstChild = h[h.children[0]];
         }
-        addClass(h.th, `${classRowShow} row${h.row} rowcol${h.col} ${classRowExpanded}`);
-        h.th.setAttribute("data-rownode", h.node);
-        if (h.col === rowAttrs.length - 1 && colAttrs.length !== 0) {
-          h.th.colSpan = 2;
+        if (lastPivotHeader) {
+          removeClass(lastPivotHeader, "lastPivot");
         }
+        lastPivotHeader = h.th;
+        addClass(h.th, `${classRowShow} pvtRowHeader lastPivot row${h.row} rowcol${h.col} ${classRowExpanded}`);
+        h.th.setAttribute("data-rownode", h.node);
         if (h.children.length !== 0) {
+          // h.th.colSpan = 2 if h.col is rowAttrs.length-1 and colAttrs.length isnt 0
           h.th.rowSpan = h.childrenSpan;
         }
         h.th.textContent = getHeaderText(h, rowAttrs, opts.rowSubtotalDisplay);
@@ -13050,7 +13112,7 @@ looker.plugins.visualizations.add({
             replaceClass(h.sTh, classRowShow, classRowHide);
           }
           h.sTh.setAttribute("data-rownode", h.node);
-          h.sTh.colSpan = rowAttrs.length - (h.col + 1) + (colAttrs.length !== 0 ? 1 : 0);
+          //h.sTh.colSpan = rowAttrs.length-(h.col+1) + if colAttrs.length != 0 then 1 else 0
           if (opts.rowSubtotalDisplay.displayOnTop) {
             h.tr.appendChild(h.sTh);
           } else {
@@ -13166,8 +13228,8 @@ looker.plugins.visualizations.add({
       };
       buildColTotalsHeader = function(rowAttrs, colAttrs) {
         var colspan, th, tr;
-        tr = createElement("tr");
-        colspan = rowAttrs.length + (colAttrs.length === 0 ? 0 : 1);
+        tr = createElement("tr", "pvtRowTotal");
+        colspan = colAttrs.length;
         th = createElement("th", "pvtTotalLabel colTotal", opts.localeStrings.totals, {
           colspan: colspan
         });
@@ -13225,7 +13287,7 @@ looker.plugins.visualizations.add({
         for (i = l = ref = col, ref1 = collapsible; (ref <= ref1 ? l <= ref1 : l >= ref1); i = ref <= ref1 ? ++l : --l) {
           ah = axisHeaders.ah[i];
           replaceClass(ah.th, classExpanded, classCollapsed);
-          ah.th.textContent = ` ${arrowCollapsed} ${ah.text}`;
+          ah.th.innerHTML = parseLabel([` ${arrowCollapsed} `, ah.text]);
           ah.clickStatus = clickStatusCollapsed;
           results.push(ah.onClick = expandAxis);
         }
@@ -13238,7 +13300,7 @@ looker.plugins.visualizations.add({
           return collapseAxisHeaders(axisHeaders, col, opts);
         } else if (ah.expandedCount === ah.expandables) {
           replaceClass(ah.th, classCollapsed, classExpanded);
-          ah.th.textContent = ` ${arrowExpanded} ${ah.text}`;
+          ah.th.innerHTML = parseLabel([` ${arrowExpanded} `, ah.text]);
           ah.clickStatus = clickStatusExpanded;
           return ah.onClick = collapseAxis;
         }
@@ -13569,7 +13631,7 @@ looker.plugins.visualizations.add({
       };
       // when h.clickStatus is clickStatusCollapsed and h.children.length isnt 0 for i in [0..col]
       main = function(rowAttrs, rowKeys, colAttrs, colKeys) {
-        var chKey, colAttrHeaders, colAxisHeaders, colKeyHeaders, l, len, len1, node, o, ref, ref1, result, rowAttrHeaders, rowAxisHeaders, rowKeyHeaders, tbody, thead, tr;
+        var ah, chKey, colAttrHeaders, colAxisHeaders, colKeyHeaders, index, l, len, len1, len2, node, o, q, ref, ref1, ref2, result, rowAttrHeaders, rowAxisHeaders, rowKeyHeaders, tableClasses, tbody, thead, tr;
         rowAttrHeaders = [];
         colAttrHeaders = [];
         if (colAttrs.length !== 0 && colKeys.length !== 0) {
@@ -13584,7 +13646,14 @@ looker.plugins.visualizations.add({
             return k !== LOOKER_ROW_TOTAL_KEY;
           });
         }
-        result = createElement("table", "pvtTable", null, {
+        tableClasses = "pvtTable";
+        if (hasRowTotals) {
+          tableClasses += " pvtHasRowTotals";
+        }
+        if (hasColTotals) {
+          tableClasses += " pvtHasColTotals";
+        }
+        result = createElement("table", tableClasses, null, {
           style: "display: none;"
         });
         thead = createElement("thead");
@@ -13600,7 +13669,17 @@ looker.plugins.visualizations.add({
             buildColHeader(colAxisHeaders, colAttrHeaders, colKeyHeaders[chKey], rowAttrs, colAttrs, node, opts);
           }
           if (hasRowTotals && !useLookerRowTotals) {
-            buildRowTotalsHeader(colAxisHeaders.ah[0].tr, null, rowAttrs, colAttrs);
+            ref1 = colAxisHeaders.ah;
+            for (index = o = 0, len1 = ref1.length; o < len1; index = ++o) {
+              ah = ref1[index];
+              if (index === colAxisHeaders.ah.length - 1) {
+                buildRowTotalsHeader(ah.tr, null, rowAttrs, colAttrs);
+              } else {
+                ah.tr.appendChild(createElement("th", "pvtColTotalFiller", null, {
+                  colspan: colAttrs.length
+                }));
+              }
+            }
           }
         }
         tbody = createElement("tbody");
@@ -13611,9 +13690,9 @@ looker.plugins.visualizations.add({
           node = {
             counter: 0
           };
-          ref1 = rowKeyHeaders.children;
-          for (o = 0, len1 = ref1.length; o < len1; o++) {
-            chKey = ref1[o];
+          ref2 = rowKeyHeaders.children;
+          for (q = 0, len2 = ref2.length; q < len2; q++) {
+            chKey = ref2[q];
             buildRowHeader(tbody, rowAxisHeaders, rowAttrHeaders, rowKeyHeaders[chKey], rowAttrs, colAttrs, node, opts);
           }
         }
@@ -13706,6 +13785,748 @@ looker.plugins.visualizations.add({
 }).call(this);
 
 //# sourceMappingURL=subtotal.js.map
+
+
+/***/ }),
+/* 4 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+/**
+ * Expose `arrayFlatten`.
+ */
+module.exports = flatten
+module.exports.from = flattenFrom
+module.exports.depth = flattenDepth
+module.exports.fromDepth = flattenFromDepth
+
+/**
+ * Flatten an array.
+ *
+ * @param  {Array} array
+ * @return {Array}
+ */
+function flatten (array) {
+  if (!Array.isArray(array)) {
+    throw new TypeError('Expected value to be an array')
+  }
+
+  return flattenFrom(array)
+}
+
+/**
+ * Flatten an array-like structure.
+ *
+ * @param  {Array} array
+ * @return {Array}
+ */
+function flattenFrom (array) {
+  return flattenDown(array, [])
+}
+
+/**
+ * Flatten an array-like structure with depth.
+ *
+ * @param  {Array}  array
+ * @param  {number} depth
+ * @return {Array}
+ */
+function flattenDepth (array, depth) {
+  if (!Array.isArray(array)) {
+    throw new TypeError('Expected value to be an array')
+  }
+
+  return flattenFromDepth(array, depth)
+}
+
+/**
+ * Flatten an array-like structure with depth.
+ *
+ * @param  {Array}  array
+ * @param  {number} depth
+ * @return {Array}
+ */
+function flattenFromDepth (array, depth) {
+  if (typeof depth !== 'number') {
+    throw new TypeError('Expected the depth to be a number')
+  }
+
+  return flattenDownDepth(array, [], depth)
+}
+
+/**
+ * Flatten an array indefinitely.
+ *
+ * @param  {Array} array
+ * @param  {Array} result
+ * @return {Array}
+ */
+function flattenDown (array, result) {
+  for (var i = 0; i < array.length; i++) {
+    var value = array[i]
+
+    if (Array.isArray(value)) {
+      flattenDown(value, result)
+    } else {
+      result.push(value)
+    }
+  }
+
+  return result
+}
+
+/**
+ * Flatten an array with depth.
+ *
+ * @param  {Array}  array
+ * @param  {Array}  result
+ * @param  {number} depth
+ * @return {Array}
+ */
+function flattenDownDepth (array, result, depth) {
+  depth--
+
+  for (var i = 0; i < array.length; i++) {
+    var value = array[i]
+
+    if (depth > -1 && Array.isArray(value)) {
+      flattenDownDepth(value, result, depth)
+    } else {
+      result.push(value)
+    }
+  }
+
+  return result
+}
+
+
+/***/ }),
+/* 5 */
+/***/ (function(module, exports, __webpack_require__) {
+
+
+var content = __webpack_require__(6);
+
+if(typeof content === 'string') content = [[module.i, content, '']];
+
+var transform;
+var insertInto;
+
+
+
+var options = {"hmr":true}
+
+options.transform = transform
+options.insertInto = undefined;
+
+var update = __webpack_require__(8)(content, options);
+
+if(content.locals) module.exports = content.locals;
+
+if(false) {
+	module.hot.accept("!!../../custom_visualizations_v2/node_modules/css-loader/index.js!./looker-classic.css", function() {
+		var newContent = require("!!../../custom_visualizations_v2/node_modules/css-loader/index.js!./looker-classic.css");
+
+		if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+
+		var locals = (function(a, b) {
+			var key, idx = 0;
+
+			for(key in a) {
+				if(!b || a[key] !== b[key]) return false;
+				idx++;
+			}
+
+			for(key in b) idx--;
+
+			return idx === 0;
+		}(content.locals, newContent.locals));
+
+		if(!locals) throw new Error('Aborting CSS HMR due to changed css-modules locals.');
+
+		update(newContent);
+	});
+
+	module.hot.dispose(function() { update(); });
+}
+
+/***/ }),
+/* 6 */
+/***/ (function(module, exports, __webpack_require__) {
+
+exports = module.exports = __webpack_require__(7)(false);
+// imports
+exports.push([module.i, "@import url(https://fonts.googleapis.com/css?family=Open+Sans:400,700);", ""]);
+
+// module
+exports.push([module.i, "#vis{font-family:\"Open Sans\",Helvetica,Arial,sans-serif;font-size:11px;font-weight:400;line-height:1.53846;color:dimgray;background-color:#fff}#vis *,#vis *::before,#vis *::after{box-sizing:border-box}#vis table,#vis thead,#vis tbody,#vis th,#vis td{font-weight:400;text-align:left}#vis table{width:100%;border-collapse:separate;border-spacing:0}#vis table thead tr:first-child th:first-child{border-top-left-radius:2px}#vis table thead tr:first-child th:last-child{border-top-right-radius:2px}#vis table tbody tr:last-child td:first-child,#vis table tbody tr:last-child th:first-child{border-bottom-left-radius:2px}#vis table tbody tr:last-child td:last-child,#vis table tbody tr:last-child th:last-child{border-bottom-right-radius:2px}#vis th,#vis td{padding:2px 4px;border-bottom:1px solid rgba(0,0,0,0.05);border-right:1px solid rgba(0,0,0,0.05)}#vis th:last-child,#vis td:last-child{border-right:none}#vis tr:last-child th,#vis tr:last-child td{border-bottom:none}#vis td{vertical-align:middle}#vis th{vertical-align:top;white-space:nowrap;user-select:none}#vis th em{font-style:normal;font-weight:700}#vis tr.pvtColAxisHeaders td,#vis tr.pvtColAxisHeaders th{background:#ccd8e4}#vis tr.pvtColAxisHeaders:nth-child(2) td,#vis tr.pvtColAxisHeaders:nth-child(2) th{background:#e4ecf3}#vis tbody tr:nth-child(odd) th{background:#fff}#vis tbody tr:nth-child(odd) td{background:#fff}#vis tbody tr:nth-child(even) th{background:#f6f8fa}#vis tbody tr:nth-child(even) td{background:#f7f2ee}#vis .pvtRowAxisHeaders .pvtAxisLabel{background:#ccd8e4}#vis .pvtColAxisHeaders .pvtAxisLabel{text-align:right;padding-right:1em}#vis .rowTotal{background:#e4d0bd}#vis .pvtVal,#vis .pvtGrandTotal{text-align:right}#vis .pvtColTotal{vertical-align:bottom}#vis .pvtRowLabelFiller{border-bottom:none}#vis .pvtRowLabel{background:#fff}#vis table.pvtHasColTotals tbody th.pvtRowLabel:last-child{border-bottom:1px solid #999}#vis table.pvtHasColTotals tbody tr:nth-last-child(2) td,#vis table.pvtHasColTotals tbody tr:nth-last-child(2) th{border-bottom:1px solid #999}#vis table.pvtHasColTotals tbody th.pvtRowHeader.lastPivot{border-bottom:1px solid #999}#vis tr.rowhide,#vis tr.colhide{display:none}\n", ""]);
+
+// exports
+
+
+/***/ }),
+/* 7 */
+/***/ (function(module, exports) {
+
+/*
+	MIT License http://www.opensource.org/licenses/mit-license.php
+	Author Tobias Koppers @sokra
+*/
+// css base code, injected by the css-loader
+module.exports = function(useSourceMap) {
+	var list = [];
+
+	// return the list of modules as css string
+	list.toString = function toString() {
+		return this.map(function (item) {
+			var content = cssWithMappingToString(item, useSourceMap);
+			if(item[2]) {
+				return "@media " + item[2] + "{" + content + "}";
+			} else {
+				return content;
+			}
+		}).join("");
+	};
+
+	// import a list of modules into the list
+	list.i = function(modules, mediaQuery) {
+		if(typeof modules === "string")
+			modules = [[null, modules, ""]];
+		var alreadyImportedModules = {};
+		for(var i = 0; i < this.length; i++) {
+			var id = this[i][0];
+			if(typeof id === "number")
+				alreadyImportedModules[id] = true;
+		}
+		for(i = 0; i < modules.length; i++) {
+			var item = modules[i];
+			// skip already imported module
+			// this implementation is not 100% perfect for weird media query combinations
+			//  when a module is imported multiple times with different media queries.
+			//  I hope this will never occur (Hey this way we have smaller bundles)
+			if(typeof item[0] !== "number" || !alreadyImportedModules[item[0]]) {
+				if(mediaQuery && !item[2]) {
+					item[2] = mediaQuery;
+				} else if(mediaQuery) {
+					item[2] = "(" + item[2] + ") and (" + mediaQuery + ")";
+				}
+				list.push(item);
+			}
+		}
+	};
+	return list;
+};
+
+function cssWithMappingToString(item, useSourceMap) {
+	var content = item[1] || '';
+	var cssMapping = item[3];
+	if (!cssMapping) {
+		return content;
+	}
+
+	if (useSourceMap && typeof btoa === 'function') {
+		var sourceMapping = toComment(cssMapping);
+		var sourceURLs = cssMapping.sources.map(function (source) {
+			return '/*# sourceURL=' + cssMapping.sourceRoot + source + ' */'
+		});
+
+		return [content].concat(sourceURLs).concat([sourceMapping]).join('\n');
+	}
+
+	return [content].join('\n');
+}
+
+// Adapted from convert-source-map (MIT)
+function toComment(sourceMap) {
+	// eslint-disable-next-line no-undef
+	var base64 = btoa(unescape(encodeURIComponent(JSON.stringify(sourceMap))));
+	var data = 'sourceMappingURL=data:application/json;charset=utf-8;base64,' + base64;
+
+	return '/*# ' + data + ' */';
+}
+
+
+/***/ }),
+/* 8 */
+/***/ (function(module, exports, __webpack_require__) {
+
+/*
+	MIT License http://www.opensource.org/licenses/mit-license.php
+	Author Tobias Koppers @sokra
+*/
+
+var stylesInDom = {};
+
+var	memoize = function (fn) {
+	var memo;
+
+	return function () {
+		if (typeof memo === "undefined") memo = fn.apply(this, arguments);
+		return memo;
+	};
+};
+
+var isOldIE = memoize(function () {
+	// Test for IE <= 9 as proposed by Browserhacks
+	// @see http://browserhacks.com/#hack-e71d8692f65334173fee715c222cb805
+	// Tests for existence of standard globals is to allow style-loader
+	// to operate correctly into non-standard environments
+	// @see https://github.com/webpack-contrib/style-loader/issues/177
+	return window && document && document.all && !window.atob;
+});
+
+var getTarget = function (target) {
+  return document.querySelector(target);
+};
+
+var getElement = (function (fn) {
+	var memo = {};
+
+	return function(target) {
+                // If passing function in options, then use it for resolve "head" element.
+                // Useful for Shadow Root style i.e
+                // {
+                //   insertInto: function () { return document.querySelector("#foo").shadowRoot }
+                // }
+                if (typeof target === 'function') {
+                        return target();
+                }
+                if (typeof memo[target] === "undefined") {
+			var styleTarget = getTarget.call(this, target);
+			// Special case to return head of iframe instead of iframe itself
+			if (window.HTMLIFrameElement && styleTarget instanceof window.HTMLIFrameElement) {
+				try {
+					// This will throw an exception if access to iframe is blocked
+					// due to cross-origin restrictions
+					styleTarget = styleTarget.contentDocument.head;
+				} catch(e) {
+					styleTarget = null;
+				}
+			}
+			memo[target] = styleTarget;
+		}
+		return memo[target]
+	};
+})();
+
+var singleton = null;
+var	singletonCounter = 0;
+var	stylesInsertedAtTop = [];
+
+var	fixUrls = __webpack_require__(9);
+
+module.exports = function(list, options) {
+	if (typeof DEBUG !== "undefined" && DEBUG) {
+		if (typeof document !== "object") throw new Error("The style-loader cannot be used in a non-browser environment");
+	}
+
+	options = options || {};
+
+	options.attrs = typeof options.attrs === "object" ? options.attrs : {};
+
+	// Force single-tag solution on IE6-9, which has a hard limit on the # of <style>
+	// tags it will allow on a page
+	if (!options.singleton && typeof options.singleton !== "boolean") options.singleton = isOldIE();
+
+	// By default, add <style> tags to the <head> element
+        if (!options.insertInto) options.insertInto = "head";
+
+	// By default, add <style> tags to the bottom of the target
+	if (!options.insertAt) options.insertAt = "bottom";
+
+	var styles = listToStyles(list, options);
+
+	addStylesToDom(styles, options);
+
+	return function update (newList) {
+		var mayRemove = [];
+
+		for (var i = 0; i < styles.length; i++) {
+			var item = styles[i];
+			var domStyle = stylesInDom[item.id];
+
+			domStyle.refs--;
+			mayRemove.push(domStyle);
+		}
+
+		if(newList) {
+			var newStyles = listToStyles(newList, options);
+			addStylesToDom(newStyles, options);
+		}
+
+		for (var i = 0; i < mayRemove.length; i++) {
+			var domStyle = mayRemove[i];
+
+			if(domStyle.refs === 0) {
+				for (var j = 0; j < domStyle.parts.length; j++) domStyle.parts[j]();
+
+				delete stylesInDom[domStyle.id];
+			}
+		}
+	};
+};
+
+function addStylesToDom (styles, options) {
+	for (var i = 0; i < styles.length; i++) {
+		var item = styles[i];
+		var domStyle = stylesInDom[item.id];
+
+		if(domStyle) {
+			domStyle.refs++;
+
+			for(var j = 0; j < domStyle.parts.length; j++) {
+				domStyle.parts[j](item.parts[j]);
+			}
+
+			for(; j < item.parts.length; j++) {
+				domStyle.parts.push(addStyle(item.parts[j], options));
+			}
+		} else {
+			var parts = [];
+
+			for(var j = 0; j < item.parts.length; j++) {
+				parts.push(addStyle(item.parts[j], options));
+			}
+
+			stylesInDom[item.id] = {id: item.id, refs: 1, parts: parts};
+		}
+	}
+}
+
+function listToStyles (list, options) {
+	var styles = [];
+	var newStyles = {};
+
+	for (var i = 0; i < list.length; i++) {
+		var item = list[i];
+		var id = options.base ? item[0] + options.base : item[0];
+		var css = item[1];
+		var media = item[2];
+		var sourceMap = item[3];
+		var part = {css: css, media: media, sourceMap: sourceMap};
+
+		if(!newStyles[id]) styles.push(newStyles[id] = {id: id, parts: [part]});
+		else newStyles[id].parts.push(part);
+	}
+
+	return styles;
+}
+
+function insertStyleElement (options, style) {
+	var target = getElement(options.insertInto)
+
+	if (!target) {
+		throw new Error("Couldn't find a style target. This probably means that the value for the 'insertInto' parameter is invalid.");
+	}
+
+	var lastStyleElementInsertedAtTop = stylesInsertedAtTop[stylesInsertedAtTop.length - 1];
+
+	if (options.insertAt === "top") {
+		if (!lastStyleElementInsertedAtTop) {
+			target.insertBefore(style, target.firstChild);
+		} else if (lastStyleElementInsertedAtTop.nextSibling) {
+			target.insertBefore(style, lastStyleElementInsertedAtTop.nextSibling);
+		} else {
+			target.appendChild(style);
+		}
+		stylesInsertedAtTop.push(style);
+	} else if (options.insertAt === "bottom") {
+		target.appendChild(style);
+	} else if (typeof options.insertAt === "object" && options.insertAt.before) {
+		var nextSibling = getElement(options.insertInto + " " + options.insertAt.before);
+		target.insertBefore(style, nextSibling);
+	} else {
+		throw new Error("[Style Loader]\n\n Invalid value for parameter 'insertAt' ('options.insertAt') found.\n Must be 'top', 'bottom', or Object.\n (https://github.com/webpack-contrib/style-loader#insertat)\n");
+	}
+}
+
+function removeStyleElement (style) {
+	if (style.parentNode === null) return false;
+	style.parentNode.removeChild(style);
+
+	var idx = stylesInsertedAtTop.indexOf(style);
+	if(idx >= 0) {
+		stylesInsertedAtTop.splice(idx, 1);
+	}
+}
+
+function createStyleElement (options) {
+	var style = document.createElement("style");
+
+	if(options.attrs.type === undefined) {
+		options.attrs.type = "text/css";
+	}
+
+	addAttrs(style, options.attrs);
+	insertStyleElement(options, style);
+
+	return style;
+}
+
+function createLinkElement (options) {
+	var link = document.createElement("link");
+
+	if(options.attrs.type === undefined) {
+		options.attrs.type = "text/css";
+	}
+	options.attrs.rel = "stylesheet";
+
+	addAttrs(link, options.attrs);
+	insertStyleElement(options, link);
+
+	return link;
+}
+
+function addAttrs (el, attrs) {
+	Object.keys(attrs).forEach(function (key) {
+		el.setAttribute(key, attrs[key]);
+	});
+}
+
+function addStyle (obj, options) {
+	var style, update, remove, result;
+
+	// If a transform function was defined, run it on the css
+	if (options.transform && obj.css) {
+	    result = options.transform(obj.css);
+
+	    if (result) {
+	    	// If transform returns a value, use that instead of the original css.
+	    	// This allows running runtime transformations on the css.
+	    	obj.css = result;
+	    } else {
+	    	// If the transform function returns a falsy value, don't add this css.
+	    	// This allows conditional loading of css
+	    	return function() {
+	    		// noop
+	    	};
+	    }
+	}
+
+	if (options.singleton) {
+		var styleIndex = singletonCounter++;
+
+		style = singleton || (singleton = createStyleElement(options));
+
+		update = applyToSingletonTag.bind(null, style, styleIndex, false);
+		remove = applyToSingletonTag.bind(null, style, styleIndex, true);
+
+	} else if (
+		obj.sourceMap &&
+		typeof URL === "function" &&
+		typeof URL.createObjectURL === "function" &&
+		typeof URL.revokeObjectURL === "function" &&
+		typeof Blob === "function" &&
+		typeof btoa === "function"
+	) {
+		style = createLinkElement(options);
+		update = updateLink.bind(null, style, options);
+		remove = function () {
+			removeStyleElement(style);
+
+			if(style.href) URL.revokeObjectURL(style.href);
+		};
+	} else {
+		style = createStyleElement(options);
+		update = applyToTag.bind(null, style);
+		remove = function () {
+			removeStyleElement(style);
+		};
+	}
+
+	update(obj);
+
+	return function updateStyle (newObj) {
+		if (newObj) {
+			if (
+				newObj.css === obj.css &&
+				newObj.media === obj.media &&
+				newObj.sourceMap === obj.sourceMap
+			) {
+				return;
+			}
+
+			update(obj = newObj);
+		} else {
+			remove();
+		}
+	};
+}
+
+var replaceText = (function () {
+	var textStore = [];
+
+	return function (index, replacement) {
+		textStore[index] = replacement;
+
+		return textStore.filter(Boolean).join('\n');
+	};
+})();
+
+function applyToSingletonTag (style, index, remove, obj) {
+	var css = remove ? "" : obj.css;
+
+	if (style.styleSheet) {
+		style.styleSheet.cssText = replaceText(index, css);
+	} else {
+		var cssNode = document.createTextNode(css);
+		var childNodes = style.childNodes;
+
+		if (childNodes[index]) style.removeChild(childNodes[index]);
+
+		if (childNodes.length) {
+			style.insertBefore(cssNode, childNodes[index]);
+		} else {
+			style.appendChild(cssNode);
+		}
+	}
+}
+
+function applyToTag (style, obj) {
+	var css = obj.css;
+	var media = obj.media;
+
+	if(media) {
+		style.setAttribute("media", media)
+	}
+
+	if(style.styleSheet) {
+		style.styleSheet.cssText = css;
+	} else {
+		while(style.firstChild) {
+			style.removeChild(style.firstChild);
+		}
+
+		style.appendChild(document.createTextNode(css));
+	}
+}
+
+function updateLink (link, options, obj) {
+	var css = obj.css;
+	var sourceMap = obj.sourceMap;
+
+	/*
+		If convertToAbsoluteUrls isn't defined, but sourcemaps are enabled
+		and there is no publicPath defined then lets turn convertToAbsoluteUrls
+		on by default.  Otherwise default to the convertToAbsoluteUrls option
+		directly
+	*/
+	var autoFixUrls = options.convertToAbsoluteUrls === undefined && sourceMap;
+
+	if (options.convertToAbsoluteUrls || autoFixUrls) {
+		css = fixUrls(css);
+	}
+
+	if (sourceMap) {
+		// http://stackoverflow.com/a/26603875
+		css += "\n/*# sourceMappingURL=data:application/json;base64," + btoa(unescape(encodeURIComponent(JSON.stringify(sourceMap)))) + " */";
+	}
+
+	var blob = new Blob([css], { type: "text/css" });
+
+	var oldSrc = link.href;
+
+	link.href = URL.createObjectURL(blob);
+
+	if(oldSrc) URL.revokeObjectURL(oldSrc);
+}
+
+
+/***/ }),
+/* 9 */
+/***/ (function(module, exports) {
+
+
+/**
+ * When source maps are enabled, `style-loader` uses a link element with a data-uri to
+ * embed the css on the page. This breaks all relative urls because now they are relative to a
+ * bundle instead of the current page.
+ *
+ * One solution is to only use full urls, but that may be impossible.
+ *
+ * Instead, this function "fixes" the relative urls to be absolute according to the current page location.
+ *
+ * A rudimentary test suite is located at `test/fixUrls.js` and can be run via the `npm test` command.
+ *
+ */
+
+module.exports = function (css) {
+  // get current location
+  var location = typeof window !== "undefined" && window.location;
+
+  if (!location) {
+    throw new Error("fixUrls requires window.location");
+  }
+
+	// blank or null?
+	if (!css || typeof css !== "string") {
+	  return css;
+  }
+
+  var baseUrl = location.protocol + "//" + location.host;
+  var currentDir = baseUrl + location.pathname.replace(/\/[^\/]*$/, "/");
+
+	// convert each url(...)
+	/*
+	This regular expression is just a way to recursively match brackets within
+	a string.
+
+	 /url\s*\(  = Match on the word "url" with any whitespace after it and then a parens
+	   (  = Start a capturing group
+	     (?:  = Start a non-capturing group
+	         [^)(]  = Match anything that isn't a parentheses
+	         |  = OR
+	         \(  = Match a start parentheses
+	             (?:  = Start another non-capturing groups
+	                 [^)(]+  = Match anything that isn't a parentheses
+	                 |  = OR
+	                 \(  = Match a start parentheses
+	                     [^)(]*  = Match anything that isn't a parentheses
+	                 \)  = Match a end parentheses
+	             )  = End Group
+              *\) = Match anything and then a close parens
+          )  = Close non-capturing group
+          *  = Match anything
+       )  = Close capturing group
+	 \)  = Match a close parens
+
+	 /gi  = Get all matches, not the first.  Be case insensitive.
+	 */
+	var fixedCss = css.replace(/url\s*\(((?:[^)(]|\((?:[^)(]+|\([^)(]*\))*\))*)\)/gi, function(fullMatch, origUrl) {
+		// strip quotes (if they exist)
+		var unquotedOrigUrl = origUrl
+			.trim()
+			.replace(/^"(.*)"$/, function(o, $1){ return $1; })
+			.replace(/^'(.*)'$/, function(o, $1){ return $1; });
+
+		// already a full url? no change
+		if (/^(#|data:|http:\/\/|https:\/\/|file:\/\/\/|\s*$)/i.test(unquotedOrigUrl)) {
+		  return fullMatch;
+		}
+
+		// convert the url to a full url
+		var newUrl;
+
+		if (unquotedOrigUrl.indexOf("//") === 0) {
+		  	//TODO: should we add protocol?
+			newUrl = unquotedOrigUrl;
+		} else if (unquotedOrigUrl.indexOf("/") === 0) {
+			// path should be relative to the base url
+			newUrl = baseUrl + unquotedOrigUrl; // already starts with '/'
+		} else {
+			// path should be relative to current directory
+			newUrl = currentDir + unquotedOrigUrl.replace(/^\.\//, ""); // Strip leading './'
+		}
+
+		// send back the fixed url(...)
+		return "url(" + JSON.stringify(newUrl) + ")";
+	});
+
+	// send back the fixed css
+	return fixedCss;
+};
 
 
 /***/ })
