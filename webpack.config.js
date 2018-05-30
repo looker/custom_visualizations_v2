@@ -1,45 +1,34 @@
 var path = require('path')
 
-const ExtraWatchWebpackPlugin = require('extra-watch-webpack-plugin') // XXX
+const UglifyJSPlugin = require('uglifyjs-webpack-plugin');
 
 var webpackConfig = {
   entry: {
-    hello_world: './src/examples/hello_world/hello_world.js',
-    sankey: './src/examples/sankey/sankey.ts',
-    liquid_fill_gauge: './src/examples/liquid_fill_gauge/liquid_fill_gauge.ts',
-    sunburst: './src/examples/sunburst/sunburst.ts',
-    collapsible_tree: './src/examples/collapsible_tree/collapsible_tree.ts',
-    chord: './src/examples/chord/chord.ts',
-    treemap: './src/examples/treemap/treemap.ts',
-    subtotal: './src/examples/subtotal/subtotal.js'
+    // hello_world: './src/examples/hello_world/hello_world.js',
+    // sankey: './src/examples/sankey/sankey.ts',
+    // liquid_fill_gauge: './src/examples/liquid_fill_gauge/liquid_fill_gauge.ts',
+    // sunburst: './src/examples/sunburst/sunburst.ts',
+    // collapsible_tree: './src/examples/collapsible_tree/collapsible_tree.ts',
+    // chord: './src/examples/chord/chord.ts',
+    // treemap: './src/examples/treemap/treemap.ts',
+    subtotal: './src/examples/subtotal/subtotal.ts'
   },
-
-  // XXX
-  plugins: [
-    new ExtraWatchWebpackPlugin({
-      files: [ 'path/to/file', 'src/**/*.json' ],
-      dirs: [ 'path/to/dir' ],
-    }),
-  ],
-  
   output: {
-    filename: '[name].js',
-    path: path.join(__dirname, 'dist'),
-    library: '[name]',
-    libraryTarget: 'umd'
+    filename: "[name].js",
+    path: path.join(__dirname, "dist"),
+    library: "[name]",
+    libraryTarget: "umd"
   },
   resolve: {
-    extensions: ['.ts', '.tsx', '.js', '.jsx']
+    extensions: [".ts", ".js"]
   },
+  plugins: [
+    new UglifyJSPlugin()
+  ],
   module: {
     loaders: [
-      { test: /\.ts$/, loader: "ts-loader" }
-    ],
-    rules: [
-      {
-        test: /\.css$/,
-        use: [ 'to-string-loader', 'css-loader' ]
-      }
+      { test: /\.ts$/, loader: "ts-loader" },
+      { test: /\.css$/, loader: [ 'to-string-loader', 'css-loader' ] }
     ]
   },
   stats: {

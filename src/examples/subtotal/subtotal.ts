@@ -1,11 +1,13 @@
-/* global looker */
+import * as $ from 'jquery'
+import 'pivottable'
+import * as subtotalMultipleAggregates from 'subtotal-multiple-aggregates'
 
-const $ = require('jquery')
-require('pivottable')
-require('subtotal-multiple-aggregates')($)
+subtotalMultipleAggregates($)
 
-const themeClassic = require('subtotal-multiple-aggregates/dist/looker-classic.css').toString()
-const themeWhite = require('subtotal-multiple-aggregates/dist/looker-white.css').toString()
+import themeClassic from 'subtotal-multiple-aggregates/dist/looker-classic.css'
+import themeWhite from 'subtotal-multiple-aggregates/dist/looker-white.css'
+
+import { Row, Looker, VisualizationDefinition } from '../types/types'
 
 const LOOKER_ROW_TOTAL_KEY = '$$$_row_total_$$$'
 
@@ -43,11 +45,11 @@ looker.plugins.visualizations.add({
     const theme = config.theme || this.options.theme.default
     switch (theme) {
       case 'classic':
-        this.style.innerHTML = themeClassic;
-        break;
+        this.style.innerHTML = themeClassic.toString()
+        break
       case 'white':
-        this.style.innerHTML = themeWhite;
-        break;
+        this.style.innerHTML = themeWhite.toString()
+        break
     }
 
     const pivots = config.query_fields.pivots.map(d => d.name)

@@ -9,8 +9,8 @@
     "test": "tests"
   },
   "scripts": {
-    "build": "yarn webpack --config webpack.config.js",
-    "watch": "yarn webpack --watch --progress --config webpack.config.js",
+    "build": "webpack --config webpack.config.js",
+    "watch": "webpack --config webpack.config.js --watch --progress",
     "lint": "tslint --project tsconfig.json --format stylish 'src/**/*.ts'",
     "lint-fix": "tslint --fix --project tsconfig.json  --format stylish 'src/**/*.ts'",
     "test": "mocha"
@@ -18,8 +18,12 @@
   "author": "",
   "private": true,
   "devDependencies": {
+    "css-loader": "^0.28.11",
     "d3": "^4.8.0",
     "mocha": "^3.2.0",
+    "pivottable": "^2.20.0",
+    "subtotal-multiple-aggregates": "4mile/subtotal-multiple-aggregates",
+    "to-string-loader": "^1.1.5",
     "ts-loader": "3.2.0",
     "tslint": "5.8.0",
     "tslint-config-standard": "7.0.0",
@@ -31,13 +35,6 @@
   "dependencies": {
     "@types/d3": "^5.0.0",
     "@types/d3-sankey": "^0.7.2",
-    "css-loader": "^0.28.11",
-    "d3-sankey": "^0.7.1",
-    "extra-watch-webpack-plugin": "^1.0.3",
-    "jquery": "^3.3.1",
-    "pivottable": "^2.20.0",
-    "subtotal-multiple-aggregates": "4mile/subtotal-multiple-aggregates",
-    "to-string-loader": "^1.1.5",
-    "webpack-notifier": "^1.6.0"
+    "d3-sankey": "^0.7.1"
   }
 }

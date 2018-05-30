@@ -5,9 +5,8 @@
     "noImplicitReturns": true,
     "outDir": "lib",
     "strict": true,
-    "lib": ["dom", "es7", "es2017.object"],
-    "target": "es5",
-    "jsx": "react"
+    "lib": [ "dom", "es6", "es2015.collection" ],
+    "target": "es5"
   },
   "exclude": [
     "node_modules"
