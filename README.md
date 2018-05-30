@@ -34,3 +34,5 @@ Visualizations provided as examples here are a community supported effort.
 Looker's support team does not troubleshoot issues relating to these example visualizations or your custom visualization code.
 
 Please use issues for tracking and closing out bugs, and visit [Looker Discourse](https://discourse.looker.com) for how-to articles, conversations, and tips regarding custom visualizations.
+
+Please note that Looker will NOT be accepting any Pull Requests for our custom visualizations. If you have a suggested bug fix or addition, please email blocks@looker.com.
