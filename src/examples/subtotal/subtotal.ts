@@ -3,11 +3,12 @@ import 'pivottable'
 import subtotalMultipleAggregates from 'subtotal-multiple-aggregates'
 import { handleErrors, formatType } from '../common/utils'
 
-import themeClassic from 'subtotal-multiple-aggregates/dist/looker-classic.css'
-import themeWhite from 'subtotal-multiple-aggregates/dist/looker-white.css'
+const themeClassic = require('subtotal-multiple-aggregates/dist/looker-classic.css')
+const themeWhite = require('subtotal-multiple-aggregates/dist/looker-white.css')
 
 import { Row, Looker, VisualizationDefinition } from '../types/types'
 
+declare var require: any
 declare var looker: Looker
 
 type Formatter = ((s: any) => string)
