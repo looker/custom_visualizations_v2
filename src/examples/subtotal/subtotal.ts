@@ -55,12 +55,11 @@ const vis: Subtotal = {
     if (!this.style) return
 
     if (!handleErrors(this, queryResponse, {
-      min_pivots: 0, max_pivots: 0,
-      min_dimensions: 1, max_dimensions: undefined,
-      min_measures: 1, max_measures: undefined
+      min_pivots: 0, max_pivots: Infinity,
+      min_dimensions: 1, max_dimensions: Infinity,
+      min_measures: 1, max_measures: Infinity
     })) return
 
-    if (!this.style) return
     const theme = config.theme || this.options.theme.default
     switch (theme) {
       case 'classic':
@@ -69,6 +68,8 @@ const vis: Subtotal = {
       case 'white':
         this.style.innerHTML = themeWhite.toString()
         break
+      default:
+        throw new Error(`Unknown theme: ${theme}`)
     }
 
     const pivots = config.query_fields.pivots.map((d: any) => d.name)
