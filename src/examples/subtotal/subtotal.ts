@@ -1,6 +1,6 @@
 import * as $ from 'jquery'
 import 'pivottable'
-import * as subtotalMultipleAggregates from 'subtotal-multiple-aggregates'
+import subtotalMultipleAggregates from 'subtotal-multiple-aggregates'
 import { handleErrors, formatType } from '../common/utils'
 
 import themeClassic from 'subtotal-multiple-aggregates/dist/looker-classic.css'
@@ -146,12 +146,14 @@ const vis: Subtotal = {
         case 'int': agg = tpl.sum(intFormat); break
         case 'number': agg = tpl.sum(customFormat); break
         default:
-          this.clearErrors('measure-type')
-          this.addError({
-            group: 'measure-type',
-            title: `Cannot Show "${label1} ${label2}"`,
-            message: `Measure types of '${type}' are unsupported by this visualization.`
-          })
+          if (this && this.clearErrors && this.addError) {
+            this.clearErrors('measure-type')
+            this.addError({
+              group: 'measure-type',
+              title: `Cannot Show "${label1} ${label2}"`,
+              message: `Measure types of '${type}' are unsupported by this visualization.`
+            })
+          }
           return
       }
       const aggName = `measure_${i}`
