@@ -23,7 +23,7 @@ interface Subtotal extends VisualizationDefinition {
 }
 
 const vis: Subtotal = {
-  id: '',
+  id: 'subtotal',
   label: 'Subtotal',
 
   options: {
