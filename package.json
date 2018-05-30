@@ -18,6 +18,7 @@
   "author": "",
   "private": true,
   "devDependencies": {
+    "@types/jquery": "^3.3.2",
     "css-loader": "^0.28.11",
     "d3": "^4.8.0",
     "mocha": "^3.2.0",

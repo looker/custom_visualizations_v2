@@ -1,17 +1,27 @@
 import * as $ from 'jquery'
 import 'pivottable'
 import * as subtotalMultipleAggregates from 'subtotal-multiple-aggregates'
-
-subtotalMultipleAggregates($)
+import { handleErrors, formatType } from '../common/utils'
 
 import themeClassic from 'subtotal-multiple-aggregates/dist/looker-classic.css'
 import themeWhite from 'subtotal-multiple-aggregates/dist/looker-white.css'
 
 import { Row, Looker, VisualizationDefinition } from '../types/types'
 
+declare var looker: Looker
+
+type Formatter = ((s: any) => string)
+const defaultFormatter: Formatter = (x) => x.toString()
+
 const LOOKER_ROW_TOTAL_KEY = '$$$_row_total_$$$'
 
-looker.plugins.visualizations.add({
+subtotalMultipleAggregates($)
+
+interface Subtotal extends VisualizationDefinition {
+  style?: HTMLElement
+}
+
+const vis: Subtotal = {
   id: '',
   label: 'Subtotal',
 
@@ -23,7 +33,7 @@ looker.plugins.visualizations.add({
     },
     theme: {
       type: 'string',
-      label: "Theme",
+      label: 'Theme',
       display: 'select',
       values: [
         { 'Classic': 'classic' },
@@ -41,7 +51,15 @@ looker.plugins.visualizations.add({
   update (data, element, config, queryResponse, details) {
     if (!config || !data) return
     if (details && details.changed && details.changed.size) return
+    if (!this.style) return
 
+    if (!handleErrors(this, queryResponse, {
+      min_pivots: 0, max_pivots: 0,
+      min_dimensions: 1, max_dimensions: undefined,
+      min_measures: 1, max_measures: undefined
+    })) return
+
+    if (!this.style) return
     const theme = config.theme || this.options.theme.default
     switch (theme) {
       case 'classic':
@@ -52,19 +70,13 @@ looker.plugins.visualizations.add({
         break
     }
 
-    const pivots = config.query_fields.pivots.map(d => d.name)
-    const dimensions = config.query_fields.dimensions.map(d => d.name)
-
+    const pivots = config.query_fields.pivots.map((d: any) => d.name)
+    const dimensions = config.query_fields.dimensions.map((d: any) => d.name)
     const measures = config.query_fields.measures
-    if (measures.length < 1) {
-      return this.addError({
-        title: 'A measure is required',
-        messsage: 'Please make sure your explore has a measure'
-      })
-    }
 
-    const labels = {}
-    for (const obj of Object.values(config.query_fields)) {
+    const labels: { [key: string]: any } = {}
+    for (const key of Object.keys(config.query_fields)) {
+      const obj = config.query_fields[key]
       for (const field of obj) {
         const { name, view_label: label1, label_short: label2 } = field
         labels[name] = { label: label1, sublabel: label2 }
@@ -73,8 +85,9 @@ looker.plugins.visualizations.add({
 
     const ptData = []
     for (const row of data) {
-      const ptRow = {}
-      for (const [key, obj] of Object.entries(row)) {
+      const ptRow: { [key: string]: any } = {}
+      for (const key of Object.keys(row)) {
+        const obj = row[key]
         if (pivots.includes(key)) continue
         ptRow[key] = obj.value
       }
@@ -112,13 +125,13 @@ looker.plugins.visualizations.add({
     // $.pivotUtilities.aggregators because we want to use our own configurable
     // number formatter for some of them.
     const tpl = $.pivotUtilities.aggregatorTemplates
-    const intFormat = (x) => Math.trunc(x)
-    const customFormat = (x) => x // XXX TODO Make this configurable.
+    const intFormat = (x: number) => Math.trunc(x)
 
     const aggregatorNames = []
     const aggregators = []
     for (let i = 0; i < measures.length; i++) {
-      const { type, name, view_label: label1, label_short: label2 } = measures[i]
+      const { type, name, value_format, view_label: label1, label_short: label2 } = measures[i]
+      const customFormat = formatType(value_format) || defaultFormatter
       let agg
       switch (type) {
         case 'count': agg = tpl.sum(intFormat); break
@@ -169,4 +182,6 @@ looker.plugins.visualizations.add({
     }
     $(element).pivot(ptData, options)
   }
-})
+}
+
+looker.plugins.visualizations.add(vis)
