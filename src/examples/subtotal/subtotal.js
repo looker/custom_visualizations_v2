@@ -2,15 +2,15 @@
 
 const $ = require('jquery')
 require('pivottable')
-require('subtotal')($)
-window.$ = $ // XXX
+require('subtotal-multiple-aggregates')($)
 
-const XXXCSS = require('../../../../subtotal/dist/looker-classic.css')
+const themeClassic = require('subtotal-multiple-aggregates/dist/looker-classic.css').toString()
+const themeWhite = require('subtotal-multiple-aggregates/dist/looker-white.css').toString()
 
 const LOOKER_ROW_TOTAL_KEY = '$$$_row_total_$$$'
 
 looker.plugins.visualizations.add({
-  id: 'subtotal',
+  id: '',
   label: 'Subtotal',
 
   options: {
@@ -18,27 +18,37 @@ looker.plugins.visualizations.add({
       type: 'boolean',
       label: "Use Looker's row totals",
       default: true
+    },
+    theme: {
+      type: 'string',
+      label: "Theme",
+      display: 'select',
+      values: [
+        { 'Classic': 'classic' },
+        { 'White': 'white' }
+      ],
+      default: 'classic'
     }
   },
 
   create (element, config) {
-    // [
-    //   'https://unpkg.com/pivottable@2.20.0/dist/pivot.min.css',
-    //   'https://unpkg.com/subtotal@1.11.0-alpha.0/dist/subtotal.min.css'
-    // ].forEach(url => {
-    //   const link = document.createElement('link')
-    //   link.rel = 'stylesheet'
-    //   link.href = url
-    //   document.head.appendChild(link)
-    // })
-    document.head.innerHTML += `<style>${XXXCSS}</style>` // XXX
+    this.style = document.createElement('style')
+    document.head.appendChild(this.style)
   },
 
   update (data, element, config, queryResponse, details) {
     if (!config || !data) return
     if (details && details.changed && details.changed.size) return
-    console.clear() // XXX
-    window.x = { data, element, config, queryResponse, details } // XXX
+
+    const theme = config.theme || this.options.theme.default
+    switch (theme) {
+      case 'classic':
+        this.style.innerHTML = themeClassic;
+        break;
+      case 'white':
+        this.style.innerHTML = themeWhite;
+        break;
+    }
 
     const pivots = config.query_fields.pivots.map(d => d.name)
     const dimensions = config.query_fields.dimensions.map(d => d.name)
@@ -95,8 +105,6 @@ looker.plugins.visualizations.add({
         }
       }
     }
-    window.data = data // XXX
-    window.ptData = ptData // XXX
 
     // We create our own aggregators instead of using
     // $.pivotUtilities.aggregators because we want to use our own configurable
@@ -120,6 +128,8 @@ looker.plugins.visualizations.add({
         case 'max': agg = tpl.max(customFormat); break
         case 'list': agg = tpl.listUnique(', '); break
         case 'percent_of_total': agg = tpl.fractionOf(tpl.sum(), 'total', customFormat); break
+        case 'int': agg = tpl.sum(intFormat); break
+        case 'number': agg = tpl.sum(customFormat); break
         default:
           this.clearErrors('measure-type')
           this.addError({
