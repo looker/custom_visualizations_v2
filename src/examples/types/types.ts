@@ -9,7 +9,7 @@ export interface Looker {
 
 export interface LookerChartUtils {
   Utils: {
-    openDrillMenu: (options: {links: Link[], event: object}) => void
+    openDrillMenu: (options: { links: Link[], event: object }) => void
     openUrl: (url: string, event: object) => void
     textForCell: (cell: Cell) => string
     filterableValueForCell: (cell: Cell) => string
@@ -31,9 +31,9 @@ export interface VisualizationDefinition {
   destroy?: () => void
 }
 
-export interface VisOptions {[optionName: string]: VisOption}
+export interface VisOptions { [optionName: string]: VisOption }
 
-export interface VisOptionValue {[label: string]: string}
+export interface VisOptionValue { [label: string]: string }
 
 export interface VisQueryResponse {
   [key: string]: any
@@ -109,7 +109,9 @@ export interface VisOption {
   order?: number
   min?: number
   max?: number
-  required ?: boolean
+  step?: number
+  required?: boolean
+  hidden?: (config: VisConfig, queryResponse: VisQueryResponse) => boolean
 }
 
 export interface VisualizationError {
