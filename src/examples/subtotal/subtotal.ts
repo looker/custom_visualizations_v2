@@ -164,8 +164,8 @@ const vis: Subtotal = {
       aggregators.push(agg([name]))
     }
 
-    const sortAsc = (a: any, b: any) => typeof a === 'string' ? a.localeCompare(b) : a - b
-    const sortDesc = (a: any, b: any) => typeof a === 'string' ? b.localeCompare(a) : b - a
+    const sortAsc = (a: any, b: any) => b === LOOKER_ROW_TOTAL_KEY ? -Infinity : typeof a === 'string' ? a.localeCompare(b) : a - b
+    const sortDesc = (a: any, b: any) => b === LOOKER_ROW_TOTAL_KEY ? -Infinity : typeof a === 'string' ? b.localeCompare(a) : b - a
     const sorters: any = {}
     for (const fieldType of ['measure_like', 'dimension_like', 'pivots']) {
       for (const field of queryResponse.fields[fieldType]) {
