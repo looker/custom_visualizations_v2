@@ -164,6 +164,17 @@ const vis: Subtotal = {
       aggregators.push(agg([name]))
     }
 
+    const sortAsc = (a: any, b: any) => typeof a === 'string' ? a.localeCompare(b) : a - b
+    const sortDesc = (a: any, b: any) => typeof a === 'string' ? b.localeCompare(a) : b - a
+    const sorters: any = {}
+    for (const fieldType of ['measure_like', 'dimension_like', 'pivots']) {
+      for (const field of queryResponse.fields[fieldType]) {
+        if (field.sorted != null) {
+          sorters[field.name] = field.sorted.desc ? sortDesc : sortAsc
+        }
+      }
+    }
+
     const dataClass = $.pivotUtilities.SubtotalPivotDataMulti
     const renderer = $.pivotUtilities.subtotal_renderers['Table With Subtotal']
     const rendererOptions = {
@@ -180,6 +191,7 @@ const vis: Subtotal = {
       rendererOptions,
       aggregatorNames,
       aggregators,
+      sorters,
       hasColTotals: queryResponse.has_totals,
       hasRowTotals: queryResponse.has_row_totals,
       useLookerRowTotals: config.use_looker_row_totals
