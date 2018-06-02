@@ -127,7 +127,7 @@ const vis: Subtotal = {
     // $.pivotUtilities.aggregators because we want to use our own configurable
     // number formatter for some of them.
     const tpl = $.pivotUtilities.aggregatorTemplates
-    const intFormat = (x: number) => Math.trunc(x)
+    const intFormat = formatType('###,###,###,##0')
 
     const aggregatorNames = []
     const aggregators = []
