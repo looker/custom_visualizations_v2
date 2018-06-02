@@ -164,13 +164,27 @@ const vis: Subtotal = {
       aggregators.push(agg([name]))
     }
 
-    const sortAsc = (a: any, b: any) => b === LOOKER_ROW_TOTAL_KEY ? -Infinity : typeof a === 'string' ? a.localeCompare(b) : a - b
-    const sortDesc = (a: any, b: any) => b === LOOKER_ROW_TOTAL_KEY ? -Infinity : typeof a === 'string' ? b.localeCompare(a) : b - a
+    const numericSortAsc = (a: any, b: any) => a - b
+    const numericSortDesc = (a: any, b: any) => b - a
+    const stringSortAsc = (a: any, b: any) => (
+      a === LOOKER_ROW_TOTAL_KEY ? Infinity :
+      b === LOOKER_ROW_TOTAL_KEY ? -Infinity :
+      a.localeCompare(b)
+    )
+    const stringSortDesc = (a: any, b: any) => (
+      a === LOOKER_ROW_TOTAL_KEY ? Infinity :
+      b === LOOKER_ROW_TOTAL_KEY ? -Infinity :
+      b.localeCompare(a)
+    )
     const sorters: any = {}
     for (const fieldType of ['measure_like', 'dimension_like', 'pivots']) {
       for (const field of queryResponse.fields[fieldType]) {
         if (field.sorted != null) {
-          sorters[field.name] = field.sorted.desc ? sortDesc : sortAsc
+          if (field.is_numeric) {
+            sorters[field.name] = field.sorted.desc ? numericSortDesc : numericSortAsc
+          } else {
+            sorters[field.name] = field.sorted.desc ? stringSortDesc : stringSortAsc
+          }
         }
       }
     }
