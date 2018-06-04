@@ -76,6 +76,11 @@ const vis: Subtotal = {
     const dimensions = config.query_fields.dimensions.map((d: any) => d.name)
     const measures = config.query_fields.measures
 
+    console.log('XXX', '------------------ update --------------------')
+    console.log('XXX', 'pivots', pivots)
+    console.log('XXX', 'dimensions', dimensions)
+    console.log('XXX', 'measures', measures.map((d: any) => d.name))
+
     const labels: { [key: string]: any } = {}
     for (const key of Object.keys(config.query_fields)) {
       const obj = config.query_fields[key]
@@ -169,12 +174,12 @@ const vis: Subtotal = {
     const stringSortAsc = (a: any, b: any) => (
       a === LOOKER_ROW_TOTAL_KEY ? Infinity :
       b === LOOKER_ROW_TOTAL_KEY ? -Infinity :
-      a.localeCompare(b)
+      String(a).localeCompare(b)
     )
     const stringSortDesc = (a: any, b: any) => (
       a === LOOKER_ROW_TOTAL_KEY ? Infinity :
       b === LOOKER_ROW_TOTAL_KEY ? -Infinity :
-      b.localeCompare(a)
+      String(b).localeCompare(a)
     )
     const sorters: any = {}
     for (const fieldType of ['measure_like', 'dimension_like', 'pivots']) {
