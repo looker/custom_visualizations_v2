@@ -76,11 +76,6 @@ const vis: Subtotal = {
     const dimensions = config.query_fields.dimensions.map((d: any) => d.name)
     const measures = config.query_fields.measures
 
-    console.log('XXX', '------------------ update --------------------')
-    console.log('XXX', 'pivots', pivots)
-    console.log('XXX', 'dimensions', dimensions)
-    console.log('XXX', 'measures', measures.map((d: any) => d.name))
-
     const labels: { [key: string]: any } = {}
     for (const key of Object.keys(config.query_fields)) {
       const obj = config.query_fields[key]
