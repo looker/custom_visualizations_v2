@@ -36,6 +36,11 @@ const vis: Subtotal = {
         { 'White': 'white' }
       ],
       default: 'classic'
+    },
+    show_full_field_name: {
+      type: 'boolean',
+      label: 'Show Full Field Name',
+      default: true
     }
   },
 
@@ -76,7 +81,7 @@ const vis: Subtotal = {
       const obj = config.query_fields[key]
       for (const field of obj) {
         const { name, view_label: label1, label_short: label2 } = field
-        labels[name] = { label: label1, sublabel: label2 }
+        labels[name] = config.show_full_field_name ? { label: label1, sublabel: label2 } : { label: label2 }
       }
     }
 
@@ -154,7 +159,7 @@ const vis: Subtotal = {
           return
       }
       const aggName = `measure_${i}`
-      labels[aggName] = { label: label1, sublabel: label2 }
+      labels[aggName] = config.show_full_field_name ? { label: label1, sublabel: label2 } : { label: label1 }
       aggregatorNames.push(aggName)
       aggregators.push(agg([name]))
     }
