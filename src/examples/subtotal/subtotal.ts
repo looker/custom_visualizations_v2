@@ -27,11 +27,6 @@ const vis: Subtotal = {
   label: 'Subtotal',
 
   options: {
-    use_looker_row_totals: {
-      type: 'boolean',
-      label: "Use Looker's row totals",
-      default: true
-    },
     theme: {
       type: 'string',
       label: 'Theme',
@@ -207,8 +202,7 @@ const vis: Subtotal = {
       aggregators,
       sorters,
       hasColTotals: queryResponse.has_totals,
-      hasRowTotals: queryResponse.has_row_totals,
-      useLookerRowTotals: config.use_looker_row_totals
+      hasRowTotals: queryResponse.has_row_totals
     }
     $(element).pivot(ptData, options)
   }
