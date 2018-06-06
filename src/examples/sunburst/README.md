@@ -6,6 +6,15 @@ This diagram creates a [sunburst](https://en.wikipedia.org/wiki/Pie_chart#Ring_c
 
 ![](sunburst.mov)
 
+**Implementation Instructions**
+Follow the instructions in [Looker's documentation](https://docs.looker.com/admin-options/platform/visualizations). Note that this viz does not require an SRI hash and has no dependencies. Simply create a unique ID, a label for the viz, and paste in the CDN link below.
+
+**CDN Link** 
+
+Paste the following URL into the "Main" section of your Admin/Visualization page. 
+
+https://looker-custom-viz-a.lookercdn.com/master/sunburst.js
+
 **How it works**
 
 Create a look with any number of dimensions and exactly one measure.
