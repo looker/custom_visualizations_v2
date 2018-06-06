@@ -6,6 +6,16 @@ This diagram creates a [chord diagram](https://en.wikipedia.org/wiki/Chord_diagr
 
 ![](chord.mov)
 
+**Implementation Instructions**
+Follow the instructions in [Looker's documentation](https://docs.looker.com/admin-options/platform/visualizations). Note that this viz does not require an SRI hash and has no dependencies. Simply create a unique ID, a label for the viz, and paste in the CDN link below.
+
+**CDN Link** 
+
+Paste the following URL into the "Main" section of your Admin/Visualization page. 
+
+https://looker-custom-viz-a.lookercdn.com/master/chord.js
+
+
 **How it works**
 
 Create a look with one measure and two dimensions. The order of the dimensions does not really matter as the color will fall with the higher affinity direction.
