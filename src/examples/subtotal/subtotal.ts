@@ -72,9 +72,9 @@ const vis: Subtotal = {
         throw new Error(`Unknown theme: ${theme}`)
     }
 
-    const pivots = config.query_fields.pivots.map((d: any) => d.name)
-    const dimensions = config.query_fields.dimensions.map((d: any) => d.name)
-    const measures = config.query_fields.measures
+    const pivots: string[] = queryResponse.fields.pivots.map((d: any) => d.name)
+    const dimensions: string[] = queryResponse.fields.dimensions.map((d: any) => d.name)
+    const measures = queryResponse.fields.measures
 
     const labels: { [key: string]: any } = {}
     for (const key of Object.keys(config.query_fields)) {
@@ -85,12 +85,17 @@ const vis: Subtotal = {
       }
     }
 
+    const pivotSet: { [key: string]: boolean } = {}
+    for (const pivot of pivots) {
+      pivotSet[pivot] = true
+    }
+
     const ptData = []
     for (const row of data) {
       const ptRow: { [key: string]: any } = {}
       for (const key of Object.keys(row)) {
         const obj = row[key]
-        if (pivots.includes(key)) continue
+        if (pivotSet[key]) continue
         ptRow[key] = obj.value
       }
       if (pivots.length === 0) {
