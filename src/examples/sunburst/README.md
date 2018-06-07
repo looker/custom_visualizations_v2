@@ -17,7 +17,7 @@ https://looker-custom-viz-a.lookercdn.com/master/sunburst.js
 
 **How it works**
 
-Create a look with any number of dimensions and exactly one measure.
+Create a Look with any number of dimensions and exactly one measure.
 
 For example, in the sunburst featured above, you can see event counts by the hierarchical sequence of events.
 
