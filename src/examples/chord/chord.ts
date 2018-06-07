@@ -128,8 +128,6 @@ const vis: ChordVisualization = {
     const innerRadius = outerRadius - thickness
 
     // Stop if radius is < 0
-    // TODO: show warning to user ???
-    // TODO: Set a min-radius ???
     if (innerRadius < 0) return
 
     const valueFormatter = formatType(measure.value_format) || defaultFormatter
