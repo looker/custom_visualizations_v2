@@ -111,7 +111,6 @@ export interface VisOption {
   max?: number
   step?: number
   required?: boolean
-  hidden?: (config: VisConfig, queryResponse: VisQueryResponse) => boolean
 }
 
 export interface VisualizationError {
