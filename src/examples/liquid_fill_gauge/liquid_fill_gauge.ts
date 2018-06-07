@@ -226,6 +226,15 @@ const vis: LiquidFillGaugeVisualization = {
     // @ts-ignore
     const gaugeConfig = Object.assign(LiquidFillGauge.defaultConfig, config)
 
+    if (this.addError && this.clearErrors) {
+      if (gaugeConfig.maxValue <= 0) {
+        this.addError({ group: 'config', title: 'Max value must be greater than zero.' })
+        return
+      } else {
+        this.clearErrors('config')
+      }
+    }
+
     const datumField = queryResponse.fields.measure_like[0]
     const datum = data[0][datumField.name]
     let value = datum.value
