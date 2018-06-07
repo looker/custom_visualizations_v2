@@ -24,7 +24,9 @@ export const formatType = (valueFormat: string) => {
   format += '.'
   format += splitValueFormat.length > 1 ? splitValueFormat[1].length : 0
 
-  switch (valueFormat.slice(-1)) { case '%': format += '%'; break
+  switch (valueFormat.slice(-1)) {
+    case '%':
+      format += '%'; break
     case '0':
       format += 'f'; break
   }
