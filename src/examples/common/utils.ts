@@ -6,10 +6,6 @@ import {
   VisualizationDefinition
 } from '../types/types'
 
-export function log(...args: any[]) {
-  console.log.apply(console, args)
-}
-
 export const formatType = (valueFormat: string) => {
   if (!valueFormat) return undefined
   let format = ''
