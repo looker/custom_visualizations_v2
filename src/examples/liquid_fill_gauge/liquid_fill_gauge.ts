@@ -9,12 +9,7 @@ import * as LiquidFillGauge from './liquid_fill_gauge.js'
 // @ts-ignore
 LiquidFillGauge.initialize(d3)
 
-import {
-  Looker,
-  VisualizationDefinition,
-  VisConfig,
-  VisQueryResponse
-} from '../types/types'
+import { Looker, VisualizationDefinition } from '../types/types'
 
 interface LiquidFillGaugeVisualization extends VisualizationDefinition {
   svg?: any
