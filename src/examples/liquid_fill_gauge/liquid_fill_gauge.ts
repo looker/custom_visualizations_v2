@@ -47,10 +47,7 @@ const vis: LiquidFillGaugeVisualization = {
       default: defaults.maxValue,
       section: 'Value',
       type: 'number',
-      placeholder: 'Any positive number',
-      hidden(config: VisConfig, queryResponse: VisQueryResponse) {
-        return config.showComparison
-      }
+      placeholder: 'Any positive number'
     },
     circleThickness: {
       label: 'Circle Thickness',
