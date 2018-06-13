@@ -98,7 +98,6 @@ const vis: SunburstVisualization = {
         value: dimensions.map((dimension) => row[dimension.name].value)
       }
     })
-    // row[dimension].value.split("-");
 
     const partition = d3.partition().size([2 * Math.PI, radius * radius])
 

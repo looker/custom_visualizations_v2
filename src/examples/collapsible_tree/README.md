@@ -17,7 +17,7 @@ https://looker-custom-viz-a.lookercdn.com/master/collapsible_tree.js
 
 **How it works**
 
-Create a look with two or more dimensions.
+Create a Look with two or more dimensions.
 
 For example, in the collapsible tree diagram featured above, you can see the nested relationship between department, category and brand in an ecommerce catalog.
 

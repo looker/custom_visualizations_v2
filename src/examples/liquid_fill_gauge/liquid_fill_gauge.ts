@@ -9,12 +9,7 @@ import * as LiquidFillGauge from './liquid_fill_gauge.js'
 // @ts-ignore
 LiquidFillGauge.initialize(d3)
 
-import {
-  Looker,
-  VisualizationDefinition,
-  VisConfig,
-  VisQueryResponse
-} from '../types/types'
+import { Looker, VisualizationDefinition } from '../types/types'
 
 interface LiquidFillGaugeVisualization extends VisualizationDefinition {
   svg?: any
@@ -47,10 +42,7 @@ const vis: LiquidFillGaugeVisualization = {
       default: defaults.maxValue,
       section: 'Value',
       type: 'number',
-      placeholder: 'Any positive number',
-      hidden(config: VisConfig, queryResponse: VisQueryResponse) {
-        return config.showComparison
-      }
+      placeholder: 'Any positive number'
     },
     circleThickness: {
       label: 'Circle Thickness',
@@ -225,6 +217,15 @@ const vis: LiquidFillGaugeVisualization = {
 
     // @ts-ignore
     const gaugeConfig = Object.assign(LiquidFillGauge.defaultConfig, config)
+
+    if (this.addError && this.clearErrors) {
+      if (gaugeConfig.maxValue <= 0) {
+        this.addError({ group: 'config', title: 'Max value must be greater than zero.' })
+        return
+      } else {
+        this.clearErrors('config')
+      }
+    }
 
     const datumField = queryResponse.fields.measure_like[0]
     const datum = data[0][datumField.name]

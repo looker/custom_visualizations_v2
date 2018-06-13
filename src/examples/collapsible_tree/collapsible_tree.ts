@@ -62,30 +62,23 @@ function burrow(table: any, taxonomy: any[]) {
 const vis: CollapsibleTreeVisualization = {
   id: 'collapsible_tree', // id/label not required, but nice for testing and keeping manifests in sync
   label: 'Collapsible Tree',
-  options: {},
+  options: {
+    color_with_children: {
+      label: 'Node Color With Children',
+      default: '#36c1b3',
+      type: 'string',
+      display: 'color'
+    },
+    color_empty: {
+      label: 'Empty Node Color',
+      default: '#fff',
+      type: 'string',
+      display: 'color'
+    }
+  },
+
   // Set up the initial state of the visualization
   create(element, config) {
-    element.innerHTML = `
-      <style>
-        .node circle {
-          fill: ${config.color_empty};
-          stroke: ${config.color_with_children};
-          stroke-width: 1.5px;
-        }
-
-        .node text {
-          font-family: sans-serif;
-          fill: #333;
-        }
-
-        .link {
-          fill: none;
-          stroke: #ccc;
-          stroke-width: 1.5px;
-        }
-      </style>
-    `
-
     this.svg = d3.select(element).append('svg')
   },
 
@@ -99,8 +92,8 @@ const vis: CollapsibleTreeVisualization = {
 
     let i = 0
     const nodeColors = {
-      children: config.color_with_children,
-      empty: config.color_empty
+      children: (config && config.color_with_children) || this.options.color_with_children.default,
+      empty: (config && config.color_empty) || this.options.color_empty.default
     }
     const textSize = 10
     const nodeRadius = 4
@@ -199,13 +192,6 @@ const vis: CollapsibleTreeVisualization = {
       nodeEnter.append('circle')
         .attr('class', 'node')
         .attr('r', 1e-6)
-        .style('fill', (d: any) => {
-          return (
-            d._children
-              ? nodeColors.children
-              : nodeColors.empty
-          )
-        })
 
       // Add labels for the nodes
       nodeEnter.append('text')
@@ -216,6 +202,7 @@ const vis: CollapsibleTreeVisualization = {
         .attr('text-anchor', (d: any) => {
           return d.children || d._children ? 'end' : 'start'
         })
+        .style('font-family', "'Open Sans', Helvetica, sans-serif")
         .style('font-size', textSize + 'px')
         .text((d: any) => d.data.name)
 
@@ -232,9 +219,9 @@ const vis: CollapsibleTreeVisualization = {
       // Update the node attributes and style
       nodeUpdate.select('circle.node')
         .attr('r', nodeRadius)
-        .style('fill', (d: any) => {
-          return d._children ? nodeColors.children : nodeColors.empty
-        })
+        .style('fill', (d: any) => d._children ? nodeColors.children : nodeColors.empty)
+        .style('stroke', nodeColors.children)
+        .style('stroke-width', 1.5)
         .attr('cursor', 'pointer')
 
       // Remove any exiting nodes
@@ -268,6 +255,9 @@ const vis: CollapsibleTreeVisualization = {
           .enter()
           .insert('path', 'g')
           .attr('class', 'link')
+          .style('fill', 'none')
+          .style('stroke', '#ddd')
+          .style('stroke-width', 1.5)
           .attr('d', (d) => {
             const o = { x: source.x0, y: source.y0 }
             return diagonal(o, o)
