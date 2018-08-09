@@ -277,9 +277,9 @@ options: {
       label: "Mode of Transport",
       display: "select",
       values: [
-      	 {"Airplane", "airplane"},
-      	 {"Car", "car"},
-      	 {"Unicycle", "unicycle"}
+      	 {"Airplane": "airplane"},
+      	 {"Car": "car"},
+      	 {"Unicycle": "unicycle"}
       ],
       default: "unicycle"
     }
