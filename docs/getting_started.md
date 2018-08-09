@@ -48,7 +48,7 @@ looker.plugins.visualizations.add({
   create: function(element, config) {
 
   },
-  updateAsync: function(data, element, config, queryResponse, done) {
+  updateAsync: function(data, element, config, queryResponse, details, done) {
 
   }
 })
@@ -119,7 +119,7 @@ In our case, we only need to find the first dimension in the first cell. We can 
 We can also use a helper method called `LookerCharts.Utils.htmlForCell` to give us the proper HTML representation of the data point in that cell, which automatically handles things like drill links, formatting, and data actions:
 
 ```js
-  updateAsync: function(data, element, config, queryResponse, done) {
+  updateAsync: function(data, element, config, queryResponse, details, done) {
 
     // Grab the first cell of the data.
     var firstRow = data[0];
@@ -150,7 +150,7 @@ Because they're added to the visualization object, they're available from the co
 We can just modify the beginning of our `updateAsync` method to detect an error condition, let the user know there's an issue, and bail out instead of trying to render:
 
 ```js
-  updateAsync: function(data, element, config, queryResponse, done) {
+  updateAsync: function(data, element, config, queryResponse, details, done) {
 
     // Clear any errors from previous updates.
     this.clearErrors();
@@ -204,7 +204,7 @@ So how do we use it?
 Recall that in the `updateAsync` method there's a `config` parameter that gets passed in. This will contain the currently selected options:
 
 ```js
-updateAsync: function(data, element, config, queryResponse, done) {
+updateAsync: function(data, element, config, queryResponse, details, done) {
 ```
 
 That `config` object looks something like this:
