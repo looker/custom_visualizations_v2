@@ -76,7 +76,7 @@ function handleErrors(vis, resp, options) {
   return true;
 }
 
-global.d3v4 = require('./d3.v4')
-global.Highcharts = require('./highcharts')
-global.formatType = formatType
-global.handleErrors = handleErrors
+window.d3v4 = require('./d3.v4')
+window.Highcharts = require('./highcharts')(window)
+window.formatType = formatType
+window.handleErrors = handleErrors
