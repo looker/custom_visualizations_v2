@@ -70,7 +70,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 483);
+/******/ 	return __webpack_require__(__webpack_require__.s = 482);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -33563,25 +33563,24 @@ function toComment(sourceMap) {
 /* 479 */,
 /* 480 */,
 /* 481 */,
-/* 482 */,
-/* 483 */
+/* 482 */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_jquery__ = __webpack_require__(466);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0_jquery___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_0_jquery__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_pivottable__ = __webpack_require__(484);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_pivottable__ = __webpack_require__(483);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_pivottable___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_pivottable__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_subtotal_multiple_aggregates__ = __webpack_require__(485);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_subtotal_multiple_aggregates__ = __webpack_require__(484);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_subtotal_multiple_aggregates___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_subtotal_multiple_aggregates__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__common_utils__ = __webpack_require__(464);
 
 
 
 
-var themeClassic = __webpack_require__(487);
-var themeWhite = __webpack_require__(489);
+var themeClassic = __webpack_require__(486);
+var themeWhite = __webpack_require__(488);
 var defaultFormatter = function (x) { return x.toString(); };
 var LOOKER_ROW_TOTAL_KEY = '$$$_row_total_$$$';
 __WEBPACK_IMPORTED_MODULE_2_subtotal_multiple_aggregates___default()(__WEBPACK_IMPORTED_MODULE_0_jquery__);
@@ -33808,7 +33807,7 @@ looker.plugins.visualizations.add(vis);
 
 
 /***/ }),
-/* 484 */
+/* 483 */
 /***/ (function(module, exports, __webpack_require__) {
 
 (function() {
@@ -35639,14 +35638,14 @@ looker.plugins.visualizations.add(vis);
 
 
 /***/ }),
-/* 485 */
+/* 484 */
 /***/ (function(module, exports, __webpack_require__) {
 
 (function() {
   var callWithJQuery, flatten,
     hasProp = {}.hasOwnProperty;
 
-  flatten = __webpack_require__(486);
+  flatten = __webpack_require__(485);
 
   callWithJQuery = function(pivotModule) {
     if (true) { // CommonJS
@@ -36986,7 +36985,7 @@ looker.plugins.visualizations.add(vis);
 
 
 /***/ }),
-/* 486 */
+/* 485 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -37101,11 +37100,11 @@ function flattenDownDepth (array, result, depth) {
 
 
 /***/ }),
-/* 487 */
+/* 486 */
 /***/ (function(module, exports, __webpack_require__) {
 
 
-        var result = __webpack_require__(488);
+        var result = __webpack_require__(487);
 
         if (typeof result === "string") {
             module.exports = result;
@@ -37115,7 +37114,7 @@ function flattenDownDepth (array, result, depth) {
     
 
 /***/ }),
-/* 488 */
+/* 487 */
 /***/ (function(module, exports, __webpack_require__) {
 
 exports = module.exports = __webpack_require__(467)(false);
@@ -37129,11 +37128,11 @@ exports.push([module.i, "#vis{font-family:\"Open Sans\",Helvetica,Arial,sans-ser
 
 
 /***/ }),
-/* 489 */
+/* 488 */
 /***/ (function(module, exports, __webpack_require__) {
 
 
-        var result = __webpack_require__(490);
+        var result = __webpack_require__(489);
 
         if (typeof result === "string") {
             module.exports = result;
@@ -37143,7 +37142,7 @@ exports.push([module.i, "#vis{font-family:\"Open Sans\",Helvetica,Arial,sans-ser
     
 
 /***/ }),
-/* 490 */
+/* 489 */
 /***/ (function(module, exports, __webpack_require__) {
 
 exports = module.exports = __webpack_require__(467)(false);
