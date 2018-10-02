@@ -449,3 +449,28 @@ this.trigger("limit", [20]);
 - `loadingEnd`
 
 	Mark the visualization as no longer loading.
+	
+- `registerOptions` (Looker 5.24+)
+
+	Allows visualizations to register additional options after the visualization has been registered: 
+
+	```
+	  update: function(data, element, config, queryResponse, details){
+	    options = {}
+	    // Create an option for each measure in your query
+	    queryResponse.fields.measure_like.forEach(function(field) {
+	      id = "color_" + field.name
+	      options[id] =
+	      {
+		label: field.label_short + " Color",
+		default: "#8B7DA8",
+		section: "Style",
+		type: "string",
+		display: "color"
+	      }
+	    })
+	    this.trigger('registerOptions', options) // register options with parent page to update visConfig
+	    ...
+	  }
+	});
+	```
