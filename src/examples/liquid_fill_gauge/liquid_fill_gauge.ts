@@ -66,7 +66,7 @@ const vis: LiquidFillGaugeVisualization = {
     },
     circleColor: {
       label: 'Circle Color',
-      default: defaults.circleFillGap,
+      default: defaults.circleColor,
       section: 'Style',
       type: 'string',
       display: 'color'
