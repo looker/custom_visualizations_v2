@@ -9,29 +9,28 @@
  7. [Treemap](#treemap) - display hierarchical data in a nested structure
 
 # Chord
-
-[![](chord/chord.png)](/chord/README.md)
+[![](chord/chord.png)](chord/README.md)
 
 # Collapsible_Tree
 
-[![](collapsible_tree/collapsible-tree.png)](/collapsible_tree/README.md)
+[![](collapsible_tree/collapsible-tree.png)](collapsible_tree/README.md)
 
 # Liquid_Fill_Gauge
 
-[![](liquid_fill_gauge/liquid_fill_gauge.png)](/liquid_fill_gauge/README.md)
+[![](liquid_fill_gauge/liquid_fill_gauge.png)](liquid_fill_gauge/README.md)
 
 # Sankey
 
-[![](sankey/sankey.png)](/sankey/README.md)
+[![](sankey/sankey.png)](sankey/README.md)
 
 # Subtotal
 
-[![](subtotal/subtotal.png)](/subtotal/README.md)
+[![](subtotal/subtotal.png)](subtotal/README.md)
 
 # Sunburst
 
-[![](sunburst/sunburst.png)](/sunburst/README.md)
+[![](sunburst/sunburst.png)](sunburst/README.md)
 
 # Treemap
 
-[![](treemap/treemap.png)](/treemap/README.md)
+[![](treemap/treemap.png)](treemap/README.md)
