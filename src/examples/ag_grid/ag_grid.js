@@ -319,7 +319,10 @@ const addRowNumbers = basics => {
 
 // Base dimensions before table calcs, pivots, measures, etc added.
 const basicDimensions = (dimensions, config) => {
+  const finalDimension = dimensions[dimensions.length - 1];
   const basics = _.map(dimensions, dimension => {
+    console.log(dimension.name)
+    const rowGroup = !(dimension.name === finalDimension.name);
     return {
       cellRenderer: baseCellRenderer,
       colType: 'default',
@@ -327,7 +330,7 @@ const basicDimensions = (dimensions, config) => {
       headerName: headerName(dimension, config),
       hide: true,
       lookup: dimension.name,
-      rowGroup: true,
+      rowGroup: rowGroup,
       suppressMenu: true,
     };
   });
@@ -335,6 +338,8 @@ const basicDimensions = (dimensions, config) => {
   if (config.showRowNumbers) {
     addRowNumbers(basics);
   }
+
+  autoGroupColumnDef.setLastGroup(finalDimension.name);
 
   return basics;
 };
@@ -424,17 +429,30 @@ const displayData = data => {
   return formattedData;
 };
 
+class AutoGroupColumnDef {
+  constructor() {
+    this.headerName = 'Group';
+    this.cellRenderer = 'agGroupCellRenderer';
+    this.cellRendererParams = {
+      suppressCount: true,
+    };
+  }
+
+  setLastGroup(field) {
+    this.field = field;
+  }
+}
+
+const autoGroupColumnDef = new AutoGroupColumnDef();
+
 const gridOptions = {
   animateRows: true,
+  autoGroupColumnDef,
   columnDefs: [],
   enableFilter: false,
   enableSorting: false,
   groupDefaultExpanded: -1,
-  groupHideOpenParents: true,
-  groupMultiAutoColumn: true,
-  groupRemoveSingleChildren: true,
   groupRowAggNodes,
-  groupSelectsChildren: true,
   onFirstDataRendered: autoSize,
   onRowGroupOpened: autoSize,
   rowSelection: 'multiple',
