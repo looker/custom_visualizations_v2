@@ -144,6 +144,7 @@ const vis: Subtotal = {
         case 'count': agg = tpl.sum(intFormat); break
         case 'count_distinct': agg = tpl.sum(intFormat); break
         case 'sum': agg = tpl.sum(customFormat); break
+        case 'sum_distinct': agg = tpl.sum(customFormat); break
         case 'average': agg = tpl.average(customFormat); break
         case 'median': agg = tpl.median(customFormat); break
         case 'min': agg = tpl.min(customFormat); break
@@ -164,7 +165,7 @@ const vis: Subtotal = {
           return
       }
       const aggName = `measure_${i}`
-      labels[aggName] = config.show_full_field_name ? { label: label1, sublabel: label2 } : { label: label1 }
+      labels[aggName] = config.show_full_field_name ? { label: label1, sublabel: label2 } : { label: label2 }
       aggregatorNames.push(aggName)
       aggregators.push(agg([name]))
     }
