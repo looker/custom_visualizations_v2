@@ -63,8 +63,34 @@ class AgData {
 }
 
 class GlobalConfig {
+  constructor() {
+    this.selectedFields = [];
+  }
+
   setQueryResponse(qr) {
     this.queryResponse = qr;
+  }
+
+  setAgData(agData) {
+    this.agData = agData;
+  }
+
+  setRange(range) {
+    this.range = range;
+  }
+
+  setConfig(config) {
+    this.config = config;
+  }
+
+  addSelectedField(field) {
+    this.selectedFields.push(field);
+  }
+
+  removeSelectedField(field) {
+    this.selectedFields = this.selectedFields.filter(selectedField => {
+      return selectedField !== field;
+    });
   }
 }
 
@@ -188,6 +214,8 @@ const countAggFn = values => {
 // Aggregation helper functions
 //
 
+// XXX The presence of data in globalConfig could be helpful here.
+
 const truncFloat = (float, values) => {
   const digits = values[0].toString().split('.').pop().length;
   return float.toFixed(digits);
@@ -263,6 +291,7 @@ const groupRowAggNodes = nodes => {
     });
   }
 
+  // TODO: Here's where you can probably map over (selected) columns to add to globalConfig.range.
   return result;
 };
 
@@ -289,7 +318,10 @@ class PivotHeader {
 // Take into account config prefs for truncation and brevity.
 const headerName = (dimension, config) => {
   let label;
-  if (config.showFullFieldName) {
+  const customLabel = config[`customLabel_${dimension.name}`];
+  if (customLabel !== undefined && customLabel !== '') {
+    label = config[`customLabel_${dimension.name}`];
+  } else if (config.showFullFieldName) {
     label = dimension.label; // eslint-disable-line
   } else {
     label = dimension.label_short || dimension.label;
@@ -301,6 +333,73 @@ const headerName = (dimension, config) => {
   }
 
   return label;
+};
+
+// Used to apply conditional formatting to cells, if enabled.
+const cellStyle = cell => {
+  const { config, range } = globalConfig;
+  if (config.enableConditionalFormatting === undefined || !config.enableConditionalFormatting) { return {}; }
+  if (config.conditionalFormattingType === 'non_subtotals_only' && cell.node.group === true) { return {}; }
+  if (config.conditionalFormattingType === 'subtotals_only' && cell.node.group === false) { return {}; }
+
+  let { measure } = cell.colDef;
+  if (!(range.keys.includes(measure))) { return {}; }
+  const { lowColor, midColor, highColor } = config;
+  let colorScheme = [lowColor, midColor, highColor];
+  if (config.formattingStyle === 'high_to_low') {
+    colorScheme = [highColor, midColor, lowColor];
+  }
+  const scale = chroma.scale(colorScheme.filter(color => !!color));
+  // Normalize number between 0 and 1
+  let normalizedValue = normalize(Number(cell.value), range);
+  if (isNaN(normalizedValue)) {
+    if (!config.includeNullValuesAsZero) { return {}; }
+    normalizedValue = 0;
+  }
+  return { 'background-color': scale(normalizedValue).hex() };
+};
+
+const normalize = (value, range) => {
+  // Edge case when there is only one value to avoid NaN response.
+  if (range.max === range.min && value === range.max) { return 1; }
+  return (value - range.min) / (range.max - range.min);
+};
+
+// For each column, calculate and store the min/max values for optional
+// conditional formatting.
+// This Fn will calc the applicable keys as well as a global min/max value into globalConfig.
+const calculateRange = (data, queryResponse, config) => {
+  // XXX Probably should use queryResponse + config.applyTo to generate the possible keys we'll use here,
+  // and then get a global min/max. Then, in cellStyle, call on those applicable keys
+  // For pivots, the keys will contain only the column, and not the combined column/pivot.
+  // For those, we'll prob have to loop through with a string match to know which to apply to.
+  if (!('applyTo' in config)) { return {}; }
+  let keys = _.map(queryResponse.fields.measure_like, measureLike => measureLike.name);
+  if (config.applyTo === 'select_fields') {
+    keys = keys.filter(key => globalConfig.selectedFields.includes(key));
+  }
+  const range = {};
+
+  data.forEach(datum => {
+    keys.forEach(key => {
+      const val = _.isUndefined(datum[key]) ? 0 : datum[key];
+      if (!isNaN(val)) {
+        const num = Number(val);
+        if (!('min' in range) || num < range.min) {
+          range.min = num;
+        }
+        if (!('max' in range) || num > range.max) {
+          range.max = num;
+        }
+      }
+    });
+  });
+
+  return {
+    keys,
+    min: range.min,
+    max: range.max,
+  };
 };
 
 const addRowNumbers = basics => {
@@ -321,7 +420,6 @@ const addRowNumbers = basics => {
 const basicDimensions = (dimensions, config) => {
   const finalDimension = dimensions[dimensions.length - 1];
   const basics = _.map(dimensions, dimension => {
-    console.log(dimension.name)
     const rowGroup = !(dimension.name === finalDimension.name);
     return {
       cellRenderer: baseCellRenderer,
@@ -332,6 +430,7 @@ const basicDimensions = (dimensions, config) => {
       lookup: dimension.name,
       rowGroup: rowGroup,
       suppressMenu: true,
+      cellStyle: cellStyle,
     };
   });
 
@@ -354,6 +453,7 @@ const addTableCalculations = (dimensions, tableCalcs) => {
       lookup: calc.name,
       rowGroup: false,
       suppressMenu: true,
+      cellStyle: cellStyle,
     };
     dimensions.push(dimension);
   });
@@ -371,6 +471,7 @@ const addMeasures = (dimensions, measures, config) => {
       measure: name,
       rowGroup: false,
       suppressMenu: true,
+      cellStyle: cellStyle,
     };
     dimensions.push(dimension);
   });
@@ -407,6 +508,7 @@ const addPivots = (dimensions, config) => {
         pivotKey: key,
         rowGroup: false,
         suppressMenu: true,
+        cellStyle: cellStyle,
       };
       outerDimension.children.push(dimension);
     });
@@ -445,13 +547,18 @@ class AutoGroupColumnDef {
 
 const autoGroupColumnDef = new AutoGroupColumnDef();
 
+// TODO: Persist column movement across refresh.
+const columnResized = e => {
+
+};
+
 const gridOptions = {
   animateRows: true,
   autoGroupColumnDef,
   columnDefs: [],
   enableFilter: false,
   enableSorting: false,
-  groupDefaultExpanded: -1,
+  groupDefaultExpanded: 0,
   groupRowAggNodes,
   onFirstDataRendered: autoSize,
   onRowGroupOpened: autoSize,
@@ -459,41 +566,261 @@ const gridOptions = {
   suppressAggFuncInHeader: true,
   suppressFieldDotNotation: true,
   suppressMovableColumns: true,
+  enableColResize: true,
+  onColumnResized: columnResized,
+  colResizeDefault: 'shift',
+};
+
+const options = {
+  // FORMATTING
+  enableConditionalFormatting: {
+    default: false,
+    label: 'Enable Conditional Formatting',
+    order: 1,
+    section: 'Formatting',
+    type: 'boolean',
+  },
+  conditionalFormattingType: {
+    default: 'all',
+    display: 'select',
+    label: 'Formatting Type',
+    order: 2,
+    section: 'Formatting',
+    type: 'string',
+    values: [
+      { 'All': 'all' },
+      { 'Subtotals only': 'subtotals_only' },
+      { 'Non-subtotals only': 'non_subtotals_only' },
+    ],
+  },
+  includeTotals: {
+    default: false,
+    label: 'Include Totals',
+    order: 3,
+    section: 'Formatting',
+    type: 'boolean',
+  },
+  includeNullValuesAsZero: {
+    default: false,
+    label: 'Include Null Values as Zero',
+    order: 4,
+    section: 'Formatting',
+    type: 'boolean',
+  },
+  formattingStyle: {
+    default: 'low_to_high',
+    display: 'select',
+    label: 'Format',
+    order: 5,
+    section: 'Formatting',
+    type: 'string',
+    values: [
+      { 'From low to high': 'low_to_high' },
+      { 'From high to low': 'high_to_low' },
+    ],
+  },
+  // Detect change to just one config setting? Maybe have another, invisible if possible, set to custom?
+  formattingPalette: {
+    default: 'red_yellow_green',
+    display: 'select',
+    label: 'Palette',
+    order: 6,
+    section: 'Formatting',
+    type: 'string',
+    values: [
+      { 'Red to Yellow to Green': 'red_yellow_green' },
+      { 'Red to White to Green': 'red_white_green' },
+      { 'Red to White': 'red_white' },
+      { 'White to Green': 'white_green' },
+      { 'Custom...': 'custom' },
+    ],
+  },
+  lowColor: {
+    display: 'color',
+    display_size: 'third',
+    label: 'Low', // These values updated in updateAsync
+    order: 7,
+    section: 'Formatting',
+    type: 'string',
+  },
+  midColor: {
+    display: 'color',
+    display_size: 'third',
+    label: 'Middle',
+    order: 8,
+    section: 'Formatting',
+    type: 'string',
+  },
+  highColor: {
+    display: 'color',
+    display_size: 'third',
+    label: 'High',
+    order: 9,
+    section: 'Formatting',
+    type: 'string',
+  },
+  applyTo: {
+    default: 'all_numeric_fields',
+    display: 'select',
+    label: 'Apply to',
+    order: 10,
+    section: 'Formatting',
+    type: 'string',
+    values: [
+      { 'All numeric fields': 'all_numeric_fields' },
+      { 'Select fields...': 'select_fields' },
+    ],
+  },
+  // SERIES
+  truncateColumnNames: {
+    default: false,
+    label: 'Truncate Column Names',
+    order: 1,
+    section: 'Series',
+    type: 'boolean',
+  },
+  showFullFieldName: {
+    default: false,
+    label: 'Show Full Field Name',
+    order: 2,
+    section: 'Series',
+    type: 'boolean',
+  },
+  // CUSTOMIZATIONS
+
+  // PLOT
+  theme: {
+    default: defaultTheme,
+    display: 'select',
+    label: 'Table Theme',
+    order: 1,
+    section: 'Plot',
+    type: 'string',
+    values: themes,
+  },
+  showRowNumbers: {
+    default: true,
+    label: 'Show Row Numbers',
+    order: 2,
+    section: 'Plot',
+    type: 'boolean',
+  },
+};
+
+const defaultColors = {
+  red: '#F36254',
+  green: '#4FBC89',
+  yellow: '#FCF758',
+  white: '#FFFFFF',
+};
+
+// TODO: Probably have another fn that all it does is spit out the appropriate # and type of color boxes.
+const modifyOptions = (vis, config) => {
+  const { measure_like: measureLike, dimension_like: dimensionLike } = globalConfig.queryResponse.fields;
+  // const fields = measureLike.concat(dimensionLike);
+  // Create config placeholders for custom labeling of columns.
+  measureLike.forEach(field => {
+    const { label, name } = field;
+    const cl = `customLabel_${name}`;
+    options[cl] = {
+      display: 'text',
+      placeholder: label,
+      label,
+      section: 'Series',
+      type: 'string',
+    };
+    // Radio freaks out here. Maybe flip display/type?
+    const alignment = `align_${name}`;
+    options[alignment] = {
+      default: 'left',
+      display: 'select',
+      label: `Align ${label}`,
+      section: 'Config',
+      type: 'string',
+      values: [
+        { 'Left': 'left' },
+        { 'Center': 'center' },
+        { 'Right': 'right' },
+      ],
+    };
+  });
+
+  const originalMidColor = {
+    display: 'color',
+    display_size: 'third',
+    label: 'Middle',
+    order: 7,
+    section: 'Formatting',
+    type: 'string',
+  };
+  // Automatically set the colors to defaults when selected.
+  if (config.formattingPalette === 'red_yellow_green') {
+    if (!('midColor' in options)) { options.midColor = originalMidColor; }
+    vis.trigger('registerOptions', options);
+    vis.trigger('updateConfig', [{ lowColor: defaultColors.red }]);
+    vis.trigger('updateConfig', [{ midColor: defaultColors.yellow }]);
+    vis.trigger('updateConfig', [{ highColor: defaultColors.green }]);
+  } else if (config.formattingPalette === 'red_white_green') {
+    if (!('midColor' in options)) { options.midColor = originalMidColor; }
+    vis.trigger('registerOptions', options);
+    vis.trigger('updateConfig', [{ lowColor: defaultColors.red }]);
+    vis.trigger('updateConfig', [{ midColor: defaultColors.white }]);
+    vis.trigger('updateConfig', [{ highColor: defaultColors.green }]);
+  } else if (config.formattingPalette === 'red_white') {
+    if ('midColor' in options) { delete(options.midColor); }
+    vis.trigger('updateConfig', [{ lowColor: defaultColors.red }]);
+    vis.trigger('updateConfig', [{ highColor: defaultColors.white }]);
+  } else if (config.formattingPalette === 'white_green') {
+    if ('midColor' in options) { delete(options.midColor); }
+    vis.trigger('updateConfig', [{ lowColor: defaultColors.white }]);
+    vis.trigger('updateConfig', [{ highColor: defaultColors.green }]);
+  }
+
+  // Decide which columns will be getting conditional formatting applied.
+  if (config.applyTo === 'select_fields') {
+    measureLike.forEach(measure => {
+      const { label, name } = measure;
+      const id = `selectedField_${name}`
+      options[id] = {
+        label,
+        default: 'false',
+        section: 'Formatting',
+        type: 'boolean',
+      };
+    });
+    vis.trigger('registerOptions', options);
+    measureLike.forEach(measure => {
+      const { name } = measure;
+      if (config[`selectedField_${name}`] === true) {
+        globalConfig.addSelectedField(name);
+      } else {
+        globalConfig.removeSelectedField(name);
+      }
+    });
+  } else if (config.applyTo === 'all_numeric_fields') {
+    measureLike.forEach(measure => {
+      const { label, name } = measure;
+      const id = `selectedField_${name}`
+      if (id in options) {
+        delete(options[id]);
+      }
+    });
+    vis.trigger('registerOptions', options);
+  }
+
+  // Flip the labels accordingly.
+  if (config.formattingStyle === 'high_to_low') {
+    options.lowColor.label = 'High';
+    options.highColor.label = 'Low';
+  } else {
+    options.lowColor.label = 'Low';
+    options.highColor.label = 'High';
+  }
+  vis.trigger('registerOptions', options);
 };
 
 looker.plugins.visualizations.add({
-  options: {
-    showFullFieldName: {
-      default: false,
-      label: 'Show Full Field Name',
-      order: 2,
-      section: 'Series',
-      type: 'boolean',
-    },
-    showRowNumbers: {
-      default: true,
-      label: 'Show Row Numbers',
-      order: 2,
-      section: 'Plot',
-      type: 'boolean',
-    },
-    theme: {
-      default: defaultTheme,
-      display: 'select',
-      label: 'Table Theme',
-      order: 1,
-      section: 'Plot',
-      type: 'string',
-      values: themes,
-    },
-    truncateColumnNames: {
-      default: false,
-      label: 'Truncate Column Names',
-      order: 1,
-      section: 'Series',
-      type: 'boolean',
-    },
-  },
+  options: options,
 
   create(element) {
     loadStylesheets();
@@ -518,8 +845,31 @@ looker.plugins.visualizations.add({
 
   updateAsync(data, _element, config, queryResponse, _details, done) {
     this.clearErrors();
+    // WIP:
+    // if ('formattingPalette' in config &&
+    //     config.formattingPalette !== 'custom' &&
+    //     !Object.values(defaultColors).includes(config.lowColor)) {
+    //   const lowColor = config.lowColor;
+    //   this.trigger('updateConfig', [{ formattingPalette: 'custom' }]);
+    //   this.trigger('updateConfig', [{ lowColor }]);
+    // }
+
+    // XXX Going to want to call this whenever the colors are manually changed, or maybe you can check if
+    // lowColor midColor high whatever if any of those aren't in a selected list of defaults, then trigger
+    // updateConfig on formattingPalette
+    // I think there needs to be a special onclick handler, rather than the config shit. see which gets
+    // invoked first.
+    // const defaultColors = ['#F36254', '#FCF758', '#4FBC89', '#FFFFFF']
+    // const { lowColor, midColor, highColor } = options;
+    // Strategy for setting 'custom' automatically when colors are played with.
+    // const currentColors = [lowColor, midColor, highColor].filter(color => !!color);
+    // const uniqColors = currentColors.filter(x => !defaultColors.includes(x));
+    // if (!_.isEmpty(uniqColors)) {
+    //   vis.trigger('updateConfig', [{ formattingPalette: 'custom' }]);
+    // }
 
     globalConfig.setQueryResponse(queryResponse);
+    modifyOptions(this, config);
 
     const { fields } = queryResponse;
     const {
@@ -550,6 +900,10 @@ looker.plugins.visualizations.add({
 
     // Manipulates Looker's data response into a format suitable for ag-grid.
     this.agData = new AgData(data, formattedColumns);
+    globalConfig.setAgData(this.agData);
+    const range = calculateRange(this.agData.formattedData, queryResponse, config);
+    globalConfig.setRange(range);
+    globalConfig.setConfig(config);
     gridOptions.api.setRowData(this.agData.formattedData);
 
     autoSize();
