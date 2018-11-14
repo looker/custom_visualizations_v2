@@ -338,12 +338,40 @@ const headerName = (dimension, config) => {
 // Used to apply conditional formatting to cells, if enabled.
 const cellStyle = cell => {
   const { config, range } = globalConfig;
-  if (config.enableConditionalFormatting === undefined || !config.enableConditionalFormatting) { return {}; }
-  if (config.conditionalFormattingType === 'non_subtotals_only' && cell.node.group === true) { return {}; }
-  if (config.conditionalFormattingType === 'subtotals_only' && cell.node.group === false) { return {}; }
+  const { measure } = cell.colDef;
+  const alignment = `align_${measure}`;
+  const fontFormat = `fontFormat_${measure}`;
 
-  let { measure } = cell.colDef;
-  if (!(range.keys.includes(measure))) { return {}; }
+  const styling = {};
+  // Align text
+  if (alignment in config) {
+    styling['text-align'] = config[alignment];
+  }
+
+  // Format text
+  if (fontFormat in config && config[fontFormat] !== 'none') {
+    switch (config[fontFormat]) {
+      case 'bold':
+        styling['font-weight'] = '800';
+        break;
+      case 'italic':
+        styling['font-style'] = 'italic';
+        break;
+      case 'underline':
+        styling['text-decoration'] = 'underline';
+        break;
+      case 'strikethrough':
+        styling['text-decoration'] = 'line-through';
+        break;
+    }
+  }
+
+  // Conditional formatting
+  if (config.enableConditionalFormatting === undefined || !config.enableConditionalFormatting) { return styling; }
+  if (config.conditionalFormattingType === 'non_subtotals_only' && cell.node.group === true) { return styling; }
+  if (config.conditionalFormattingType === 'subtotals_only' && cell.node.group === false) { return styling; }
+
+  if (!(range.keys.includes(measure))) { return styling; }
   const { lowColor, midColor, highColor } = config;
   let colorScheme = [lowColor, midColor, highColor];
   if (config.formattingStyle === 'high_to_low') {
@@ -353,10 +381,12 @@ const cellStyle = cell => {
   // Normalize number between 0 and 1
   let normalizedValue = normalize(Number(cell.value), range);
   if (isNaN(normalizedValue)) {
-    if (!config.includeNullValuesAsZero) { return {}; }
+    if (!config.includeNullValuesAsZero) { return styling; }
     normalizedValue = 0;
   }
-  return { 'background-color': scale(normalizedValue).hex() };
+
+  styling['background-color'] = scale(normalizedValue).hex();
+  return styling;
 };
 
 const normalize = (value, range) => {
@@ -558,7 +588,7 @@ const gridOptions = {
   columnDefs: [],
   enableFilter: false,
   enableSorting: false,
-  groupDefaultExpanded: 0,
+  groupDefaultExpanded: -1, // for dev purposes. 0,
   groupRowAggNodes,
   onFirstDataRendered: autoSize,
   onRowGroupOpened: autoSize,
@@ -592,13 +622,6 @@ const options = {
       { 'Subtotals only': 'subtotals_only' },
       { 'Non-subtotals only': 'non_subtotals_only' },
     ],
-  },
-  includeTotals: {
-    default: false,
-    label: 'Include Totals',
-    order: 3,
-    section: 'Formatting',
-    type: 'boolean',
   },
   includeNullValuesAsZero: {
     default: false,
@@ -671,6 +694,36 @@ const options = {
       { 'Select fields...': 'select_fields' },
     ],
   },
+  // CONFIG
+  fontSize: {
+    default: 12,
+    display_size: 'third',
+    label: 'Font size (pt)',
+    order: 1,
+    section: 'Config',
+    type: 'number',
+  },
+  fontFamily: {
+    default: 'Helvetica',
+    display: 'select',
+    display_size: 'two-thirds',
+    label: 'Font Family',
+    order: 2,
+    section: 'Config',
+    type: 'string',
+    values: [
+      { 'Helvetica': 'BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif' },
+      { 'Times New Roman': 'Times, "Times New Roman", serif' },
+    ],
+  },
+  rowHeight: {
+    default: 25,
+    display_size: 'third',
+    label: 'Row Height',
+    order: 3,
+    section: 'Config',
+    type: 'number',
+  },
   // SERIES
   truncateColumnNames: {
     default: false,
@@ -741,6 +794,22 @@ const modifyOptions = (vis, config) => {
         { 'Left': 'left' },
         { 'Center': 'center' },
         { 'Right': 'right' },
+      ],
+    };
+
+    const fontFormat = `fontFormat_${name}`;
+    options[fontFormat] = {
+      default: 'none',
+      display: 'select',
+      label: `Format ${label}`,
+      section: 'Config',
+      type: 'string',
+      values: [
+        { 'None': 'none' },
+        { 'Bold': 'bold' },
+        { 'Italic': 'italic' },
+        { 'Underline': 'underline' },
+        { 'Strikethrough': 'strikethrough' },
       ],
     };
   });
@@ -817,6 +886,43 @@ const modifyOptions = (vis, config) => {
     options.highColor.label = 'High';
   }
   vis.trigger('registerOptions', options);
+};
+
+const adjustFonts = config => {
+  if ('fontFamily' in config) {
+    const theme = config.theme;
+    const mainDiv = document.getElementsByClassName(theme)[0];
+    mainDiv.style.fontFamily = config.fontFamily;
+  }
+
+  if ('fontSize' in config) {
+    const agHeaderRows = document.getElementsByClassName('ag-header-row');
+    _.forEach(agHeaderRows, row => {
+      row.style.fontSize = `${config.fontSize}px`;
+    });
+    const agRows = document.getElementsByClassName('ag-row');
+    _.forEach(agRows, row => {
+      row.style.fontSize = `${config.fontSize}px`;
+    });
+    const agHeaderCells = document.getElementsByClassName('ag-header-cell');
+    _.forEach(agHeaderCells, cell => {
+      // TODO: flex was not working here, this is a hack.
+      cell.style.paddingTop = `${(config.fontSize - 14)}px`;
+    });
+    const agCells = document.getElementsByClassName('ag-cell');
+    _.forEach(agCells, cell => {
+      cell.style.display = 'flex';
+      cell.style.flexDirection = 'column';
+      cell.style.justifyContent = 'center';
+    });
+    const headerHeight = config.fontSize * 2 + 1;
+    gridOptions.api.setHeaderHeight(headerHeight);
+  }
+
+  if ('rowHeight' in config) {
+    gridOptions.rowHeight = config.rowHeight;
+    gridOptions.api.resetRowHeights();
+  }
 };
 
 looker.plugins.visualizations.add({
@@ -907,6 +1013,7 @@ looker.plugins.visualizations.add({
     gridOptions.api.setRowData(this.agData.formattedData);
 
     autoSize();
+    adjustFonts(config);
     done();
   },
 });
