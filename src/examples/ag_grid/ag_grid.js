@@ -521,6 +521,8 @@ const addPivots = (dimensions, config) => {
 
     dimensions.push(outerDimension);
   });
+  // Add the title:
+  globalConfig.hasPivot = true;
 };
 
 // Attempt to display in this order: HTML -> rendered -> value
@@ -883,7 +885,6 @@ const adjustFonts = config => {
     });
     const agCells = document.getElementsByClassName('ag-cell');
     _.forEach(agCells, cell => {
-      console.log(cell.innerHTML);
       cell.style.display = 'flex';
       cell.style.flexDirection = 'column';
       cell.style.justifyContent = 'center';
@@ -966,6 +967,12 @@ looker.plugins.visualizations.add({
 
     autoSize();
     adjustFonts(config);
+    if (globalConfig.hasPivot) {
+      const name = headerName(queryResponse.fields.pivots[0], config);
+      const titleDiv = document.getElementsByClassName('ag-header-group-cell-no-group')[0];
+      titleDiv.innerHTML = `${name}:`;
+      titleDiv.style.textAlign = 'right';
+    }
     done();
   },
 });
