@@ -67,22 +67,6 @@ class GlobalConfig {
     this.selectedFields = [];
   }
 
-  setQueryResponse(qr) {
-    this.queryResponse = qr;
-  }
-
-  setAgData(agData) {
-    this.agData = agData;
-  }
-
-  setRange(range) {
-    this.range = range;
-  }
-
-  setConfig(config) {
-    this.config = config;
-  }
-
   addSelectedField(field) {
     this.selectedFields.push(field);
   }
@@ -130,7 +114,7 @@ const themes = [
   { Fresh: 'ag-theme-fresh' },
   { Dark: 'ag-theme-dark' },
   { Blue: 'ag-theme-blue' },
-  { Material: 'ag-theme-material' },
+  // { Material: 'ag-theme-material' }, // TODO: bug in header.
   { Bootstrap: 'ag-theme-bootstrap' },
 ];
 
@@ -213,8 +197,6 @@ const countAggFn = values => {
 //
 // Aggregation helper functions
 //
-
-// XXX The presence of data in globalConfig could be helpful here.
 
 const truncFloat = (float, values) => {
   const digits = values[0].toString().split('.').pop().length;
@@ -395,14 +377,8 @@ const normalize = (value, range) => {
   return (value - range.min) / (range.max - range.min);
 };
 
-// For each column, calculate and store the min/max values for optional
-// conditional formatting.
-// This Fn will calc the applicable keys as well as a global min/max value into globalConfig.
+// For each column, calculate and store the min/max values for optional conditional formatting.
 const calculateRange = (data, queryResponse, config) => {
-  // XXX Probably should use queryResponse + config.applyTo to generate the possible keys we'll use here,
-  // and then get a global min/max. Then, in cellStyle, call on those applicable keys
-  // For pivots, the keys will contain only the column, and not the combined column/pivot.
-  // For those, we'll prob have to loop through with a string match to know which to apply to.
   if (!('applyTo' in config)) { return {}; }
   let keys = _.map(queryResponse.fields.measure_like, measureLike => measureLike.name);
   if (config.applyTo === 'select_fields') {
@@ -548,17 +524,17 @@ const addPivots = (dimensions, config) => {
 };
 
 // Attempt to display in this order: HTML -> rendered -> value
-const displayData = data => {
-  if (_.isEmpty(data)) { return null; }
-  let formattedData;
-  if (data.html) {
+const displayData = cell => {
+  if (_.isEmpty(cell)) { return null; }
+  let formattedCell;
+  if (cell.html) {
     // XXX This seems to be a diff func than table. OK?
-    formattedData = LookerCharts.Utils.htmlForCell(data);
+    formattedCell = LookerCharts.Utils.htmlForCell(cell);
   } else {
-    formattedData = LookerCharts.Utils.textForCell(data);
+    formattedCell = LookerCharts.Utils.textForCell(cell);
   }
 
-  return formattedData;
+  return formattedCell;
 };
 
 class AutoGroupColumnDef {
@@ -777,7 +753,7 @@ const modifyOptions = (vis, config) => {
     const cl = `customLabel_${name}`;
     options[cl] = {
       display: 'text',
-      placeholder: label,
+      placeholder: `Label: ${label}`,
       label,
       section: 'Series',
       type: 'string',
@@ -787,7 +763,7 @@ const modifyOptions = (vis, config) => {
     options[alignment] = {
       default: 'left',
       display: 'select',
-      label: `Align ${label}`,
+      label: `text-align: ${label}`,
       section: 'Config',
       type: 'string',
       values: [
@@ -801,7 +777,7 @@ const modifyOptions = (vis, config) => {
     options[fontFormat] = {
       default: 'none',
       display: 'select',
-      label: `Format ${label}`,
+      label: `Format: ${label}`,
       section: 'Config',
       type: 'string',
       values: [
@@ -897,13 +873,9 @@ const adjustFonts = config => {
 
   if ('fontSize' in config) {
     const agHeaderRows = document.getElementsByClassName('ag-header-row');
-    _.forEach(agHeaderRows, row => {
-      row.style.fontSize = `${config.fontSize}px`;
-    });
+    _.forEach(agHeaderRows, row => row.style.fontSize = `${config.fontSize}px`);
     const agRows = document.getElementsByClassName('ag-row');
-    _.forEach(agRows, row => {
-      row.style.fontSize = `${config.fontSize}px`;
-    });
+    _.forEach(agRows, row => row.style.fontSize = `${config.fontSize}px`);
     const agHeaderCells = document.getElementsByClassName('ag-header-cell');
     _.forEach(agHeaderCells, cell => {
       // TODO: flex was not working here, this is a hack.
@@ -911,6 +883,7 @@ const adjustFonts = config => {
     });
     const agCells = document.getElementsByClassName('ag-cell');
     _.forEach(agCells, cell => {
+      console.log(cell.innerHTML);
       cell.style.display = 'flex';
       cell.style.flexDirection = 'column';
       cell.style.justifyContent = 'center';
@@ -951,30 +924,8 @@ looker.plugins.visualizations.add({
 
   updateAsync(data, _element, config, queryResponse, _details, done) {
     this.clearErrors();
-    // WIP:
-    // if ('formattingPalette' in config &&
-    //     config.formattingPalette !== 'custom' &&
-    //     !Object.values(defaultColors).includes(config.lowColor)) {
-    //   const lowColor = config.lowColor;
-    //   this.trigger('updateConfig', [{ formattingPalette: 'custom' }]);
-    //   this.trigger('updateConfig', [{ lowColor }]);
-    // }
 
-    // XXX Going to want to call this whenever the colors are manually changed, or maybe you can check if
-    // lowColor midColor high whatever if any of those aren't in a selected list of defaults, then trigger
-    // updateConfig on formattingPalette
-    // I think there needs to be a special onclick handler, rather than the config shit. see which gets
-    // invoked first.
-    // const defaultColors = ['#F36254', '#FCF758', '#4FBC89', '#FFFFFF']
-    // const { lowColor, midColor, highColor } = options;
-    // Strategy for setting 'custom' automatically when colors are played with.
-    // const currentColors = [lowColor, midColor, highColor].filter(color => !!color);
-    // const uniqColors = currentColors.filter(x => !defaultColors.includes(x));
-    // if (!_.isEmpty(uniqColors)) {
-    //   vis.trigger('updateConfig', [{ formattingPalette: 'custom' }]);
-    // }
-
-    globalConfig.setQueryResponse(queryResponse);
+    globalConfig.queryResponse = queryResponse;
     modifyOptions(this, config);
 
     const { fields } = queryResponse;
@@ -1006,10 +957,11 @@ looker.plugins.visualizations.add({
 
     // Manipulates Looker's data response into a format suitable for ag-grid.
     this.agData = new AgData(data, formattedColumns);
-    globalConfig.setAgData(this.agData);
+    globalConfig.agData = this.agData;
+    // Gets a range for use by conditional formatting.
     const range = calculateRange(this.agData.formattedData, queryResponse, config);
-    globalConfig.setRange(range);
-    globalConfig.setConfig(config);
+    globalConfig.range = range;
+    globalConfig.config = config;
     gridOptions.api.setRowData(this.agData.formattedData);
 
     autoSize();
