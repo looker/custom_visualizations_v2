@@ -1,0 +1,38 @@
+updateAsync is the entry point; it's called often.
+
+
+commit 696e2f2b3ba1a286df123cdfb279bab7f4d5daaa (origin/jj/ag-grid, origin/HEAD)
+Author: JJ Bruno <brujj77@gmail.com>
+Date:   Sun Nov 18 16:06:52 2018 -0600
+
+    Hide color config unless Custom...
+
+** commit 23c2d2e9506cff251c569b80b0960568a5e22db5
+Author: JJ Bruno <brujj77@gmail.com>
+Date:   Sun Nov 18 15:45:44 2018 -0600
+
+    Allow proper changes to rerender columns
+
+commit 434ed938de53168cde3d03a7e614b4e00918fd84
+Author: JJ Bruno <brujj77@gmail.com>
+Date:   Sun Nov 18 15:04:49 2018 -0600
+
+    Pull out updateRange fn, zero values highlight correctly
+
+** commit aab1cb09a177abbd8394972a2ef56762e2d8c6b4
+Author: JJ Bruno <brujj77@gmail.com>
+Date:   Sun Nov 18 14:50:40 2018 -0600
+
+    Fix null zero thing
+
+commit a143c604f630e07d3291670a01a76c54fc24d708
+Author: JJ Bruno <brujj77@gmail.com>
+Date:   Sun Nov 18 14:38:53 2018 -0600
+
+    WIP basic pivot functionality, no subtotals, zero still not working
+
+commit 0d6e658c38c90e97ea299fa728ccc6c8ef2c8e09
+Author: JJ Bruno <brujj77@gmail.com>
+Date:   Sun Nov 18 14:27:59 2018 -0600
+
+    WIP working on pivot formatting, refactored cellStyle fn
