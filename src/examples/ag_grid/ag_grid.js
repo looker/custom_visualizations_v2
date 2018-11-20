@@ -82,7 +82,6 @@ class AgColumn {
         addTableCalculations(dimensions, tableCalcs);
       }
     }
-
     this.formattedColumns = dimensions;
   }
 }
@@ -204,7 +203,7 @@ const aggregate = (values, mType, valueFormat) => {
   }
   let value;
   if (_.isEmpty(valueFormat)) {
-    value = isFloat(agg) ? truncFloat(agg, values) : agg;
+    value = isFloat(agg) ? truncFloat(agg, values) : numeral(agg).format(',');
   } else {
     // TODO EUR and GBP symbols don't play nice. It fails gracefully though.
     value = numeral(agg).format(valueFormat);
@@ -236,8 +235,18 @@ const countAggFn = values => {
 // Aggregation helper functions
 //
 
+// This attempts to apply a reasonable truncation amount if Looker's data does not
+// specifically indicate one, based on the first value of the column. If not a float,
+// keeps as int.
 const truncFloat = (float, values) => {
-  const digits = values[0].toString().split('.').pop().length;
+  const firstVal = values[0].toString().split('.');
+  let digits;
+  if (firstVal.length > 1) {
+    digits = firstVal.pop().length;
+    return float.toFixed(digits);
+  } else {
+    return numeral(float.toFixed(0)).format(',');
+  }
   return float.toFixed(digits);
 };
 
@@ -322,10 +331,11 @@ const groupRowAggNodes = nodes => {
     // cellStyle to understand if the cell is a subtotal (I think possible), and then draw from a diff. range.
     _.forEach(result, (value, key) => {
       const val = numeral(value).value();
-      updateRange(key, value, range);
-      // updateRange(key, value, nodes[0].level, range);
+      updateRange(key, val, range);
+      // updateRange(key, val, nodes[0].level, range);
     });
   }
+
   return result;
 };
 
@@ -379,6 +389,12 @@ class PivotHeader {
   init(agParams) {
     this.agParams = agParams;
     this.eGui = document.createElement('div');
+    // this.eGui.classList.add('pivot-header');
+    // const { displayName } = this.agParams;
+    // const names = _.map(displayName, name => {
+    //   return `<div class='pivot'>${name}</div>`;
+    // }).join('');
+    // this.eGui.innerHTML = names;
     this.eGui.innerHTML = this.agParams.displayName;
   }
 
@@ -447,7 +463,7 @@ const conditionallyFormat = (styling, config, cell) => {
   if (config.conditionalFormattingType === 'non_subtotals_only' && cell.node.group === true) { return styling; }
   if (config.conditionalFormattingType === 'subtotals_only' && cell.node.group === false) { return styling; }
 
-  if (!(range.keys.includes(measure))) { return styling; }
+  if (!(range.keys.includes(measure)) && !(range.keys.includes(field))) { return styling; }
   const { lowColor, midColor, highColor } = config;
   let colorScheme = [lowColor, midColor, highColor];
   if (config.formattingStyle === 'high_to_low') {
@@ -510,6 +526,7 @@ const setPivotRange = (datum, key, range) => {
 
 const getValue = val => {
   const { config } = gridOptions.context.globalConfig;
+  if (_.isUndefined(config)) { return; }
   if (!('includeNullValuesAsZero' in config)) { return; }
   let value = numeral(val).value();
   if (_.isNull(value) && config.includeNullValuesAsZero) {
@@ -559,14 +576,21 @@ const addRowNumbers = basics => {
 const basicDimensions = (dimensions, config) => {
   const finalDimension = dimensions[dimensions.length - 1];
   const basics = _.map(dimensions, dimension => {
-    const rowGroup = !(dimension.name === finalDimension.name);
+    let rowGroup;
+    // If there is only 1 dimension, then we are going to display without grouping.
+    if (dimensions.length <= 1) {
+      rowGroup = false;
+    } else {
+      rowGroup = !(dimension.name === finalDimension.name);
+    }
+    const hide = dimensions.length > 1;
     return {
       cellRenderer: baseCellRenderer,
       cellStyle,
       colType: 'default',
       field: dimension.name,
       headerName: headerName(dimension, config),
-      hide: true,
+      hide,
       lookup: dimension.name,
       rowGroup: rowGroup,
       suppressMenu: true,
@@ -577,7 +601,9 @@ const basicDimensions = (dimensions, config) => {
     addRowNumbers(basics);
   }
 
-  autoGroupColumnDef.setLastGroup(finalDimension.name);
+  if (dimensions.length > 1) {
+    autoGroupColumnDef.setLastGroup(finalDimension.name);
+  }
 
   return basics;
 };
@@ -611,7 +637,6 @@ const addMeasures = (dimensions, measures, config) => {
       measure: name,
       rowGroup: false,
       suppressMenu: true,
-      // colId: 'jj',
     };
     dimensions.push(dimension);
   });
@@ -626,13 +651,14 @@ const addPivots = (dimensions, config) => {
   let dimension;
   pivots.forEach(pivot => {
     const { key } = pivot;
+    const keys = key.split('|FIELD|').join();
 
     const outerDimension = {
       children: [],
       colType: 'pivot',
       field: key,
       headerGroupComponent: PivotHeader,
-      headerName: key,
+      headerName: keys,
       rowGroup: false,
       suppressMenu: true,
     };
@@ -1063,14 +1089,11 @@ const addPivotHeader = () => {
   if (!('showRowNumbers' in config)) { return; }
   const name = headerName(queryResponse.fields.pivots[0], config);
   const labelDivs = document.getElementsByClassName('ag-header-group-cell-label');
-  let titleDiv;
-  if (config.showRowNumbers) {
-    titleDiv = labelDivs[1];
-  } else {
-    titleDiv = labelDivs[0];
+  const titleDiv = labelDivs[labelDivs.length - 1];
+  if (!_.isUndefined(titleDiv)) {
+    titleDiv.innerText = `${name}:`;
+    titleDiv.style.float = 'right';
   }
-  titleDiv.innerText = `${name}:`;
-  titleDiv.style.float = 'right';
 };
 
 const setColumns = () => {
@@ -1095,6 +1118,7 @@ const refreshColumns = changed => {
       const agColumn = new AgColumn(gridOptions.context.globalConfig.config);
       gridOptions.api.setColumnDefs(agColumn.formattedColumns);
       addPivotHeader();
+      adjustFonts();
       autoSize();
       gridOptions.context.refreshed = true;
     }
@@ -1106,7 +1130,7 @@ const gridOptions = {
     globalConfig,
     refreshed: false,
   },
-  debug: true, // for dev purposes.
+  // debug: true, // for dev purposes.
   refreshed: false,
   animateRows: true,
   autoGroupColumnDef,
@@ -1139,6 +1163,10 @@ looker.plugins.visualizations.add({
           flex-direction: column;
           height: 100%;
         }
+        /* .pivot-header {
+          display: flex;
+          flex-direction: column;
+        } */
       </style>
     `;
 
