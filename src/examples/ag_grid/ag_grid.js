@@ -93,6 +93,9 @@ class AgData {
     this.formatData();
   }
 
+  // TODO: Maybe here is where we can save a value but also an indication of whether it should be
+  // drillable, so that the renderer understands to make an href. Then, the drillableCallback or w/e
+  // is going to have to dig and get the proper links from something we've indicated on the data obj.
   formatData() {
     this.formattedData = this.data.map(datum => {
       const formattedDatum = {};
@@ -174,11 +177,26 @@ const loadStylesheets = () => {
   });
 };
 
+const drillingCallback = event => {
+  const ds = event.currentTarget.dataset;
+  const keys = Object.keys(ds);
+  let links = [];
+  _.forEach(keys, key => {
+    const [k, i] = key.split('-');
+    if (!links[i]) { links[i] = {}; }
+    links[i][k] = ds[key];
+  });
+  LookerCharts.Utils.openDrillMenu({ links, event });
+};
+
 //
 // User-defined cell renderers
 //
 
 // The mere presence of this renderer is enough to actually render HTML.
+// TODO: This is broken, and so are subtotals, which makes me think the subtotaling stuff can be
+// fixed here instead of with the BS timeout fix.
+
 const baseCellRenderer = obj => obj.value;
 
 // Looker's table is 1-indexed.
@@ -304,7 +322,8 @@ const groupRowAggNodes = nodes => {
       measures.forEach(measure => {
         const { name } = measure;
         if (typeof data[name] !== 'undefined') {
-          const value = numeral(data[name]).value();
+          let val = cellValue(data[name]);
+          const value = numeral(val).value();
           if (value !== null) {
             result[name].push(value);
           }
@@ -456,6 +475,18 @@ const formatText = (styling, config, cell) => {
   }
 };
 
+const cellValue = value => {
+  let val;
+  if (value && value[0] === '<') {
+    const span = document.createElement('span');
+    span.innerHTML = value;
+    val = span.textContent || span.innerText;
+  } else {
+    val = value;
+  }
+  return numeral(val).value();
+};
+
 const conditionallyFormat = (styling, config, cell) => {
   const { range } = globalConfig;
   const { field, measure } = cell.colDef;
@@ -475,7 +506,7 @@ const conditionallyFormat = (styling, config, cell) => {
     supportedRange = range[field];
   }
   // Normalize number between 0 and 1
-  const v = numeral(cell.value).value();
+  const v = cellValue(cell.value);
   if (!config.includeNullValuesAsZero && _.isNull(v)) {
     return;
   }
@@ -613,6 +644,7 @@ const addTableCalculations = (dimensions, tableCalcs) => {
   tableCalcs.forEach(calc => {
     dimension = {
       cellStyle,
+      cellRenderer: baseCellRenderer,
       colType: 'table_calculation',
       field: calc.name,
       headerName: calc.label,
@@ -630,6 +662,7 @@ const addMeasures = (dimensions, measures, config) => {
     const { name } = measure;
     dimension = {
       cellStyle,
+      cellRenderer: baseCellRenderer,
       colType: 'measure',
       field: name,
       headerName: headerName(measure, config),
@@ -685,12 +718,19 @@ const addPivots = (dimensions, config) => {
   globalConfig.hasPivot = true;
 };
 
-// Attempt to display in this order: HTML -> rendered -> value
+// Attempt to display in this order: HTML/drill -> rendered -> value
+// TODO: Return an object here, with value, and then also with pertinent info for links/drilling.
 const displayData = cell => {
   if (_.isEmpty(cell)) { return null; }
   let formattedCell;
-  if (cell.html) {
-    // XXX This seems to be a diff func than table. OK?
+  if (cell.links) {
+    let dataset = '';
+    _.forEach(cell.links, (link, i) => {
+      dataset += `data-label-${i}=${JSON.stringify(link.label)} data-url-${i}=${JSON.stringify(link.url)} data-type-${i}=${JSON.stringify(link.type)} `;
+    });
+    formattedCell = `<a class='drillable-link' href="#" onclick="drillingCallback(event); return false;" ${dataset}>${cell.value}</a>`;
+  } else if (cell.html) {
+    // TODO: This seems to be a diff func than table. OK?
     formattedCell = LookerCharts.Utils.htmlForCell(cell);
   } else {
     formattedCell = LookerCharts.Utils.textForCell(cell);
@@ -1143,6 +1183,7 @@ const gridOptions = {
   onRowGroupOpened: adjustFonts,
   rowSelection: 'multiple',
   suppressAggFuncInHeader: true,
+  // suppressCellSelection: true, // XXX
   suppressFieldDotNotation: true,
   suppressMovableColumns: true,
   enableColResize: true,
@@ -1163,10 +1204,13 @@ looker.plugins.visualizations.add({
           flex-direction: column;
           height: 100%;
         }
-        /* .pivot-header {
-          display: flex;
-          flex-direction: column;
-        } */
+        .drillable-link {
+          color: inherit;
+          text-decoration: none;
+        }
+        .drillable-link:hover {
+          text-decoration: underline;
+        }
       </style>
     `;
 
