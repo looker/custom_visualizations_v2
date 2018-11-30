@@ -18,13 +18,10 @@ class GlobalConfig {
   }
 }
 
-const globalConfig = new GlobalConfig();
-
 const adjustFonts = () => {
   const { config } = globalConfig;
 
   if ('fontFamily' in config) {
-    const theme = config.theme;
     const mainDiv = document.getElementById('ag-grid-vis');
     mainDiv.style.fontFamily = config.fontFamily;
   }
@@ -64,7 +61,7 @@ class AgColumn {
 
   // Format the columns based on the queryResponse into an object ag-grid can handle.
   formatColumns() {
-    const { queryResponse } = globalConfig;
+    const { queryResponse } = gridOptions.context.globalConfig;
     const { pivots, measures, dimensions: dims } = queryResponse.fields;
     const dimensions = basicDimensions(dims, this.config);
 
@@ -177,7 +174,7 @@ const loadStylesheets = () => {
   });
 };
 
-const drillingCallback = event => {
+const drillingCallback = event => { // eslint-disable-line
   const ds = event.currentTarget.dataset;
   const keys = Object.keys(ds);
   let links = [];
@@ -262,10 +259,8 @@ const truncFloat = (float, values) => {
   if (firstVal.length > 1) {
     digits = firstVal.pop().length;
     return float.toFixed(digits);
-  } else {
-    return numeral(float.toFixed(0)).format(',');
   }
-  return float.toFixed(digits);
+  return numeral(float.toFixed(0)).format(',');
 };
 
 const isFloat = num => {
@@ -279,7 +274,7 @@ const isFloat = num => {
 const groupRowAggNodes = nodes => {
   if (!_.isEmpty(gridOptions.columnDefs)) { return; }
   // This method is called often by ag-grid, sometimes with no nodes.
-  const { queryResponse } = globalConfig;
+  const { queryResponse } = gridOptions.context.globalConfig;
   if (_.isEmpty(nodes) || queryResponse === undefined) { return; }
 
   const { measure_like: measures } = queryResponse.fields;
@@ -334,13 +329,11 @@ const groupRowAggNodes = nodes => {
     // Map over again to calculate a final result value and convert to value_format.
     measures.forEach(measure => {
       const { name, type: mType, value_format: valueFormat } = measure;
-      result[name] = aggregate(
-        result[name], mType, valueFormat,
-      );
+      result[name] = aggregate(result[name], mType, valueFormat);
     });
   }
 
-  const { config, range } = globalConfig;
+  const { config, range } = gridOptions.context.globalConfig;
   // The top level aggregate here isn't actually shown on our grouped table, and
   // shouldn't be counted towards the conditional formatting ranges.
   const includeInRange = nodes[0].level !== 0;
@@ -360,6 +353,8 @@ const groupRowAggNodes = nodes => {
 
 // const updateRange = (key, value, level, range) => {
 const updateRange = (key, value, range) => {
+  if (!range) { return; }
+  // Global:
   if (!('min' in range)) { range.min = value; }
   if (!('max' in range)) { range.max = value; }
   if (value < range.min) {
@@ -475,6 +470,8 @@ const formatText = (styling, config, cell) => {
   }
 };
 
+// Some measures contain just a value, others are an href/html for drilling.
+// This function derives a raw numerical value for either case.
 const cellValue = value => {
   let val;
   if (value && value[0] === '<') {
@@ -522,8 +519,6 @@ const conditionallyFormat = (styling, config, cell) => {
 // Used to apply conditional formatting to cells, if enabled.
 const cellStyle = cell => {
   const { config } = globalConfig;
-  const { measure } = cell.colDef;
-
   const styling = {};
 
   alignText(styling, config, cell);
@@ -700,6 +695,7 @@ const addPivots = (dimensions, config) => {
       const { name } = measure;
       dimension = {
         cellStyle,
+        cellRenderer: baseCellRenderer,
         colType: 'pivotChild',
         columnGroupShow: 'open',
         field: `${key}_${name}`,
@@ -797,6 +793,8 @@ const options = {
       { 'All': 'all' },
       { 'Subtotals only': 'subtotals_only' },
       { 'Non-subtotals only': 'non_subtotals_only' },
+      // TODO
+      // { 'Individual aggregation': 'indv_aggregation' },
     ],
   },
   includeNullValuesAsZero: {
@@ -1078,7 +1076,7 @@ const selectFormattedFields = (fields, config) => {
     });
   } else if (config.applyTo === 'all_numeric_fields') {
     fields.forEach(field => {
-      const { label, name } = field;
+      const { name } = field;
       const id = `selectedField_${name}`
       if (id in options) { delete(options[id]); }
     });
@@ -1123,7 +1121,6 @@ const modifyOptions = (vis, config) => {
 
 // TODO: Hack that only works for 1 pivot.
 const addPivotHeader = () => {
-  const { globalConfig } = gridOptions.context;
   if (!globalConfig.hasPivot) { return; }
   const { config, queryResponse } = globalConfig;
   if (!('showRowNumbers' in config)) { return; }
@@ -1149,29 +1146,40 @@ const setColumns = () => {
 // revert to the 'only do this if details.changed is appropriate', or also if we notice
 // that a column has either been added or removed.
 // Note: Still broken if add column and just hit run.
-const refreshColumns = changed => {
-  gridOptions.api.setColumnDefs(globalConfig.formattedColumns);
-  gridOptions.context.refreshed = !gridOptions.context.refreshed;
+// TODO: `changed` unused.
+const refreshColumns = details => {
+  const values = document.getElementsByClassName('ag-cell-value');
+  // If something on the grid has changed, we want to refresh it.
+  if (details.changed) {
+    const agColumn = new AgColumn(globalConfig.config);
+    gridOptions.api.setColumnDefs(agColumn.formattedColumns);
+    refreshed = !refreshed;
+  }
+  // However, if we determine that the subtotaling isn't showing, we also want to redraw.
+  if (values[1] && values[1].childElementCount === 0) {
+    const agColumn = new AgColumn(globalConfig.config);
+    gridOptions.api.setColumnDefs(agColumn.formattedColumns);
+    refreshed = !refreshed;
+  }
   // I hate this so much, but it seems to work. Should be enough to get through the demo.
-  setTimeout(() => {
-    if (gridOptions.context.refreshed === false) {
-      const agColumn = new AgColumn(gridOptions.context.globalConfig.config);
-      gridOptions.api.setColumnDefs(agColumn.formattedColumns);
-      addPivotHeader();
-      adjustFonts();
-      autoSize();
-      gridOptions.context.refreshed = true;
-    }
-  }, 1);
+  // if (refreshed === false) {
+  //   setTimeout(() => {
+  //     const agColumn = new AgColumn(globalConfig.config);
+  //     gridOptions.api.setColumnDefs(agColumn.formattedColumns);
+  //     addPivotHeader();
+  //     adjustFonts();
+  //     autoSize();
+  //     refreshed = true;
+  //   }, 1);
+  // }
 };
 
 const gridOptions = {
   context: {
-    globalConfig,
     refreshed: false,
+    globalConfig: new GlobalConfig,
   },
   // debug: true, // for dev purposes.
-  refreshed: false,
   animateRows: true,
   autoGroupColumnDef,
   columnDefs: [],
@@ -1183,13 +1191,15 @@ const gridOptions = {
   onRowGroupOpened: adjustFonts,
   rowSelection: 'multiple',
   suppressAggFuncInHeader: true,
-  // suppressCellSelection: true, // XXX
   suppressFieldDotNotation: true,
   suppressMovableColumns: true,
   enableColResize: true,
   onColumnResized: columnResized,
   colResizeDefault: 'shift',
 };
+
+const { globalConfig } = gridOptions.context;
+let { refreshed } = gridOptions.context;
 
 looker.plugins.visualizations.add({
   options: options,
@@ -1259,7 +1269,7 @@ looker.plugins.visualizations.add({
     const { formattedColumns } = this.agColumn;
 
     globalConfig.formattedColumns = formattedColumns;
-    refreshColumns(details.changed);
+    refreshColumns(details);
 
     // Manipulates Looker's data response into a format suitable for ag-grid.
     this.agData = new AgData(data, formattedColumns);
