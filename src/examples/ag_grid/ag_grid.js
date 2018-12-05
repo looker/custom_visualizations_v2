@@ -18,41 +18,6 @@ class GlobalConfig {
   }
 }
 
-const adjustFonts = () => {
-  const { config } = globalConfig;
-
-  if ('fontFamily' in config) {
-    const mainDiv = document.getElementById('ag-grid-vis');
-    mainDiv.style.fontFamily = config.fontFamily;
-  }
-
-  // TODO: Fix the header font resizing (keeping header text centered properly).
-  if ('fontSize' in config) {
-    // const agHeaderRows = document.getElementsByClassName('ag-header-row');
-    // _.forEach(agHeaderRows, row => row.style.fontSize = `${config.fontSize}px`);
-    const agRows = document.getElementsByClassName('ag-row');
-    _.forEach(agRows, row => row.style.fontSize = `${config.fontSize}px`);
-    // const agHeaderCells = document.getElementsByClassName('ag-header-cell');
-    // _.forEach(agHeaderCells, cell => {
-    //   // TODO: flex was not working here, this is a hack.
-    //   cell.style.paddingTop = `${(config.fontSize - 14)}px`;
-    // });
-    const agCells = document.getElementsByClassName('ag-cell');
-    _.forEach(agCells, cell => {
-      cell.style.display = 'flex';
-      cell.style.flexDirection = 'column';
-      cell.style.justifyContent = 'center';
-    });
-    // const headerHeight = config.fontSize * 2 + 1;
-    // gridOptions.api.setHeaderHeight(headerHeight);
-  }
-
-  if ('rowHeight' in config) {
-    gridOptions.rowHeight = config.rowHeight;
-    // gridOptions.api.resetRowHeights();
-  }
-};
-
 class AgColumn {
   constructor(config) {
     this.config = config;
@@ -118,10 +83,62 @@ class AgData {
 }
 
 //
+// User-defined grouped header class
+//
+
+class PivotHeader {
+  init(agParams) {
+    this.agParams = agParams;
+    this.eGui = document.createElement('div');
+    // this.eGui.classList.add('pivot-header');
+    // const { displayName } = this.agParams;
+    // const names = _.map(displayName, name => {
+    //   return `<div class='pivot'>${name}</div>`;
+    // }).join('');
+    // this.eGui.innerHTML = names;
+    this.eGui.innerHTML = this.agParams.displayName;
+  }
+
+  getGui() {
+    return this.eGui;
+  }
+
+  destroy() {
+    return null;
+  }
+}
+
+const adjustFonts = () => {
+  const { config } = globalConfig;
+
+  if ('fontFamily' in config) {
+    const mainDiv = document.getElementById('ag-grid-vis');
+    mainDiv.style.fontFamily = config.fontFamily;
+  }
+
+  // TODO: Fix the header font resizing (keeping header text centered properly).
+  if ('fontSize' in config) {
+    const agRows = document.getElementsByClassName('ag-row');
+    _.forEach(agRows, row => row.style.fontSize = `${config.fontSize}px`);
+    const agCells = document.getElementsByClassName('ag-cell');
+    _.forEach(agCells, cell => {
+      cell.style.display = 'flex';
+      cell.style.flexDirection = 'column';
+      cell.style.justifyContent = 'center';
+    });
+  }
+
+  if ('rowHeight' in config) {
+    gridOptions.rowHeight = config.rowHeight;
+  }
+};
+
+//
 // Display-related constants and functions
 //
 
 const autoSize = () => {
+  debugger
   gridOptions.columnApi.autoSizeAllColumns();
   const { gridPanel } = gridOptions.api;
   if (gridPanel.eBodyContainer.scrollWidth < gridPanel.eBody.scrollWidth) {
@@ -191,9 +208,6 @@ const drillingCallback = event => { // eslint-disable-line
 //
 
 // The mere presence of this renderer is enough to actually render HTML.
-// TODO: This is broken, and so are subtotals, which makes me think the subtotaling stuff can be
-// fixed here instead of with the BS timeout fix.
-
 const baseCellRenderer = obj => obj.value;
 
 // Looker's table is 1-indexed.
@@ -220,7 +234,7 @@ const aggregate = (values, mType, valueFormat) => {
   if (_.isEmpty(valueFormat)) {
     value = isFloat(agg) ? truncFloat(agg, values) : numeral(agg).format(',');
   } else {
-    // TODO EUR and GBP symbols don't play nice. It fails gracefully though.
+    // TODO: EUR and GBP symbols don't play nice. It fails gracefully though.
     value = numeral(agg).format(valueFormat);
   }
   return value;
@@ -378,10 +392,10 @@ const updateRange = (key, value, range) => {
   // if (!(lvl in range)) {
   //   range[lvl] = { min: value, max: value };
   // }
-  // if (value < range[lvl]) {
+  // if (value < range[lvl].min) {
   //   range[lvl].min = value;
   // }
-  // if (value > range[lvl]) {
+  // if (value > range[lvl].min) {
   //   range[lvl].max = value;
   // }
   // if (!(key in range[lvl])) {
@@ -394,32 +408,6 @@ const updateRange = (key, value, range) => {
   //   range[lvl][key].max = value;
   // }
 };
-
-//
-// User-defined grouped header class
-//
-
-class PivotHeader {
-  init(agParams) {
-    this.agParams = agParams;
-    this.eGui = document.createElement('div');
-    // this.eGui.classList.add('pivot-header');
-    // const { displayName } = this.agParams;
-    // const names = _.map(displayName, name => {
-    //   return `<div class='pivot'>${name}</div>`;
-    // }).join('');
-    // this.eGui.innerHTML = names;
-    this.eGui.innerHTML = this.agParams.displayName;
-  }
-
-  getGui() {
-    return this.eGui;
-  }
-
-  destroy() {
-    return null;
-  }
-}
 
 // Take into account config prefs for truncation and brevity.
 const headerName = (dimension, config) => {
@@ -774,14 +762,6 @@ const options = {
     section: 'Formatting',
     type: 'boolean',
   },
-  // rangesByLevel: {
-  //   default: false,
-  //   hidden: true,
-  //   label: 'Ranges by level',
-  //   order: 3,
-  //   section: 'Formatting',
-  //   type: 'boolean',
-  // },
   conditionalFormattingType: {
     default: 'all',
     display: 'select',
@@ -816,7 +796,6 @@ const options = {
       { 'From high to low': 'high_to_low' },
     ],
   },
-  // Detect change to just one config setting? Maybe have another, invisible if possible, set to custom?
   formattingPalette: {
     default: 'red_yellow_green',
     display: 'select',
@@ -1089,7 +1068,6 @@ const setupConditionalFormatting = (vis, config, measureLike) => {
 
   if ('enableConditionalFormatting' in config) {
     options.perColumnRange.hidden = !config.enableConditionalFormatting;
-    // options.rangesByLevel.hidden = !config.enableConditionalFormatting;
   }
 
   if ('formattingPalette' in config) {
@@ -1139,14 +1117,6 @@ const setColumns = () => {
 
 // Certain config changes require a refresh of the column headers - we only
 // will refresh them if needed.
-// There is a bug here where we actually need to call this twice to get subtotals
-// displaying properly. I assume there is a specific event I can plug into to do
-// away with this timeout, but haven't found it yet. Anything less than 300 doesn't work.
-// TODO: In the future, to avoid this gross rerender unless totally necessary, we could
-// revert to the 'only do this if details.changed is appropriate', or also if we notice
-// that a column has either been added or removed.
-// Note: Still broken if add column and just hit run.
-// TODO: `changed` unused.
 const refreshColumns = details => {
   const values = document.getElementsByClassName('ag-cell-value');
   // If something on the grid has changed, we want to refresh it.
@@ -1161,23 +1131,13 @@ const refreshColumns = details => {
     gridOptions.api.setColumnDefs(agColumn.formattedColumns);
     refreshed = !refreshed;
   }
-  // I hate this so much, but it seems to work. Should be enough to get through the demo.
-  // if (refreshed === false) {
-  //   setTimeout(() => {
-  //     const agColumn = new AgColumn(globalConfig.config);
-  //     gridOptions.api.setColumnDefs(agColumn.formattedColumns);
-  //     addPivotHeader();
-  //     adjustFonts();
-  //     autoSize();
-  //     refreshed = true;
-  //   }, 1);
-  // }
 };
 
 const gridOptions = {
   context: {
     refreshed: false,
     globalConfig: new GlobalConfig,
+    needsAutoSize: true,
   },
   // debug: true, // for dev purposes.
   animateRows: true,
@@ -1281,7 +1241,10 @@ looker.plugins.visualizations.add({
 
     addPivotHeader();
 
-    autoSize();
+    if (details.changed || gridOptions.context.needsAutoSize) {
+      autoSize();
+      gridOptions.context.needsAutoSize = false;
+    }
     // Not sure why this is here, doesn't seem to have an effect.
     done();
   },
