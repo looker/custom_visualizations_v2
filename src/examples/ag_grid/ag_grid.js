@@ -86,16 +86,11 @@ class AgData {
 // User-defined grouped header class
 //
 
+// TODO: Make multiple pivots work.
 class PivotHeader {
   init(agParams) {
     this.agParams = agParams;
     this.eGui = document.createElement('div');
-    // this.eGui.classList.add('pivot-header');
-    // const { displayName } = this.agParams;
-    // const names = _.map(displayName, name => {
-    //   return `<div class='pivot'>${name}</div>`;
-    // }).join('');
-    // this.eGui.innerHTML = names;
     this.eGui.innerHTML = this.agParams.displayName;
   }
 
@@ -163,6 +158,7 @@ const updateTheme = (classList, theme) => {
 
 // All of the currently supported ag-grid stylesheets.
 const themes = [
+  { Looker: 'ag-theme-looker' },
   { Balham: 'ag-theme-balham' },
   // { 'Balham Dark': 'ag-theme-balham-dark' },
   { Fresh: 'ag-theme-fresh' },
@@ -172,7 +168,7 @@ const themes = [
   { Bootstrap: 'ag-theme-bootstrap' },
 ];
 
-const defaultTheme = 'ag-theme-balham';
+const defaultTheme = 'ag-theme-looker';
 
 const addCSS = link => {
   const linkElement = document.createElement('link');
@@ -186,8 +182,13 @@ const addCSS = link => {
 // Load all ag-grid default style themes.
 const loadStylesheets = () => {
   addCSS('https://unpkg.com/ag-grid-community/dist/styles/ag-grid.css');
+  addCSS('https://4mile.github.io/ag_grid/ag-theme-looker.css');
+  // XXX For development only:
+  // addCSS('https://localhost:4443/ag-theme-looker.css');
   themes.forEach(theme => {
-    addCSS(`https://unpkg.com/ag-grid-community/dist/styles/${theme[Object.keys(theme)]}.css`);
+    if (theme !== 'ag-theme-looker') {
+      addCSS(`https://unpkg.com/ag-grid-community/dist/styles/${theme[Object.keys(theme)]}.css`);
+    }
   });
 };
 
@@ -857,7 +858,7 @@ const options = {
     type: 'number',
   },
   fontFamily: {
-    default: 'Helvetica',
+    default: 'Looker',
     display: 'select',
     display_size: 'two-thirds',
     label: 'Font Family',
@@ -865,6 +866,7 @@ const options = {
     section: 'Config',
     type: 'string',
     values: [
+      { 'Looker': 'Open Sans, Helvetica, Arial, sans-serif' },
       { 'Helvetica': 'BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif' },
       { 'Times New Roman': 'Times, "Times New Roman", serif' },
     ],
@@ -905,7 +907,7 @@ const options = {
     values: themes,
   },
   showRowNumbers: {
-    default: true,
+    default: false,
     label: 'Show Row Numbers',
     order: 2,
     section: 'Plot',
