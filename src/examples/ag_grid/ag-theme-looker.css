@@ -6,7 +6,7 @@
 .ag-theme-looker {
   background-color: white;
   color: #000;
-  font: 400 11px -apple-system, 'Open Sans', Helvetica, Arial, sans-serif;
+  font: 400 12px -apple-system, 'Open Sans', Helvetica, Arial, sans-serif;
 }
 
 .ag-theme-looker .ag-header,
@@ -879,7 +879,8 @@
 .ag-theme-looker .ag-header {
   background-color: #f5f7f7;
   color: rgba(0, 0, 0, 0.54);
-  font: 600 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+  /* font: 600 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif; */
+  font-weight: 700;
 }
 
 .ag-theme-looker .ag-header-row {
@@ -908,9 +909,22 @@
   background-color: #f7f2ee;
 }
 
-.ag-theme-looker .ag-row-odd .ag-cell:first-child {
+/* XXX */
+.ag-theme-looker .ag-row-odd .ag-cell.groupCell {
   background-color: #f6f8fa;
 }
+
+/* .ag-theme-looker .ag-row-odd .ag-cell:nth-child(2) {
+  background-color: #f6f8fa;
+} */
+
+/* .ag-theme-looker .ag-row-odd .ag-cell:nth-child(3) {
+  background-color: #f6f8fa;
+} */
+
+/* .ag-theme-looker .ag-row-odd .ag-cell:nth-child(2) {
+  background-color: #f6f8fa;
+} */
 
 .ag-theme-looker .ag-row-even {
   background-color: white;
@@ -1609,7 +1623,7 @@
   padding: 4px;
   border: 1px solid #BDC3C7;
   color: rgba(0, 0, 0, 0.54);
-  font: 600 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+  /* font: 600 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif; */
   height: 32px !important;
   line-height: 32px;
   margin: 0;
@@ -1887,7 +1901,7 @@
 .ag-theme-looker .ag-tool-panel-wrapper .ag-column-drop .ag-column-drop-empty-message {
   clear: both;
   color: rgba(0, 0, 0, 0.38);
-  font: 600 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+  /* font: 600 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif; */
   line-height: 8px;
   padding-left: 16px;
   padding-right: 4px;
@@ -2588,7 +2602,7 @@
   border: 1px solid #BDC3C7;
   border-top: 0;
   color: rgba(0, 0, 0, 0.38);
-  font: 600 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+  /* font: 600 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif; */
   padding-right: 16px;
   padding-left: 16px;
 }
@@ -2958,10 +2972,11 @@
 }
 
 .ag-theme-looker .ag-header-cell {
-  background-color: #e4d0bd;
+  background-color: #ccd8e4;
   line-height: 25px;
 }
 
-.ag-theme-looker .ag-header-cell:first-child {
-  background-color: #ccd8e4;
+/* Overrides background color for all measures (after grouping) */
+.ag-theme-looker .ag-header-cell:not(.rowNumber) + .ag-header-cell {
+  background-color: #e4d0bd;
 }
