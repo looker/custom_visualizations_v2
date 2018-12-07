@@ -44,9 +44,26 @@ class AgColumn {
         addTableCalculations(dimensions, tableCalcs);
       }
     }
+    const { config } = gridOptions.context.globalConfig;
+    if (!config.autoSizeEnabled) {
+      addWidths(dimensions);
+    }
     this.formattedColumns = dimensions;
   }
 }
+
+const addWidths = dimensions => {
+  const { widths } = gridOptions.context;
+  _.forEach(dimensions, dim => {
+    const width = widths[dim.field];
+    if (!_.isUndefined(width)) {
+      dim.width = width;
+    }
+    if (widths['Group']) {
+      autoGroupColumnDef.width = widths['Group'];
+    }
+  });
+};
 
 class AgData {
   constructor(data, formattedColumns) {
@@ -104,7 +121,7 @@ class PivotHeader {
 }
 
 const adjustFonts = () => {
-  const { config } = globalConfig;
+  const { config } = gridOptions.context.globalConfig;
 
   if ('fontFamily' in config) {
     const mainDiv = document.getElementById('ag-grid-vis');
@@ -133,11 +150,13 @@ const adjustFonts = () => {
 //
 
 const autoSize = () => {
-  debugger
-  gridOptions.columnApi.autoSizeAllColumns();
-  const { gridPanel } = gridOptions.api;
-  if (gridPanel.eBodyContainer.scrollWidth < gridPanel.eBody.scrollWidth) {
-    gridOptions.api.sizeColumnsToFit();
+  const { config } = gridOptions.context.globalConfig;
+  if (config.autoSizeEnabled) {
+    gridOptions.columnApi.autoSizeAllColumns();
+    const { gridPanel } = gridOptions.api;
+    if (gridPanel.eBodyContainer.scrollWidth < gridPanel.eBody.scrollWidth) {
+      gridOptions.api.sizeColumnsToFit();
+    }
   }
 };
 
@@ -182,9 +201,9 @@ const addCSS = link => {
 // Load all ag-grid default style themes.
 const loadStylesheets = () => {
   addCSS('https://unpkg.com/ag-grid-community/dist/styles/ag-grid.css');
-  addCSS('https://4mile.github.io/ag_grid/ag-theme-looker.css');
+  // addCSS('https://4mile.github.io/ag_grid/ag-theme-looker.css');
   // XXX For development only:
-  // addCSS('https://localhost:4443/ag-theme-looker.css');
+  addCSS('https://localhost:4443/ag-theme-looker.css');
   themes.forEach(theme => {
     if (theme !== 'ag-theme-looker') {
       addCSS(`https://unpkg.com/ag-grid-community/dist/styles/${theme[Object.keys(theme)]}.css`);
@@ -507,7 +526,7 @@ const conditionallyFormat = (styling, config, cell) => {
 
 // Used to apply conditional formatting to cells, if enabled.
 const cellStyle = cell => {
-  const { config } = globalConfig;
+  const { config } = gridOptions.context.globalConfig;
   const styling = {};
 
   alignText(styling, config, cell);
@@ -579,7 +598,8 @@ const addRowNumbers = basics => {
     colType: 'row',
     headerName: '',
     lockPosition: true,
-    maxWidth: '*',
+    // Arbitrary
+    width: 50,
     rowGroup: false,
     suppressMenu: true,
     suppressResize: true,
@@ -742,7 +762,13 @@ const autoGroupColumnDef = new AutoGroupColumnDef();
 
 // TODO: Persist column movement across refresh.
 const columnResized = e => {
-
+  _.forEach(e.columns, col => {
+    let { field } = col.colDef;
+    if (col.colDef.headerName === 'Group') {
+      field = 'Group';
+    }
+    gridOptions.context.widths[field] = col.actualWidth;
+  });
 };
 
 
@@ -910,6 +936,13 @@ const options = {
     default: false,
     label: 'Show Row Numbers',
     order: 2,
+    section: 'Plot',
+    type: 'boolean',
+  },
+  autoSizeEnabled: {
+    default: true,
+    label: 'Enable Auto Sizing',
+    order: 3,
     section: 'Plot',
     type: 'boolean',
   },
@@ -1102,7 +1135,7 @@ const modifyOptions = (vis, config) => {
 // TODO: Hack that only works for 1 pivot.
 const addPivotHeader = () => {
   if (!globalConfig.hasPivot) { return; }
-  const { config, queryResponse } = globalConfig;
+  const { config, queryResponse } = gridOptions.context.globalConfig;
   if (!('showRowNumbers' in config)) { return; }
   const name = headerName(queryResponse.fields.pivots[0], config);
   const labelDivs = document.getElementsByClassName('ag-header-group-cell-label');
@@ -1120,26 +1153,39 @@ const setColumns = () => {
 // Certain config changes require a refresh of the column headers - we only
 // will refresh them if needed.
 const refreshColumns = details => {
-  const values = document.getElementsByClassName('ag-cell-value');
   // If something on the grid has changed, we want to refresh it.
   if (details.changed) {
     const agColumn = new AgColumn(globalConfig.config);
     gridOptions.api.setColumnDefs(agColumn.formattedColumns);
-    refreshed = !refreshed;
   }
   // However, if we determine that the subtotaling isn't showing, we also want to redraw.
-  if (values[1] && values[1].childElementCount === 0) {
+  const values = document.getElementsByClassName('ag-cell-value');
+  if (values && _.some(values, value => value.childElementCount === 0)) {
     const agColumn = new AgColumn(globalConfig.config);
     gridOptions.api.setColumnDefs(agColumn.formattedColumns);
-    refreshed = !refreshed;
   }
+};
+
+const setLookerClasses = () => {
+  // Adding a special color to [odd] row numbers and group cells.
+  const groupCells = document.querySelectorAll(".ag-cell[col-id='ag-Grid-AutoColumn']");
+  _.forEach(groupCells, gc => gc.classList.add('groupCell'));
+  // For some reason the id here changes whether or not the config pane is open.
+  // It's '0' when it's closed, '1' when open. Adding a class to each here.
+  let rowNumCells = document.querySelectorAll(".ag-cell[col-id='1']");
+  _.forEach(rowNumCells, rnc => rnc.classList.add('groupCell'));
+  rowNumCells = document.querySelectorAll(".ag-cell[col-id='0']");
+  _.forEach(rowNumCells, rnc => rnc.classList.add('groupCell'));
+  // Also adding a color to said headers.
+  const firstHeader = document.getElementsByClassName('ag-header-cell')[0];
+  const { config } = gridOptions.context.globalConfig;
+  config.showRowNumbers ? firstHeader.classList.add('rowNumber') : firstHeader.classList.remove('rowNumber');
 };
 
 const gridOptions = {
   context: {
-    refreshed: false,
     globalConfig: new GlobalConfig,
-    needsAutoSize: true,
+    widths: {},
   },
   // debug: true, // for dev purposes.
   animateRows: true,
@@ -1161,12 +1207,11 @@ const gridOptions = {
 };
 
 const { globalConfig } = gridOptions.context;
-let { refreshed } = gridOptions.context;
 
 looker.plugins.visualizations.add({
   options: options,
 
-  create(element) {
+  create(element, _config) {
     loadStylesheets();
 
     element.innerHTML = `
@@ -1243,11 +1288,10 @@ looker.plugins.visualizations.add({
 
     addPivotHeader();
 
-    if (details.changed || gridOptions.context.needsAutoSize) {
+    if (details.changed) {
       autoSize();
-      gridOptions.context.needsAutoSize = false;
     }
-    // Not sure why this is here, doesn't seem to have an effect.
+    setLookerClasses();
     done();
   },
 });
