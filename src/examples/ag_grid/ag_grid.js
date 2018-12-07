@@ -205,8 +205,9 @@ const loadStylesheets = () => {
   // XXX For development only:
   addCSS('https://localhost:4443/ag-theme-looker.css');
   themes.forEach(theme => {
-    if (theme !== 'ag-theme-looker') {
-      addCSS(`https://unpkg.com/ag-grid-community/dist/styles/${theme[Object.keys(theme)]}.css`);
+    const themeName = theme[Object.keys(theme)];
+    if (themeName !== 'ag-theme-looker') {
+      addCSS(`https://unpkg.com/ag-grid-community/dist/styles/${themeName}.css`);
     }
   });
 };
@@ -378,14 +379,12 @@ const groupRowAggNodes = nodes => {
     _.forEach(result, (value, key) => {
       const val = numeral(value).value();
       updateRange(key, val, range);
-      // updateRange(key, val, nodes[0].level, range);
     });
   }
 
   return result;
 };
 
-// const updateRange = (key, value, level, range) => {
 const updateRange = (key, value, range) => {
   if (!range) { return; }
   // Global:
@@ -407,26 +406,6 @@ const updateRange = (key, value, range) => {
   if (value > range[key].max) {
     range[key].max = value;
   }
-  // Per level:
-  // const lvl = String(level);
-  // if (!(lvl in range)) {
-  //   range[lvl] = { min: value, max: value };
-  // }
-  // if (value < range[lvl].min) {
-  //   range[lvl].min = value;
-  // }
-  // if (value > range[lvl].min) {
-  //   range[lvl].max = value;
-  // }
-  // if (!(key in range[lvl])) {
-  //   range[lvl][key] = { min: value, max: value };
-  // }
-  // if (value < range[lvl][key].min) {
-  //   range[lvl][key].min = value;
-  // }
-  // if (value > range[lvl][key].max) {
-  //   range[lvl][key].max = value;
-  // }
 };
 
 // Take into account config prefs for truncation and brevity.
@@ -545,7 +524,6 @@ const normalize = (value, range) => {
 const setNonPivotRange = (datum, key, range) => {
   const val = getValue(datum[key].value);
   if (!_.isNull(val)) { updateRange(key, val, range); }
-  // if (!_.isNull(val)) { updateRange(key, val, -1, range); }
 };
 
 const setPivotRange = (datum, key, range) => {
@@ -554,7 +532,6 @@ const setPivotRange = (datum, key, range) => {
   _.forEach(pivotKeys, pk => {
     const val = getValue(datum[key][pk].value);
     if (!_.isNull(val)) { updateRange(`${pk}_${key}`, val, range); }
-    // if (!_.isNull(val)) { updateRange(`${pk}_${key}`, val, -1, range); }
   });
 };
 
@@ -598,7 +575,7 @@ const addRowNumbers = basics => {
     colType: 'row',
     headerName: '',
     lockPosition: true,
-    // Arbitrary
+    // Arbitrary width, doesn't always seem to be respected.
     width: 50,
     rowGroup: false,
     suppressMenu: true,
@@ -736,7 +713,7 @@ const displayData = cell => {
     formattedCell = `<a class='drillable-link' href="#" onclick="drillingCallback(event); return false;" ${dataset}>${cell.value}</a>`;
   } else if (cell.html) {
     // TODO: This seems to be a diff func than table. OK?
-    formattedCell = LookerCharts.Utils.htmlForCell(cell);
+    formattedCell = LookerCharts.Utils.htmlForCell(cell).replace('<a ', '<a class="drillable-link" ');
   } else {
     formattedCell = LookerCharts.Utils.textForCell(cell);
   }
@@ -800,8 +777,6 @@ const options = {
       { 'All': 'all' },
       { 'Subtotals only': 'subtotals_only' },
       { 'Non-subtotals only': 'non_subtotals_only' },
-      // TODO
-      // { 'Individual aggregation': 'indv_aggregation' },
     ],
   },
   includeNullValuesAsZero: {
@@ -884,7 +859,7 @@ const options = {
     type: 'number',
   },
   fontFamily: {
-    default: 'Looker',
+    default: 'Open Sans, Helvetica, Arial, sans-serif',
     display: 'select',
     display_size: 'two-thirds',
     label: 'Font Family',
@@ -977,7 +952,7 @@ const addOptionAlignments = fields => {
     options[alignment] = {
       default: 'left',
       display: 'select',
-      label: `text-align: ${label}`,
+      label: `Text-align: ${label}`,
       section: 'Config',
       type: 'string',
       values: [
@@ -1173,13 +1148,24 @@ const setLookerClasses = () => {
   // For some reason the id here changes whether or not the config pane is open.
   // It's '0' when it's closed, '1' when open. Adding a class to each here.
   let rowNumCells = document.querySelectorAll(".ag-cell[col-id='1']");
-  _.forEach(rowNumCells, rnc => rnc.classList.add('groupCell'));
+  _.forEach(rowNumCells, rnc => rnc.classList.add('rowNumber', 'groupCell'));
   rowNumCells = document.querySelectorAll(".ag-cell[col-id='0']");
-  _.forEach(rowNumCells, rnc => rnc.classList.add('groupCell'));
+  _.forEach(rowNumCells, rnc => rnc.classList.add('rowNumber', 'groupCell'));
   // Also adding a color to said headers.
   const firstHeader = document.getElementsByClassName('ag-header-cell')[0];
   const { config } = gridOptions.context.globalConfig;
-  config.showRowNumbers ? firstHeader.classList.add('rowNumber') : firstHeader.classList.remove('rowNumber');
+  if (firstHeader) {
+    config.showRowNumbers ? firstHeader.classList.add('rowNumber') : firstHeader.classList.remove('rowNumber');
+  }
+};
+
+const hideOverlay = (vis, element, config) => {
+  if (config.theme) {
+    const style = _.find(document.head.children, c => c.href && c.href.includes(config.theme));
+    if (style.sheet && vis.loadingGrid.parentNode === element) {
+      element.removeChild(vis.loadingGrid);
+    }
+  }
 };
 
 const gridOptions = {
@@ -1228,8 +1214,19 @@ looker.plugins.visualizations.add({
         .drillable-link:hover {
           text-decoration: underline;
         }
+        .loading {
+          background-color: #FFF;
+          height: 100%;
+          position: absolute;
+          width: 100%;
+          z-index: 1;
+        }
       </style>
     `;
+
+    this.loadingGrid = element.appendChild(document.createElement('div'));
+    this.loadingGrid.id = 'loading';
+    this.loadingGrid.className = 'loading';
 
     // Create an element to contain the grid.
     this.grid = element.appendChild(document.createElement('div'));
@@ -1240,7 +1237,8 @@ looker.plugins.visualizations.add({
     new agGrid.Grid(this.grid, gridOptions); // eslint-disable-line
   },
 
-  updateAsync(data, _element, config, queryResponse, details, done) {
+  updateAsync(data, element, config, queryResponse, details, done) {
+    hideOverlay(this, element, config);
     this.clearErrors();
 
     globalConfig.queryResponse = queryResponse;
