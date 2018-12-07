@@ -2,6 +2,7 @@
 /* th.measure background-color: #e4d0bd */
 /* on hover: background-color: #e6e8ec */
 /* odd measure rows (.ag-row-odd) background-color: #f7f2ee */
+/* row number color #c2c2c2 */
 
 .ag-theme-looker {
   background-color: white;
@@ -883,12 +884,12 @@
   font-weight: 700;
 }
 
-.ag-theme-looker .ag-header-row {
+/* .ag-theme-looker .ag-header-row {
   border-style: solid;
   border-color: #BDC3C7;
   box-sizing: border-box;
   border-width: 0 0 1px;
-}
+} */
 
 .ag-theme-looker .ag-row {
   border-style: solid;
@@ -912,6 +913,10 @@
 /* XXX */
 .ag-theme-looker .ag-row-odd .ag-cell.groupCell {
   background-color: #f6f8fa;
+}
+
+.ag-theme-looker .ag-row-odd .ag-cell.tableCalc {
+  background-color: #c9dfc5 !important;
 }
 
 /* .ag-theme-looker .ag-row-odd .ag-cell:nth-child(2) {
@@ -2599,7 +2604,6 @@
 
 .ag-theme-looker .ag-status-bar {
   background: white;
-  border: 1px solid #BDC3C7;
   border-top: 0;
   color: rgba(0, 0, 0, 0.38);
   /* font: 600 12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif; */
@@ -2640,7 +2644,6 @@
 
 .ag-theme-looker .ag-side-bar {
   background-color: #f5f7f7;
-  border-right: 1px solid #BDC3C7;
   border-top: 1px solid #BDC3C7;
   position: relative;
 }
@@ -2715,7 +2718,6 @@
 
 .ag-theme-looker .ag-header {
   background-color: #f5f7f7;
-  border-bottom: 1px solid #BDC3C7;
 }
 
 .ag-theme-looker .ag-pinned-right-header {
@@ -2739,11 +2741,9 @@
 .ag-theme-looker .ag-header-group-cell::after {
   border-right: 1px solid rgba(189, 195, 199, 0.5);
   content: " ";
-  height: 16px;
-  margin-top: 8px;
+  height: 100%;
   position: absolute;
   right: 0;
-  text-indent: -2000px;
   top: 0;
 }
 
@@ -2757,7 +2757,7 @@
 }
 
 .ag-theme-looker .ag-row {
-  border-color: #d9dcde;
+  border-color: transparent;
 }
 
 .ag-theme-looker .ag-row-selected {
@@ -2813,10 +2813,6 @@
 
 .ag-theme-looker .ag-filter .ag-filter-header-container {
   height: 24px;
-}
-
-.ag-theme-looker .ag-root {
-  border: 1px solid #BDC3C7;
 }
 
 .ag-theme-looker .ag-tab {
@@ -2979,4 +2975,21 @@
 /* Overrides background color for all measures (after grouping) */
 .ag-theme-looker .ag-header-cell:not(.rowNumber) + .ag-header-cell {
   background-color: #e4d0bd;
+}
+
+.ag-theme-looker .ag-cell.rowNumber {
+  color: #c2c2c2;
+}
+
+.ag-theme-looker .ag-header-cell.tableCalc {
+  background-color: #c9dfc5 !important;
+}
+
+.ag-theme-looker .ag-cell {
+  border-left: 1px solid rgba(0,0,0,.1);
+  color: dimgray;
+}
+
+.ag-theme-looker .ag-cell:first-child {
+  border-left: 0px;
 }
