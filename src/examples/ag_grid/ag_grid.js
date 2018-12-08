@@ -107,8 +107,16 @@ class AgData {
 class PivotHeader {
   init(agParams) {
     this.agParams = agParams;
+    const pivots = this.agParams.displayName.split(', ');
     this.eGui = document.createElement('div');
-    this.eGui.innerHTML = this.agParams.displayName;
+    this.eGui.classList.add('outerPivotHeader');
+    _.forEach(pivots, pivot => {
+      const pivotDiv = document.createElement('div');
+      pivotDiv.classList.add('pivotHeader');
+      pivotDiv.innerHTML = pivot;
+      this.eGui.appendChild(pivotDiv);
+    });
+    // this.eGui.innerHTML = this.agParams.displayName;
   }
 
   getGui() {
@@ -665,7 +673,7 @@ const addPivots = (dimensions, config) => {
   let dimension;
   pivots.forEach(pivot => {
     const { key } = pivot;
-    const keys = key.split('|FIELD|').join();
+    const keys = key.split('|FIELD|').join(', ');
 
     const outerDimension = {
       children: [],
@@ -1112,12 +1120,20 @@ const addPivotHeader = () => {
   if (!globalConfig.hasPivot) { return; }
   const { config, queryResponse } = gridOptions.context.globalConfig;
   if (!('showRowNumbers' in config)) { return; }
-  const name = headerName(queryResponse.fields.pivots[0], config);
+  const pivots = _.map(queryResponse.fields.pivots, pivot => headerName(pivot, config));
   const labelDivs = document.getElementsByClassName('ag-header-group-cell-label');
   const titleDiv = labelDivs[labelDivs.length - 1];
+  titleDiv.classList.add('pivotHeaderNameContainer');
   if (!_.isUndefined(titleDiv)) {
-    titleDiv.innerText = `${name}:`;
-    titleDiv.style.float = 'right';
+    _.forEach(pivots, pivot => {
+      const pivotDiv = document.createElement('div');
+      pivotDiv.innerHTML = `${pivot}:`;
+      pivotDiv.classList.add('pivotHeaderName');
+      pivotDiv.style.float = 'right';
+      titleDiv.appendChild(pivotDiv);
+    });
+    // titleDiv.innerText = `${name}:`;
+    // titleDiv.style.float = 'right';
   }
 };
 
@@ -1156,6 +1172,18 @@ const setLookerClasses = () => {
   const { config } = gridOptions.context.globalConfig;
   if (firstHeader) {
     config.showRowNumbers ? firstHeader.classList.add('rowNumber') : firstHeader.classList.remove('rowNumber');
+  }
+
+  // Pivot stuff
+  var pivotHeaders = document.getElementsByClassName('pivotHeader');
+  if (pivotHeaders) {
+    const parentRow = pivotHeaders[0].parentNode.parentNode.parentNode;
+    parentRow.classList.add('pivotHeaderRow');
+
+    // Set height according to how many pivots are present:
+    const numPivots = globalConfig.queryResponse.fields.pivots.length;
+    // XXX Magic number corresponding to .ag-header-group-cell
+    gridOptions.api.setGroupHeaderHeight(26 * numPivots);
   }
 };
 
