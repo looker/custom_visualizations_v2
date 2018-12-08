@@ -579,9 +579,11 @@ const calculateRange = (data, queryResponse, config) => {
 
 const addRowNumbers = basics => {
   basics.unshift({
+    cellClass: ['rowNumber', 'groupCell'],
     cellRenderer: rowIndexRenderer,
     colType: 'row',
     headerName: '',
+    headerClass: 'rowNumberHeader',
     lockPosition: true,
     // Arbitrary width, doesn't always seem to be respected.
     width: 50,
@@ -605,10 +607,12 @@ const basicDimensions = (dimensions, config) => {
     }
     const hide = dimensions.length > 1;
     return {
+      cellClass: dimension.category,
       cellRenderer: baseCellRenderer,
       cellStyle,
       colType: 'default',
       field: dimension.name,
+      headerClass: dimension.category,
       headerName: headerName(dimension, config),
       hide,
       lookup: dimension.name,
@@ -630,12 +634,15 @@ const basicDimensions = (dimensions, config) => {
 
 const addTableCalculations = (dimensions, tableCalcs) => {
   let dimension;
+  const klass = 'tableCalc';
   tableCalcs.forEach(calc => {
     dimension = {
+      cellClass: klass,
       cellStyle,
       cellRenderer: baseCellRenderer,
       colType: 'table_calculation',
       field: calc.name,
+      headerClass: klass,
       headerName: calc.label,
       lookup: calc.name,
       rowGroup: false,
@@ -647,13 +654,16 @@ const addTableCalculations = (dimensions, tableCalcs) => {
 
 const addMeasures = (dimensions, measures, config) => {
   let dimension;
+  const klass = 'measure';
   measures.forEach(measure => {
     const { name } = measure;
     dimension = {
+      cellClass: klass,
       cellStyle,
       cellRenderer: baseCellRenderer,
       colType: 'measure',
       field: name,
+      headerClass: klass,
       headerName: headerName(measure, config),
       lookup: name,
       measure: name,
@@ -687,12 +697,20 @@ const addPivots = (dimensions, config) => {
 
     measureLike.forEach(measure => {
       const { name } = measure;
+      let klass = measure.category;
+      if (_.isUndefined(klass) && measure.is_table_calculation) {
+        klass = 'tableCalc'; // XXX standardize with snake case?
+      }
+
       dimension = {
+        cellClass: klass,
         cellStyle,
         cellRenderer: baseCellRenderer,
         colType: 'pivotChild',
+        // colId: measure.category,
         columnGroupShow: 'open',
         field: `${key}_${name}`,
+        headerClass: klass,
         headerName: headerName(measure, config),
         measure: name,
         pivotKey: key,
@@ -732,6 +750,7 @@ const displayData = cell => {
 class AutoGroupColumnDef {
   constructor() {
     this.headerName = 'Group';
+    this.cellClass = 'groupCell';
     this.cellRenderer = 'agGroupCellRenderer';
     this.cellRendererParams = {
       suppressCount: true,
@@ -1114,8 +1133,6 @@ const modifyOptions = (vis, config) => {
   vis.trigger('registerOptions', options);
 };
 
-
-// TODO: Hack that only works for 1 pivot.
 const addPivotHeader = () => {
   if (!globalConfig.hasPivot) { return; }
   const { config, queryResponse } = gridOptions.context.globalConfig;
@@ -1123,8 +1140,8 @@ const addPivotHeader = () => {
   const pivots = _.map(queryResponse.fields.pivots, pivot => headerName(pivot, config));
   const labelDivs = document.getElementsByClassName('ag-header-group-cell-label');
   const titleDiv = labelDivs[labelDivs.length - 1];
-  titleDiv.classList.add('pivotHeaderNameContainer');
   if (!_.isUndefined(titleDiv)) {
+    titleDiv.classList.add('pivotHeaderNameContainer');
     _.forEach(pivots, pivot => {
       const pivotDiv = document.createElement('div');
       pivotDiv.innerHTML = `${pivot}:`;
@@ -1132,8 +1149,6 @@ const addPivotHeader = () => {
       pivotDiv.style.float = 'right';
       titleDiv.appendChild(pivotDiv);
     });
-    // titleDiv.innerText = `${name}:`;
-    // titleDiv.style.float = 'right';
   }
 };
 
@@ -1158,25 +1173,9 @@ const refreshColumns = details => {
 };
 
 const setLookerClasses = () => {
-  // Adding a special color to [odd] row numbers and group cells.
-  const groupCells = document.querySelectorAll(".ag-cell[col-id='ag-Grid-AutoColumn']");
-  _.forEach(groupCells, gc => gc.classList.add('groupCell'));
-  // For some reason the id here changes whether or not the config pane is open.
-  // It's '0' when it's closed, '1' when open. Adding a class to each here.
-  let rowNumCells = document.querySelectorAll(".ag-cell[col-id='1']");
-  _.forEach(rowNumCells, rnc => rnc.classList.add('rowNumber', 'groupCell'));
-  rowNumCells = document.querySelectorAll(".ag-cell[col-id='0']");
-  _.forEach(rowNumCells, rnc => rnc.classList.add('rowNumber', 'groupCell'));
-  // Also adding a color to said headers.
-  const firstHeader = document.getElementsByClassName('ag-header-cell')[0];
-  const { config } = gridOptions.context.globalConfig;
-  if (firstHeader) {
-    config.showRowNumbers ? firstHeader.classList.add('rowNumber') : firstHeader.classList.remove('rowNumber');
-  }
-
   // Pivot stuff
-  var pivotHeaders = document.getElementsByClassName('pivotHeader');
-  if (pivotHeaders) {
+  const pivotHeaders = document.getElementsByClassName('pivotHeader');
+  if (!_.isEmpty(pivotHeaders)) {
     const parentRow = pivotHeaders[0].parentNode.parentNode.parentNode;
     parentRow.classList.add('pivotHeaderRow');
 

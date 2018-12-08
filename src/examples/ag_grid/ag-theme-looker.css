@@ -906,30 +906,26 @@
   border-bottom-width: 1px;
 }
 
+/* XXX Odd row background colors depend on category of data. */
 .ag-theme-looker .ag-row-odd {
+  background-color: #f6f8fa; /* default odd row color */
+}
+
+.ag-theme-looker .ag-row-odd .ag-cell.measure {
   background-color: #f7f2ee;
 }
 
-/* XXX */
+.ag-theme-looker .ag-row-odd .ag-cell.tableCalc {
+  background-color: #eef7ee;
+}
+
 .ag-theme-looker .ag-row-odd .ag-cell.groupCell {
   background-color: #f6f8fa;
 }
 
-.ag-theme-looker .ag-row-odd .ag-cell.tableCalc {
-  background-color: #c9dfc5 !important;
+.ag-theme-looker .ag-cell.rowNumber {
+  color: #c2c2c2;
 }
-
-/* .ag-theme-looker .ag-row-odd .ag-cell:nth-child(2) {
-  background-color: #f6f8fa;
-} */
-
-/* .ag-theme-looker .ag-row-odd .ag-cell:nth-child(3) {
-  background-color: #f6f8fa;
-} */
-
-/* .ag-theme-looker .ag-row-odd .ag-cell:nth-child(2) {
-  background-color: #f6f8fa;
-} */
 
 .ag-theme-looker .ag-row-even {
   background-color: white;
@@ -2967,24 +2963,6 @@
   background-color: white;
 }
 
-.ag-theme-looker .ag-header-cell {
-  background-color: #e4ecf3;
-  line-height: 25px;
-}
-
-/* Overrides background color for all measures (after grouping) */
-.ag-theme-looker .ag-header-cell:not(.rowNumber) + .ag-header-cell {
-  background-color: #e4d0bd;
-}
-
-.ag-theme-looker .ag-cell.rowNumber {
-  color: #c2c2c2;
-}
-
-.ag-theme-looker .ag-header-cell.tableCalc {
-  background-color: #c9dfc5 !important;
-}
-
 .ag-theme-looker .ag-cell {
   border-left: 1px solid rgba(0,0,0,.1);
   color: dimgray;
@@ -3000,6 +2978,19 @@
 
 .ag-theme-looker .ag-header-row .pivotHeader {
   font-weight: 400;
+}
+
+/* Looker header cells */
+.ag-theme-looker .ag-header-cell {
+  background-color: #e4ecf3;
+}
+
+.ag-theme-looker .ag-header-cell.measure {
+  background-color: #e4d0bd;
+}
+
+.ag-theme-looker .ag-header-cell.tableCalc {
+  background-color: #c9dfc5;
 }
 
 .ag-theme-looker .pivotHeaderNameContainer {
