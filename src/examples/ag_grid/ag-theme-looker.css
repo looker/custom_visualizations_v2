@@ -994,7 +994,7 @@
 
 .ag-theme-looker .ag-header-cell,
 .ag-theme-looker .ag-header-group-cell {
-  line-height: 32px;
+  line-height: 26px;/*32px;*/
   padding-left: 12px;
   padding-right: 12px;
 }
@@ -2968,7 +2968,7 @@
 }
 
 .ag-theme-looker .ag-header-cell {
-  background-color: #ccd8e4;
+  background-color: #e4ecf3;
   line-height: 25px;
 }
 
@@ -2992,4 +2992,18 @@
 
 .ag-theme-looker .ag-cell:first-child {
   border-left: 0px;
+}
+
+.ag-theme-looker .ag-header-row.pivotHeaderRow {
+  background-color: #ccd8e4;
+}
+
+.ag-theme-looker .ag-header-row .pivotHeader {
+  font-weight: 400;
+}
+
+.ag-theme-looker .pivotHeaderNameContainer {
+  display: flex;
+  flex-direction: column;
+  text-align: right;
 }
