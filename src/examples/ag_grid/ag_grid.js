@@ -140,12 +140,6 @@ const adjustFonts = () => {
   if ('fontSize' in config) {
     const agRows = document.getElementsByClassName('ag-row');
     _.forEach(agRows, row => row.style.fontSize = `${config.fontSize}px`);
-    const agCells = document.getElementsByClassName('ag-cell');
-    _.forEach(agCells, cell => {
-      cell.style.display = 'flex';
-      cell.style.flexDirection = 'column';
-      cell.style.justifyContent = 'center';
-    });
   }
 
   if ('rowHeight' in config) {
@@ -251,9 +245,9 @@ const aggregate = (values, mType, valueFormat) => {
   let agg;
   // TODO Support for more types of aggregations:
   // https://docs.looker.com/reference/field-reference/measure-type-reference
-  if (mType === 'count') {
+  if (mType === 'count' || mType === 'count_distinct') {
     agg = countAggFn(values);
-  } else if (mType === 'average') {
+  } else if (mType === 'average' || mType === 'average_distinct') {
     agg = avgAggFn(values);
   } else {
     // Default to sum.
@@ -372,7 +366,7 @@ const groupRowAggNodes = nodes => {
     // Map over again to calculate a final result value and convert to value_format.
     measures.forEach(measure => {
       const { name, type: mType, value_format: valueFormat } = measure;
-      result[name] = aggregate(result[name], mType, valueFormat);
+      result[name] = aggregate(result[name], mType, valueFormat) || LookerCharts.Utils.textForCell({ value: null });
     });
   }
 
@@ -736,7 +730,8 @@ const displayData = cell => {
     _.forEach(cell.links, (link, i) => {
       dataset += `data-label-${i}=${JSON.stringify(link.label)} data-url-${i}=${JSON.stringify(link.url)} data-type-${i}=${JSON.stringify(link.type)} `;
     });
-    formattedCell = `<a class='drillable-link' href="#" onclick="drillingCallback(event); return false;" ${dataset}>${cell.value}</a>`;
+    const val = !_.isUndefined(cell.rendered) ? cell.rendered : cell.value;
+    formattedCell = `<a class='drillable-link' href="#" onclick="drillingCallback(event); return false;" ${dataset}>${val}</a>`;
   } else if (cell.html) {
     // TODO: This seems to be a diff func than table. OK?
     formattedCell = LookerCharts.Utils.htmlForCell(cell).replace('<a ', '<a class="drillable-link" ');
@@ -1216,7 +1211,6 @@ const gridOptions = {
   suppressMovableColumns: true,
   enableColResize: true,
   onColumnResized: columnResized,
-  colResizeDefault: 'shift',
 };
 
 const { globalConfig } = gridOptions.context;
@@ -1309,14 +1303,14 @@ looker.plugins.visualizations.add({
 
     gridOptions.api.setRowData(this.agData.formattedData);
 
-    adjustFonts();
-
     addPivotHeader();
 
     if (details.changed) {
       autoSize();
     }
     setLookerClasses();
+    adjustFonts();
+
     done();
   },
 });

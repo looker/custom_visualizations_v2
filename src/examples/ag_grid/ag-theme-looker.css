@@ -2966,6 +2966,9 @@
 .ag-theme-looker .ag-cell {
   border-left: 1px solid rgba(0,0,0,.1);
   color: dimgray;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .ag-theme-looker .ag-cell:first-child {
