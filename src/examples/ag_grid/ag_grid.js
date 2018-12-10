@@ -249,6 +249,10 @@ const aggregate = (values, mType, valueFormat) => {
     agg = countAggFn(values);
   } else if (mType === 'average' || mType === 'average_distinct') {
     agg = avgAggFn(values);
+  } else if (mType === 'max') {
+    agg = maxAggFn(values);
+  } else if (mType === 'min') {
+    agg = minAggFn(values);
   } else {
     // Default to sum.
     agg = sumAggFn(values);
@@ -275,6 +279,14 @@ const avgAggFn = values => {
   }, 0);
 
   return total / values.length;
+};
+
+const maxAggFn = values => {
+  return _.max(values);
+};
+
+const minAggFn = values => {
+  return _.min(values);
 };
 
 const countAggFn = values => {
