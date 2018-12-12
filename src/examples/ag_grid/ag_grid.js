@@ -234,7 +234,7 @@ const drillingCallback = event => { // eslint-disable-line
 const baseCellRenderer = obj => obj.value;
 
 // Looker's table is 1-indexed.
-const rowIndexRenderer = obj => obj.rowIndex + 1;
+// const rowIndexRenderer = obj => obj.rowIndex + 1;
 
 //
 // User-defined aggregation functions
@@ -583,20 +583,23 @@ const calculateRange = (data, queryResponse, config) => {
   return range;
 };
 
+// https://next.plnkr.co/edit/7WDkMHBUMsvTXGmGnhmG?p=preview&preview
 const addRowNumbers = basics => {
   basics.unshift({
     cellClass: ['rowNumber', 'groupCell'],
-    cellRenderer: rowIndexRenderer,
     colType: 'row',
-    headerName: '',
     headerClass: 'rowNumberHeader',
+    headerName: '',
     lockPosition: true,
-    // Arbitrary width, doesn't always seem to be respected.
-    width: 50,
     rowGroup: false,
     suppressMenu: true,
+    suppressNavigable: true,
     suppressResize: true,
     suppressSizeToFit: true,
+    suppressSorting: true,
+    valueGetter: 'node.rowIndex + 1',
+    // Arbitrary width, doesn't always seem to be respected.
+    width: 50,
   });
 };
 
@@ -713,7 +716,6 @@ const addPivots = (dimensions, config) => {
         cellStyle,
         cellRenderer: baseCellRenderer,
         colType: 'pivotChild',
-        // colId: measure.category,
         columnGroupShow: 'open',
         field: `${key}_${name}`,
         headerClass: klass,
@@ -955,6 +957,13 @@ const options = {
     section: 'Plot',
     type: 'boolean',
   },
+  // agGridSort: {
+  //   default: false,
+  //   label: 'Sort Via Visualization',
+  //   order: 4,
+  //   section: 'Plot',
+  //   type: 'boolean',
+  // },
 };
 
 const defaultColors = {
@@ -1017,6 +1026,38 @@ const addOptionFontFormats = fields => {
       ],
     };
   });
+};
+
+const addOptionSorts = fields => {
+  // If there's one dimension, add that. If multiple, utilize ag-Grid-AutoColumn.
+  fields.forEach(field => {
+    const { label, name } = field;
+    const sort = `sort_${name}`;
+    options[sort] = {
+      default: 'asc',
+      display: 'select',
+      label: `Sort: ${label}`,
+      section: 'Plot',
+      // hidden: true,
+      type: 'string',
+      values: [
+        { asc: 'asc' },
+        { desc: 'desc' },
+      ],
+    };
+  });
+  options['sort_ag-Grid-AutoColumn'] = {
+    default: 'asc',
+    display: 'select',
+    label: `Sort: Group`,
+    section: 'Plot',
+    // hidden: true,
+    type: 'string',
+    values: [
+      { asc: 'asc' },
+      { desc: 'desc' },
+    ],
+  };
 };
 
 updateColorConfig = (vis, config) => {
@@ -1134,6 +1175,7 @@ const modifyOptions = (vis, config) => {
   addOptionCustomLabels(measureLike);
   addOptionAlignments(measureLike);
   addOptionFontFormats(measureLike);
+  // addOptionSorts(measureLike); // XXX all dimensions..groups?
 
   setupConditionalFormatting(vis, config, measureLike);
 
@@ -1199,24 +1241,56 @@ const hideOverlay = (vis, element, config) => {
     if (style.sheet && vis.loadingGrid.parentNode === element) {
       element.removeChild(vis.loadingGrid);
     }
+    gridOptions.context.overlay = false;
   }
+};
+
+// Uses hidden config values to automatically set sort values for columns.
+const setSorts = config => {
+  if (config.agGridSort) {
+    // Get the values of the hidden options, and craft a `sorts` var, setting them.
+    const sortKeys = _.filter(Object.keys(config), k => k.startsWith('sort_'));
+    const sorts = _.map(sortKeys, sk => {
+      return { colId: sk.slice(5), sort: config[sk] };
+    });
+    gridOptions.api.setSortModel(sorts);
+  }
+};
+
+// XXX Maybe I have some dummy value in the options so that if it _really_ is a sortChanged to clear all,
+// it somehow still has that one and isn't empty?
+const sortChanged = e => {
+  gridOptions.api.refreshCells();
+  // const { vis, config } = gridOptions.context.globalConfig;
+  // const sortModel = gridOptions.api.getSortModel();
+  // if (_.isEmpty(sortModel)) { return; }
+  // if (config && `sort_${sortModel[0].colId}` in config) {
+  //   _.forEach(sortModel, sm => {
+  //     const key = `sort_${sm.colId}`;
+  //     const updatedConfig = {};
+  //     updatedConfig[key] = sm.sort;
+  //     vis.trigger('updateConfig', [updatedConfig]);
+  //   });
+  // }
 };
 
 const gridOptions = {
   context: {
     globalConfig: new GlobalConfig,
     widths: {},
+    overlay: true,
   },
   // debug: true, // for dev purposes.
-  animateRows: true,
+  animateRows: false,
   autoGroupColumnDef,
   columnDefs: [],
   enableFilter: false,
-  enableSorting: false,
+  enableSorting: true,
   groupDefaultExpanded: -1, // for dev purposes. 0,
   groupRowAggNodes,
   onFirstDataRendered: setColumns,
   onRowGroupOpened: adjustFonts,
+  onSortChanged: sortChanged,
   rowSelection: 'multiple',
   suppressAggFuncInHeader: true,
   suppressFieldDotNotation: true,
@@ -1275,6 +1349,7 @@ looker.plugins.visualizations.add({
     this.clearErrors();
 
     globalConfig.queryResponse = queryResponse;
+    globalConfig.vis = this;
     modifyOptions(this, config);
 
     const { fields } = queryResponse;
@@ -1322,6 +1397,8 @@ looker.plugins.visualizations.add({
     }
     setLookerClasses();
     adjustFonts();
+
+    setSorts(config);
 
     done();
   },
