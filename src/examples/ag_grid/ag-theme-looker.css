@@ -963,6 +963,10 @@
   opacity: 0.87;
 }
 
+.ag-theme-looker .ag-header-cell-label .ag-sort-order {
+  display: none;
+}
+
 .ag-theme-looker .ag-header-cell-label .ag-header-cell-text {
   overflow: hidden;
   text-overflow: ellipsis;
