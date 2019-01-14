@@ -1,5 +1,12 @@
 /* eslint-disable arrow-body-style, no-undef, no-use-before-define */
 
+// Dependencies:
+// The following dependencies are required in order to run this custom visualization.
+// Ag-grid: https://unpkg.com/ag-grid-enterprise/dist/ag-grid-enterprise.min.noStyle.js×
+// Lodash: https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.11/lodash.core.min.js
+// Numeral: https://cdnjs.cloudflare.com/ajax/libs/numeral.js/2.0.6/numeral.min.js
+// Chroma: https://cdnjs.cloudflare.com/ajax/libs/chroma-js/1.4.0/chroma.min.js
+
 class GlobalConfig {
   constructor() {
     this.selectedFields = [];
@@ -26,7 +33,7 @@ class AgColumn {
 
   // Format the columns based on the queryResponse into an object ag-grid can handle.
   formatColumns() {
-    const { queryResponse } = gridOptions.context.globalConfig;
+    const { queryResponse } = globalConfig;
     const { pivots, measures, dimensions: dims } = queryResponse.fields;
     const dimensions = basicDimensions(dims, this.config);
 
@@ -44,26 +51,9 @@ class AgColumn {
         addTableCalculations(dimensions, tableCalcs);
       }
     }
-    const { config } = gridOptions.context.globalConfig;
-    if (!config.autoSizeEnabled) {
-      addWidths(dimensions);
-    }
     this.formattedColumns = dimensions;
   }
 }
-
-const addWidths = dimensions => {
-  const { widths } = gridOptions.context;
-  _.forEach(dimensions, dim => {
-    const width = widths[dim.field];
-    if (!_.isUndefined(width)) {
-      dim.width = width;
-    }
-    if (widths['Group']) {
-      autoGroupColumnDef.width = widths['Group'];
-    }
-  });
-};
 
 class AgData {
   constructor(data, formattedColumns) {
@@ -72,17 +62,12 @@ class AgData {
     this.formatData();
   }
 
-  // TODO: Maybe here is where we can save a value but also an indication of whether it should be
-  // drillable, so that the renderer understands to make an href. Then, the drillableCallback or w/e
-  // is going to have to dig and get the proper links from something we've indicated on the data obj.
   formatData() {
     this.formattedData = this.data.map(datum => {
       const formattedDatum = {};
 
       this.formattedColumns.forEach(col => {
-        const {
-          children, colType, field: colField, lookup,
-        } = col;
+        const { children, colType, field: colField, lookup } = col;
         if (colType === 'row') { return; }
 
         if (colType === 'pivot') {
@@ -103,7 +88,6 @@ class AgData {
 // User-defined grouped header class
 //
 
-// TODO: Make multiple pivots work.
 class PivotHeader {
   init(agParams) {
     this.agParams = agParams;
@@ -116,7 +100,6 @@ class PivotHeader {
       pivotDiv.innerHTML = pivot;
       this.eGui.appendChild(pivotDiv);
     });
-    // this.eGui.innerHTML = this.agParams.displayName;
   }
 
   getGui() {
@@ -129,14 +112,13 @@ class PivotHeader {
 }
 
 const adjustFonts = () => {
-  const { config } = gridOptions.context.globalConfig;
+  const { config } = globalConfig;
 
   if ('fontFamily' in config) {
     const mainDiv = document.getElementById('ag-grid-vis');
     mainDiv.style.fontFamily = config.fontFamily;
   }
 
-  // TODO: Fix the header font resizing (keeping header text centered properly).
   if ('fontSize' in config) {
     const agRows = document.getElementsByClassName('ag-row');
     _.forEach(agRows, row => row.style.fontSize = `${config.fontSize}px`);
@@ -152,11 +134,11 @@ const adjustFonts = () => {
 //
 
 const autoSize = () => {
-  const { config } = gridOptions.context.globalConfig;
+  const { config } = globalConfig;
   if (config.autoSizeEnabled) {
     gridOptions.columnApi.autoSizeAllColumns();
     const { gridPanel } = gridOptions.api;
-    if (gridPanel.eBodyContainer.scrollWidth < gridPanel.eBody.scrollWidth) {
+    if (gridPanel.eBodyHorizontalScrollContainer.scrollWidth < gridPanel.eBodyViewport.scrollWidth) {
       gridOptions.api.sizeColumnsToFit();
     }
   }
@@ -181,11 +163,9 @@ const updateTheme = (classList, theme) => {
 const themes = [
   { Looker: 'ag-theme-looker' },
   { Balham: 'ag-theme-balham' },
-  // { 'Balham Dark': 'ag-theme-balham-dark' },
   { Fresh: 'ag-theme-fresh' },
   { Dark: 'ag-theme-dark' },
   { Blue: 'ag-theme-blue' },
-  // { Material: 'ag-theme-material' }, // TODO: bug in header.
   { Bootstrap: 'ag-theme-bootstrap' },
 ];
 
@@ -231,10 +211,10 @@ const drillingCallback = event => { // eslint-disable-line
 //
 
 // The mere presence of this renderer is enough to actually render HTML.
-const baseCellRenderer = obj => obj.value;
+const defaultCellRenderer = obj => obj.value;
 
 // Looker's table is 1-indexed.
-// const rowIndexRenderer = obj => obj.rowIndex + 1;
+const rowNumberRenderer = obj => obj.rowIndex + 1;
 
 //
 // User-defined aggregation functions
@@ -243,7 +223,7 @@ const baseCellRenderer = obj => obj.value;
 const aggregate = (values, mType, valueFormat) => {
   if (_.isEmpty(values)) { return; }
   let agg;
-  // TODO Support for more types of aggregations:
+  // Looker aggregation type source:
   // https://docs.looker.com/reference/field-reference/measure-type-reference
   if (mType === 'count' || mType === 'count_distinct') {
     agg = countAggFn(values);
@@ -261,7 +241,7 @@ const aggregate = (values, mType, valueFormat) => {
   if (_.isEmpty(valueFormat)) {
     value = isFloat(agg) ? truncFloat(agg, values) : numeral(agg).format(',');
   } else {
-    // TODO: EUR and GBP symbols don't play nice. It fails gracefully though.
+    // EUR and GBP symbols don't play nice. It fails gracefully though.
     value = numeral(agg).format(valueFormat);
   }
   return value;
@@ -281,13 +261,9 @@ const avgAggFn = values => {
   return total / values.length;
 };
 
-const maxAggFn = values => {
-  return _.max(values);
-};
+const maxAggFn = values => _.max(values);
 
-const minAggFn = values => {
-  return _.min(values);
-};
+const minAggFn = values => _.min(values);
 
 const countAggFn = values => {
   return _.reduce(values, (sum, n) => {
@@ -316,18 +292,21 @@ const isFloat = num => {
   return Number.isInteger(num) === false && num % 1 !== 0;
 };
 
-// In order to maintain proper formatting for aggregate columns, we are using
+// In order to maintain proper formatting for aggregate columns, we need to use
 // a group aggregate function, which requires us to calculate aggregates for
 // all columns at once. As a result, the code is significantly more complex
 // than if we had used the simpler ag-grid individual column aggregate.
+// (The simpler function only gives us raw values here, and no indication as to
+// which column it belongs to.)
 const groupRowAggNodes = nodes => {
-  if (!_.isEmpty(gridOptions.columnDefs)) { return; }
   // This method is called often by ag-grid, sometimes with no nodes.
-  const { queryResponse } = gridOptions.context.globalConfig;
+  if (!_.isEmpty(gridOptions.columnDefs)) { return; }
+  const { queryResponse } = globalConfig;
   if (_.isEmpty(nodes) || queryResponse === undefined) { return; }
 
   const { measure_like: measures } = queryResponse.fields;
   const result = {};
+  const genericNullValue = LookerCharts.Utils.textForCell({ value: null });
   if (!_.isEmpty(queryResponse.pivots)) {
     const { pivots } = queryResponse;
     const fields = pivots.flatMap(pivot => {
@@ -351,12 +330,11 @@ const groupRowAggNodes = nodes => {
         const { type: mType, value_format: valueFormat } = measure;
         const formattedField = `${pivot.key}_${measure.name}`;
         result[formattedField] = aggregate(
-          result[formattedField], mType, valueFormat,
-        ) || LookerCharts.Utils.textForCell({ value: null });
+          result[formattedField], mType, valueFormat
+        ) || genericNullValue;
       });
     });
   } else {
-    // XXX Merge this loop below.
     measures.forEach(measure => {
       result[measure.name] = [];
     });
@@ -378,11 +356,11 @@ const groupRowAggNodes = nodes => {
     // Map over again to calculate a final result value and convert to value_format.
     measures.forEach(measure => {
       const { name, type: mType, value_format: valueFormat } = measure;
-      result[name] = aggregate(result[name], mType, valueFormat) || LookerCharts.Utils.textForCell({ value: null });
+      result[name] = aggregate(result[name], mType, valueFormat) || genericNullValue;
     });
   }
 
-  const { config, range } = gridOptions.context.globalConfig;
+  const { config, range } = globalConfig;
   // The top level aggregate here isn't actually shown on our grouped table, and
   // shouldn't be counted towards the conditional formatting ranges.
   const includeInRange = nodes[0].level !== 0;
@@ -429,12 +407,12 @@ const headerName = (dimension, config) => {
   if (customLabel !== undefined && customLabel !== '') {
     label = config[`customLabel_${dimension.name}`];
   } else if (config.showFullFieldName) {
-    label = dimension.label; // eslint-disable-line
+    label = dimension.label;
   } else {
     label = dimension.label_short || dimension.label;
   }
 
-  // TODO requires a _little_ more finesse.
+  // Arbitrary truncation values.
   if (config.truncateColumnNames && label.length > 15) {
     label = `${label.substring(0, 12)}...`;
   }
@@ -515,11 +493,11 @@ const conditionallyFormat = (styling, config, cell) => {
   }
 
   styling['background-color'] = scale(normalizedValue).hex();
-}
+};
 
 // Used to apply conditional formatting to cells, if enabled.
 const cellStyle = cell => {
-  const { config } = gridOptions.context.globalConfig;
+  const { config } = globalConfig;
   const styling = {};
 
   alignText(styling, config, cell);
@@ -550,7 +528,7 @@ const setPivotRange = (datum, key, range) => {
 };
 
 const getValue = val => {
-  const { config } = gridOptions.context.globalConfig;
+  const { config } = globalConfig;
   if (_.isUndefined(config)) { return; }
   if (!('includeNullValuesAsZero' in config)) { return; }
   let value = numeral(val).value();
@@ -561,6 +539,11 @@ const getValue = val => {
 };
 
 // For each column, calculate and store the min/max values for optional conditional formatting.
+// Object structure:
+// keys => an array of the selected fields
+// min => the global minimum value
+// max => the global maximum value
+// Each key in keys also consists of a hash with { min, max }
 const calculateRange = (data, queryResponse, config) => {
   if (!('applyTo' in config)) { return {}; }
   let keys = _.map(queryResponse.fields.measure_like, measureLike => measureLike.name);
@@ -583,22 +566,20 @@ const calculateRange = (data, queryResponse, config) => {
   return range;
 };
 
-// https://next.plnkr.co/edit/7WDkMHBUMsvTXGmGnhmG?p=preview&preview
 const addRowNumbers = basics => {
   basics.unshift({
     cellClass: ['rowNumber', 'groupCell'],
+    cellRenderer: rowNumberRenderer,
     colType: 'row',
     headerClass: 'rowNumberHeader',
     headerName: '',
     lockPosition: true,
+    resizable: false,
     rowGroup: false,
+    sortable: false,
     suppressMenu: true,
     suppressNavigable: true,
-    suppressResize: true,
     suppressSizeToFit: true,
-    suppressSorting: true,
-    valueGetter: 'node.rowIndex + 1',
-    // Arbitrary width, doesn't always seem to be respected.
     width: 50,
   });
 };
@@ -617,7 +598,7 @@ const basicDimensions = (dimensions, config) => {
     const hide = dimensions.length > 1;
     return {
       cellClass: dimension.category,
-      cellRenderer: baseCellRenderer,
+      cellRenderer: defaultCellRenderer,
       cellStyle,
       colType: 'default',
       field: dimension.name,
@@ -625,7 +606,9 @@ const basicDimensions = (dimensions, config) => {
       headerName: headerName(dimension, config),
       hide,
       lookup: dimension.name,
+      resizable: true,
       rowGroup: rowGroup,
+      sortable: true,
       suppressMenu: true,
     };
   });
@@ -648,13 +631,15 @@ const addTableCalculations = (dimensions, tableCalcs) => {
     dimension = {
       cellClass: klass,
       cellStyle,
-      cellRenderer: baseCellRenderer,
+      cellRenderer: defaultCellRenderer,
       colType: 'table_calculation',
       field: calc.name,
       headerClass: klass,
       headerName: calc.label,
       lookup: calc.name,
+      resizable: true,
       rowGroup: false,
+      sortable: true,
       suppressMenu: true,
     };
     dimensions.push(dimension);
@@ -669,14 +654,16 @@ const addMeasures = (dimensions, measures, config) => {
     dimension = {
       cellClass: klass,
       cellStyle,
-      cellRenderer: baseCellRenderer,
+      cellRenderer: defaultCellRenderer,
       colType: 'measure',
       field: name,
       headerClass: klass,
       headerName: headerName(measure, config),
       lookup: name,
       measure: name,
+      resizable: true,
       rowGroup: false,
+      sortable: true,
       suppressMenu: true,
     };
     dimensions.push(dimension);
@@ -708,13 +695,13 @@ const addPivots = (dimensions, config) => {
       const { name } = measure;
       let klass = measure.category;
       if (_.isUndefined(klass) && measure.is_table_calculation) {
-        klass = 'tableCalc'; // XXX standardize with snake case?
+        klass = 'tableCalc';
       }
 
       dimension = {
         cellClass: klass,
         cellStyle,
-        cellRenderer: baseCellRenderer,
+        cellRenderer: defaultCellRenderer,
         colType: 'pivotChild',
         columnGroupShow: 'open',
         field: `${key}_${name}`,
@@ -722,7 +709,9 @@ const addPivots = (dimensions, config) => {
         headerName: headerName(measure, config),
         measure: name,
         pivotKey: key,
+        resizable: true,
         rowGroup: false,
+        sortable: true,
         suppressMenu: true,
       };
       outerDimension.children.push(dimension);
@@ -735,19 +724,19 @@ const addPivots = (dimensions, config) => {
 };
 
 // Attempt to display in this order: HTML/drill -> rendered -> value
-// TODO: Return an object here, with value, and then also with pertinent info for links/drilling.
 const displayData = cell => {
   if (_.isEmpty(cell)) { return null; }
   let formattedCell;
   if (cell.links) {
     let dataset = '';
+    // Adding data to DOM that we will need when drilling into link which we would not
+    // otherwise have when ag-grid hits our callback fn.
     _.forEach(cell.links, (link, i) => {
       dataset += `data-label-${i}=${JSON.stringify(link.label)} data-url-${i}=${JSON.stringify(link.url)} data-type-${i}=${JSON.stringify(link.type)} `;
     });
     const val = !_.isUndefined(cell.rendered) ? cell.rendered : cell.value;
     formattedCell = `<a class='drillable-link' href="#" onclick="drillingCallback(event); return false;" ${dataset}>${val}</a>`;
   } else if (cell.html) {
-    // TODO: This seems to be a diff func than table. OK?
     formattedCell = LookerCharts.Utils.htmlForCell(cell).replace('<a ', '<a class="drillable-link" ');
   } else {
     formattedCell = LookerCharts.Utils.textForCell(cell);
@@ -758,12 +747,14 @@ const displayData = cell => {
 
 class AutoGroupColumnDef {
   constructor() {
-    this.headerName = 'Group';
     this.cellClass = 'groupCell';
     this.cellRenderer = 'agGroupCellRenderer';
     this.cellRendererParams = {
       suppressCount: true,
     };
+    this.headerName = 'Group';
+    this.resizable = true;
+    this.sortable = true;
   }
 
   setLastGroup(field) {
@@ -772,18 +763,6 @@ class AutoGroupColumnDef {
 }
 
 const autoGroupColumnDef = new AutoGroupColumnDef();
-
-// TODO: Persist column movement across refresh.
-const columnResized = e => {
-  _.forEach(e.columns, col => {
-    let { field } = col.colDef;
-    if (col.colDef.headerName === 'Group') {
-      field = 'Group';
-    }
-    gridOptions.context.widths[field] = col.actualWidth;
-  });
-};
-
 
 const options = {
   // FORMATTING
@@ -957,13 +936,6 @@ const options = {
     section: 'Plot',
     type: 'boolean',
   },
-  // agGridSort: {
-  //   default: false,
-  //   label: 'Sort Via Visualization',
-  //   order: 4,
-  //   section: 'Plot',
-  //   type: 'boolean',
-  // },
 };
 
 const defaultColors = {
@@ -991,7 +963,6 @@ const addOptionAlignments = fields => {
   fields.forEach(field => {
     const { label, name } = field;
     const alignment = `align_${name}`;
-    // Radio freaks out here. Maybe flip display/type?
     options[alignment] = {
       default: 'left',
       display: 'select',
@@ -1026,38 +997,6 @@ const addOptionFontFormats = fields => {
       ],
     };
   });
-};
-
-const addOptionSorts = fields => {
-  // If there's one dimension, add that. If multiple, utilize ag-Grid-AutoColumn.
-  fields.forEach(field => {
-    const { label, name } = field;
-    const sort = `sort_${name}`;
-    options[sort] = {
-      default: 'asc',
-      display: 'select',
-      label: `Sort: ${label}`,
-      section: 'Plot',
-      // hidden: true,
-      type: 'string',
-      values: [
-        { asc: 'asc' },
-        { desc: 'desc' },
-      ],
-    };
-  });
-  options['sort_ag-Grid-AutoColumn'] = {
-    default: 'asc',
-    display: 'select',
-    label: `Sort: Group`,
-    section: 'Plot',
-    // hidden: true,
-    type: 'string',
-    values: [
-      { asc: 'asc' },
-      { desc: 'desc' },
-    ],
-  };
 };
 
 updateColorConfig = (vis, config) => {
@@ -1122,7 +1061,7 @@ const selectFormattedFields = (fields, config) => {
   if (config.applyTo === 'select_fields') {
     fields.forEach(field => {
       const { label, name } = field;
-      const id = `selectedField_${name}`
+      const id = `selectedField_${name}`;
       options[id] = {
         label,
         default: 'false',
@@ -1141,7 +1080,7 @@ const selectFormattedFields = (fields, config) => {
   } else if (config.applyTo === 'all_numeric_fields') {
     fields.forEach(field => {
       const { name } = field;
-      const id = `selectedField_${name}`
+      const id = `selectedField_${name}`;
       if (id in options) { delete(options[id]); }
     });
   }
@@ -1164,7 +1103,7 @@ const setupConditionalFormatting = (vis, config, measureLike) => {
 };
 
 
-// Once columns are available to ag-grid, we can update the options hash / config
+// Once columns are available to ag-grid, we can update the options hash/config
 // and add/remove custom configurations.
 // This triggers two events on the visualization object:
 //   vis.trigger('registerOptions', options)
@@ -1175,16 +1114,15 @@ const modifyOptions = (vis, config) => {
   addOptionCustomLabels(measureLike);
   addOptionAlignments(measureLike);
   addOptionFontFormats(measureLike);
-  // addOptionSorts(measureLike); // XXX all dimensions..groups?
 
   setupConditionalFormatting(vis, config, measureLike);
 
   vis.trigger('registerOptions', options);
 };
 
-const addPivotHeader = () => {
+const addPivotLabels = () => {
   if (!globalConfig.hasPivot) { return; }
-  const { config, queryResponse } = gridOptions.context.globalConfig;
+  const { config, queryResponse } = globalConfig;
   if (!('showRowNumbers' in config)) { return; }
   const pivots = _.map(queryResponse.fields.pivots, pivot => headerName(pivot, config));
   const labelDivs = document.getElementsByClassName('ag-header-group-cell-label');
@@ -1221,8 +1159,7 @@ const refreshColumns = details => {
   }
 };
 
-const setLookerClasses = () => {
-  // Pivot stuff
+const setPivotHeaders = () => {
   const pivotHeaders = document.getElementsByClassName('pivotHeader');
   if (!_.isEmpty(pivotHeaders)) {
     const parentRow = pivotHeaders[0].parentNode.parentNode.parentNode;
@@ -1230,11 +1167,13 @@ const setLookerClasses = () => {
 
     // Set height according to how many pivots are present:
     const numPivots = globalConfig.queryResponse.fields.pivots.length;
-    // XXX Magic number corresponding to .ag-header-group-cell
+    // Magic number corresponding to .ag-header-group-cell in CSS file.
     gridOptions.api.setGroupHeaderHeight(26 * numPivots);
   }
 };
 
+// This is called from updateAsync once we are ready to display (prevents early
+// displaying before CSS files have been downloaded and applied).
 const hideOverlay = (vis, element, config) => {
   if (config.theme) {
     const style = _.find(document.head.children, c => c.href && c.href.includes(config.theme));
@@ -1245,48 +1184,20 @@ const hideOverlay = (vis, element, config) => {
   }
 };
 
-// Uses hidden config values to automatically set sort values for columns.
-const setSorts = config => {
-  if (config.agGridSort) {
-    // Get the values of the hidden options, and craft a `sorts` var, setting them.
-    const sortKeys = _.filter(Object.keys(config), k => k.startsWith('sort_'));
-    const sorts = _.map(sortKeys, sk => {
-      return { colId: sk.slice(5), sort: config[sk] };
-    });
-    gridOptions.api.setSortModel(sorts);
-  }
-};
-
-// XXX Maybe I have some dummy value in the options so that if it _really_ is a sortChanged to clear all,
-// it somehow still has that one and isn't empty?
-const sortChanged = e => {
+const sortChanged = () => {
   gridOptions.api.refreshCells();
-  // const { vis, config } = gridOptions.context.globalConfig;
-  // const sortModel = gridOptions.api.getSortModel();
-  // if (_.isEmpty(sortModel)) { return; }
-  // if (config && `sort_${sortModel[0].colId}` in config) {
-  //   _.forEach(sortModel, sm => {
-  //     const key = `sort_${sm.colId}`;
-  //     const updatedConfig = {};
-  //     updatedConfig[key] = sm.sort;
-  //     vis.trigger('updateConfig', [updatedConfig]);
-  //   });
-  // }
 };
 
 const gridOptions = {
-  context: {
-    globalConfig: new GlobalConfig,
-    widths: {},
-    overlay: true,
-  },
-  // debug: true, // for dev purposes.
   animateRows: false,
   autoGroupColumnDef,
   columnDefs: [],
+  context: {
+    globalConfig: new GlobalConfig,
+    overlay: true,
+  },
   enableFilter: false,
-  enableSorting: true,
-  groupDefaultExpanded: -1, // for dev purposes. 0,
+  groupDefaultExpanded: -1,
   groupRowAggNodes,
   onFirstDataRendered: setColumns,
   onRowGroupOpened: adjustFonts,
@@ -1295,8 +1206,6 @@ const gridOptions = {
   suppressAggFuncInHeader: true,
   suppressFieldDotNotation: true,
   suppressMovableColumns: true,
-  enableColResize: true,
-  onColumnResized: columnResized,
 };
 
 const { globalConfig } = gridOptions.context;
@@ -1304,12 +1213,12 @@ const { globalConfig } = gridOptions.context;
 looker.plugins.visualizations.add({
   options: options,
 
-  create(element, _config) {
+  create(element) {
     loadStylesheets();
 
     element.innerHTML = `
       <style>
-        .ag-grid-vis {
+        #ag-grid-vis {
           display: flex;
           flex-direction: column;
           height: 100%;
@@ -1321,7 +1230,7 @@ looker.plugins.visualizations.add({
         .drillable-link:hover {
           text-decoration: underline;
         }
-        .loading {
+        #loading {
           background-color: #FFF;
           height: 100%;
           position: absolute;
@@ -1333,15 +1242,13 @@ looker.plugins.visualizations.add({
 
     this.loadingGrid = element.appendChild(document.createElement('div'));
     this.loadingGrid.id = 'loading';
-    this.loadingGrid.className = 'loading';
 
     // Create an element to contain the grid.
     this.grid = element.appendChild(document.createElement('div'));
     this.grid.id = 'ag-grid-vis';
-    this.grid.className = 'ag-grid-vis';
 
     this.grid.classList.add(defaultTheme);
-    new agGrid.Grid(this.grid, gridOptions); // eslint-disable-line
+    new agGrid.Grid(this.grid, gridOptions);
   },
 
   updateAsync(data, element, config, queryResponse, details, done) {
@@ -1373,32 +1280,26 @@ looker.plugins.visualizations.add({
     updateTheme(this.grid.classList, config.theme);
 
     // Gets a range for use by conditional formatting.
-    const range = calculateRange(data, queryResponse, config);
-    globalConfig.range = range;
+    globalConfig.range = calculateRange(data, queryResponse, config);
     globalConfig.config = config;
 
     // Manipulates Looker's queryResponse into a format suitable for ag-grid.
     this.agColumn = new AgColumn(config);
-    const { formattedColumns } = this.agColumn;
 
-    globalConfig.formattedColumns = formattedColumns;
+    globalConfig.formattedColumns = this.agColumn.formattedColumns;
     refreshColumns(details);
 
     // Manipulates Looker's data response into a format suitable for ag-grid.
-    this.agData = new AgData(data, formattedColumns);
+    this.agData = new AgData(data, globalConfig.formattedColumns);
     globalConfig.agData = this.agData;
 
     gridOptions.api.setRowData(this.agData.formattedData);
 
-    addPivotHeader();
+    addPivotLabels();
 
-    if (details.changed) {
-      autoSize();
-    }
-    setLookerClasses();
+    autoSize();
+    setPivotHeaders();
     adjustFonts();
-
-    setSorts(config);
 
     done();
   },
