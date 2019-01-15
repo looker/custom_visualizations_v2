@@ -4,6 +4,7 @@ const UglifyJSPlugin = require('uglifyjs-webpack-plugin');
 
 var webpackConfig = {
   entry: {
+    ag_grid: './src/examples/ag_grid/ag_grid.js',
     hello_world: './src/examples/hello_world/hello_world.js',
     sankey: './src/examples/sankey/sankey.ts',
     liquid_fill_gauge: './src/examples/liquid_fill_gauge/liquid_fill_gauge.ts',
