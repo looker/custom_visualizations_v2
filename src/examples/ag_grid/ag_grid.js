@@ -251,11 +251,11 @@ const formatNumeral = (num, valueFormat) => {
   // EUR and GBP symbols don't play nice with this JS formatting library.
   // Below are shims to replace the foreign currency.
   if (valueFormat.includes('€')) {
-    valueFormat = valueFormat.replace('€', '$').replace('"', '');
+    valueFormat = valueFormat.replace(new RegExp('"', 'g'), '').replace('€', '$');
     formatted = num.format(valueFormat).replace('$', '€');
   }
   if (valueFormat.includes('£')) {
-    valueFormat = valueFormat.replace('£', '$').replace('"', '');
+    valueFormat = valueFormat.replace(new RegExp('"', 'g'), '').replace('£', '$');
     formatted = num.format(valueFormat).replace('$', '£');
   }
   return formatted;
