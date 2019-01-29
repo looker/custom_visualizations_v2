@@ -596,6 +596,7 @@ const addRowNumbers = basics => {
     suppressMenu: true,
     suppressNavigable: true,
     suppressSizeToFit: true,
+    valueGetter: 'node.rowIndex + 1',
     width: 50,
   });
 };
@@ -617,6 +618,7 @@ const basicDimensions = (dimensions, config) => {
       cellRenderer: defaultCellRenderer,
       cellStyle,
       colType: 'default',
+      comparator: comparator,
       field: dimension.name,
       headerClass: dimension.category,
       headerName: headerName(dimension, config),
@@ -657,9 +659,20 @@ const addTableCalculations = (dimensions, tableCalcs) => {
       rowGroup: false,
       sortable: true,
       suppressMenu: true,
+      comparator: comparator,
     };
     dimensions.push(dimension);
   });
+};
+
+const comparator = (valueA, valueB) => {
+  let comparison = valueA - valueB;
+  // A small speed optimization here - instantiating a numeral object for every
+  // cell is slow, so we're only doing it if the above fails to sort.
+  if (_.isNaN(comparison)) {
+    comparison = numeral(valueA).value() - numeral(valueB).value();
+  }
+  return comparison;
 };
 
 const addMeasures = (dimensions, measures, config) => {
@@ -672,6 +685,7 @@ const addMeasures = (dimensions, measures, config) => {
       cellStyle,
       cellRenderer: defaultCellRenderer,
       colType: 'measure',
+      comparator: comparator,
       field: name,
       headerClass: klass,
       headerName: headerName(measure, config),
@@ -720,6 +734,7 @@ const addPivots = (dimensions, config) => {
         cellRenderer: defaultCellRenderer,
         colType: 'pivotChild',
         columnGroupShow: 'open',
+        comparator: comparator,
         field: `${key}_${name}`,
         headerClass: klass,
         headerName: headerName(measure, config),
