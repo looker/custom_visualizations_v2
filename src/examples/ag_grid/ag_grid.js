@@ -241,10 +241,24 @@ const aggregate = (values, mType, valueFormat) => {
   if (_.isEmpty(valueFormat)) {
     value = isFloat(agg) ? truncFloat(agg, values) : numeral(agg).format(',');
   } else {
-    // EUR and GBP symbols don't play nice. It fails gracefully though.
-    value = numeral(agg).format(valueFormat);
+    value = formatNumeral(numeral(agg), valueFormat);
   }
   return value;
+};
+
+const formatNumeral = (num, valueFormat) => {
+  let formatted = num.format(valueFormat);
+  // EUR and GBP symbols don't play nice with this JS formatting library.
+  // Below are shims to replace the foreign currency.
+  if (valueFormat.includes('€')) {
+    valueFormat = valueFormat.replace('€', '$').replace('"', '');
+    formatted = num.format(valueFormat).replace('$', '€');
+  }
+  if (valueFormat.includes('£')) {
+    valueFormat = valueFormat.replace('£', '$').replace('"', '');
+    formatted = num.format(valueFormat).replace('$', '£');
+  }
+  return formatted;
 };
 
 const sumAggFn = values => {
