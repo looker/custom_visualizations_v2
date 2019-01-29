@@ -227,7 +227,7 @@ const aggregate = (values, mType, valueFormat) => {
   // https://docs.looker.com/reference/field-reference/measure-type-reference
   if (mType === 'count' || mType === 'count_distinct') {
     agg = countAggFn(values);
-  } else if (mType === 'average' || mType === 'average_distinct') {
+  } else if (mType === 'average' || mType === 'average_distinct' || mType === 'percent_of_total') {
     agg = avgAggFn(values);
   } else if (mType === 'max') {
     agg = maxAggFn(values);
