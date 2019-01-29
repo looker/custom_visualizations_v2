@@ -119,11 +119,6 @@ const adjustFonts = () => {
     mainDiv.style.fontFamily = config.fontFamily;
   }
 
-  if ('fontSize' in config) {
-    const agCells = document.getElementsByClassName('ag-cell');
-    _.forEach(agCells, cell => cell.style.fontSize = `${config.fontSize}px`);
-  }
-
   if ('rowHeight' in config) {
     gridOptions.rowHeight = config.rowHeight;
   }
@@ -477,6 +472,12 @@ const cellValue = value => {
   return numeral(val).value();
 };
 
+const setFontSize = (styling, config) => {
+  if ('fontSize' in config) {
+    styling['font-size'] = `${config['fontSize']}px`;
+  }
+};
+
 const conditionallyFormat = (styling, config, cell) => {
   const { range } = globalConfig;
   const { field, measure } = cell.colDef;
@@ -516,6 +517,7 @@ const cellStyle = cell => {
 
   alignText(styling, config, cell);
   formatText(styling, config, cell);
+  setFontSize(styling, config);
   conditionallyFormat(styling, config, cell);
 
   return styling;
@@ -766,6 +768,7 @@ class AutoGroupColumnDef {
     this.cellRendererParams = {
       suppressCount: true,
     };
+    this.cellStyle = cellStyle;
     this.headerName = 'Group';
     this.resizable = true;
     this.sortable = true;
