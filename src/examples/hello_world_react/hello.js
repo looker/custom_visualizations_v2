@@ -1,3 +1,5 @@
+import React from 'react'
+
 // Create (or import) our react component
 export default class Hello extends React.Component {
   constructor () {
