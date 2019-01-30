@@ -1,7 +1,6 @@
-import React from 'react';
-import ReactDOM from 'react-dom'
 import Hello from './hello'
-
+import React from 'react'
+import ReactDOM from 'react-dom'
 
 looker.plugins.visualizations.add({
   // Id and Label are legacy properties that no longer have any function besides documenting
