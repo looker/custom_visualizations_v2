@@ -6,6 +6,7 @@ var webpackConfig = {
   entry: {
     v1_common: './src/common/common-entry.js',
     hello_world: './src/examples/hello_world/hello_world.js',
+    hello_world_react: './src/examples/hello_world_react/hello_world_react.js',
     sankey: './src/examples/sankey/sankey.ts',
     liquid_fill_gauge: './src/examples/liquid_fill_gauge/liquid_fill_gauge.ts',
     sunburst: './src/examples/sunburst/sunburst.ts',
@@ -28,6 +29,7 @@ var webpackConfig = {
   ],
   module: {
     loaders: [
+      { test: /\.js$/, loader: "babel-loader" },
       { test: /\.ts$/, loader: "ts-loader" },
       { test: /\.css$/, loader: [ 'to-string-loader', 'css-loader' ] }
     ]
