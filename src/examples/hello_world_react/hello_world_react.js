@@ -1,12 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom'
+import Hello from './hello'
 
-// Create (or import) our react component
-class Hello extends React.Component {
-  render() {
-    return <div>{this.props.data}</div>;
-  }
-}
 
 looker.plugins.visualizations.add({
   // Id and Label are legacy properties that no longer have any function besides documenting
@@ -50,11 +45,17 @@ looker.plugins.visualizations.add({
     `;
 
     // Create a container element to let us center the text.
-    var container = element.appendChild(document.createElement("div"));
+    let container = element.appendChild(document.createElement("div"));
     container.className = "hello-world-vis";
 
     // Create an element to contain the text.
     this._textElement = container.appendChild(document.createElement("div"));
+
+    // Render to the target element
+    this.chart = ReactDOM.render(
+      <Hello />,
+      this._textElement
+    );
 
   },
   // Render in response to the data or settings changing
@@ -77,14 +78,11 @@ looker.plugins.visualizations.add({
     }
 
     // Grab the first cell of the data
-    var firstRow = data[0];
-    var firstCellValue = firstRow[queryResponse.fields.dimensions[0].name].value;
+    let firstRow = data[0];
+    let firstCellValue = firstRow[queryResponse.fields.dimensions[0].name].value;
 
-    // Finally render to the target element
-    ReactDOM.render(
-      <Hello data={firstCellValue} />,
-      this._textElement
-    );
+    // Finally update the state with our new data
+    this.chart.setState({data: firstCellValue})
 
     // We are done rendering! Let Looker know.
     done()
