@@ -78,12 +78,14 @@ looker.plugins.visualizations.add({
       this._textElement.className = "ag-grid-text-large";
     }
 
-    // Grab the first cell of the data
-    let firstRow = data[0];
-    let firstCellValue = firstRow[queryResponse.fields.dimensions[0].name].value;
+    console.log(data, "data from aggrid");
+    // Grab the data and pick columnDefs and rowData
+    let columnDefs = data['columnDefs'];
+    let rowData = data['rowData'];
+
 
     // Finally update the state with our new data
-    this.chart.setState({data: firstCellValue})
+    this.chart.setState({columnDefs, rowData})
 
     // We are done rendering! Let Looker know.
     done()
