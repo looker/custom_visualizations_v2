@@ -225,7 +225,7 @@ These are all available on the global `LookerCharts.Utils` object.
 
 	- `links` **Required** _array_
 
-		An array of the objects returned from the `links` property of a cell. If you want to display links for multiple cells at once, you may concatenate these arrays together first.
+		An array of the objects returned from the `links` property of a cell. If you want to display links for multiple cells at once, you may concatenate these arrays together first. For custom links, provide an array of objects with the following form: <pre><code>{ label: _string_, type: 'drill', type_label: _string_, url: _url_ }</code></pre>
 
 	- `element` _DOMElement_
 
@@ -245,7 +245,6 @@ These are all available on the global `LookerCharts.Utils` object.
 			cellElement.onclick = function(event) {
 				LookerCharts.Utils.openDrillMenu({
 					links: cell.links,
-					element: cellElement,
 					event: event
 				});
 			};
