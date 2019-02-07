@@ -1,7 +1,5 @@
 import { options } from './options.js';
 import GlobalConfig from './globalConfig.js';
-// import AgColumn from './agColumn.js';
-// import AgData from './agData.js';
 import PivotHeader from './pivotHeader.js';
 
 /* eslint-disable arrow-body-style, no-undef, no-use-before-define */
