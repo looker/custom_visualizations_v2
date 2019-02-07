@@ -1,3 +1,9 @@
+import { options } from './options.js';
+import GlobalConfig from './globalConfig.js';
+// import AgColumn from './agColumn.js';
+// import AgData from './agData.js';
+import PivotHeader from './pivotHeader.js';
+
 /* eslint-disable arrow-body-style, no-undef, no-use-before-define */
 
 // Dependencies:
@@ -6,24 +12,6 @@
 // Lodash: https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.11/lodash.core.min.js
 // Numeral: https://cdnjs.cloudflare.com/ajax/libs/numeral.js/2.0.6/numeral.min.js
 // Chroma: https://cdnjs.cloudflare.com/ajax/libs/chroma-js/1.4.0/chroma.min.js
-
-class GlobalConfig {
-  constructor() {
-    this.selectedFields = [];
-  }
-
-  addSelectedField(field) {
-    if (this.selectedFields.indexOf(field) === -1) {
-      this.selectedFields.push(field);
-    }
-  }
-
-  removeSelectedField(field) {
-    this.selectedFields = this.selectedFields.filter(selectedField => {
-      return selectedField !== field;
-    });
-  }
-}
 
 class AgColumn {
   constructor(config) {
@@ -81,33 +69,6 @@ class AgData {
 
       return formattedDatum;
     });
-  }
-}
-
-//
-// User-defined grouped header class
-//
-
-class PivotHeader {
-  init(agParams) {
-    this.agParams = agParams;
-    const pivots = this.agParams.displayName.split(', ');
-    this.eGui = document.createElement('div');
-    this.eGui.classList.add('outerPivotHeader');
-    _.forEach(pivots, pivot => {
-      const pivotDiv = document.createElement('div');
-      pivotDiv.classList.add('pivotHeader');
-      pivotDiv.innerHTML = pivot;
-      this.eGui.appendChild(pivotDiv);
-    });
-  }
-
-  getGui() {
-    return this.eGui;
-  }
-
-  destroy() {
-    return null;
   }
 }
 
@@ -178,9 +139,9 @@ const addCSS = link => {
 // Load all ag-grid default style themes.
 const loadStylesheets = () => {
   addCSS('https://unpkg.com/ag-grid-community/dist/styles/ag-grid.css');
-  // addCSS('https://4mile.github.io/ag_grid/ag-theme-looker.css');
+  addCSS('https://4mile.github.io/ag_grid/ag-theme-looker.css');
   // XXX For development only:
-  addCSS('https://localhost:4443/ag-theme-looker.css');
+  // addCSS('https://localhost:4443/ag-theme-looker.css');
   themes.forEach(theme => {
     const themeName = theme[Object.keys(theme)];
     if (themeName !== 'ag-theme-looker') {
@@ -796,180 +757,6 @@ class AutoGroupColumnDef {
 
 const autoGroupColumnDef = new AutoGroupColumnDef();
 
-const options = {
-  // FORMATTING
-  enableConditionalFormatting: {
-    default: false,
-    label: 'Enable Conditional Formatting',
-    order: 1,
-    section: 'Formatting',
-    type: 'boolean',
-  },
-  perColumnRange: {
-    default: true,
-    hidden: true,
-    label: 'Per column range',
-    order: 2,
-    section: 'Formatting',
-    type: 'boolean',
-  },
-  conditionalFormattingType: {
-    default: 'all',
-    display: 'select',
-    label: 'Formatting Type',
-    order: 3,
-    section: 'Formatting',
-    type: 'string',
-    values: [
-      { 'All': 'all' },
-      { 'Subtotals only': 'subtotals_only' },
-      { 'Non-subtotals only': 'non_subtotals_only' },
-    ],
-  },
-  includeNullValuesAsZero: {
-    default: false,
-    label: 'Include Null Values as Zero',
-    order: 4,
-    section: 'Formatting',
-    type: 'boolean',
-  },
-  formattingStyle: {
-    default: 'low_to_high',
-    display: 'select',
-    label: 'Format',
-    order: 5,
-    section: 'Formatting',
-    type: 'string',
-    values: [
-      { 'From low to high': 'low_to_high' },
-      { 'From high to low': 'high_to_low' },
-    ],
-  },
-  formattingPalette: {
-    default: 'red_yellow_green',
-    display: 'select',
-    label: 'Palette',
-    order: 6,
-    section: 'Formatting',
-    type: 'string',
-    values: [
-      { 'Red to Yellow to Green': 'red_yellow_green' },
-      { 'Red to White to Green': 'red_white_green' },
-      { 'Red to White': 'red_white' },
-      { 'White to Green': 'white_green' },
-      { 'Custom...': 'custom' },
-    ],
-  },
-  lowColor: {
-    display: 'color',
-    display_size: 'third',
-    label: 'Low', // These values updated in updateAsync
-    order: 7,
-    section: 'Formatting',
-    type: 'string',
-  },
-  midColor: {
-    display: 'color',
-    display_size: 'third',
-    label: 'Middle',
-    order: 8,
-    section: 'Formatting',
-    type: 'string',
-  },
-  highColor: {
-    display: 'color',
-    display_size: 'third',
-    label: 'High',
-    order: 9,
-    section: 'Formatting',
-    type: 'string',
-  },
-  applyTo: {
-    default: 'all_numeric_fields',
-    display: 'select',
-    label: 'Apply to',
-    order: 10,
-    section: 'Formatting',
-    type: 'string',
-    values: [
-      { 'All numeric fields': 'all_numeric_fields' },
-      { 'Select fields...': 'select_fields' },
-    ],
-  },
-  // CONFIG
-  fontSize: {
-    default: 12,
-    display_size: 'third',
-    label: 'Font size (pt)',
-    order: 1,
-    section: 'Config',
-    type: 'number',
-  },
-  fontFamily: {
-    default: 'Open Sans, Helvetica, Arial, sans-serif',
-    display: 'select',
-    display_size: 'two-thirds',
-    label: 'Font Family',
-    order: 2,
-    section: 'Config',
-    type: 'string',
-    values: [
-      { 'Looker': 'Open Sans, Helvetica, Arial, sans-serif' },
-      { 'Helvetica': 'BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif' },
-      { 'Times New Roman': 'Times, "Times New Roman", serif' },
-    ],
-  },
-  rowHeight: {
-    default: 25,
-    display_size: 'third',
-    label: 'Row Height',
-    order: 3,
-    section: 'Config',
-    type: 'number',
-  },
-  // SERIES
-  truncateColumnNames: {
-    default: false,
-    label: 'Truncate Column Names',
-    order: 1,
-    section: 'Series',
-    type: 'boolean',
-  },
-  showFullFieldName: {
-    default: false,
-    label: 'Show Full Field Name',
-    order: 2,
-    section: 'Series',
-    type: 'boolean',
-  },
-  // CUSTOMIZATIONS
-
-  // PLOT
-  theme: {
-    default: defaultTheme,
-    display: 'select',
-    label: 'Table Theme',
-    order: 1,
-    section: 'Plot',
-    type: 'string',
-    values: themes,
-  },
-  showRowNumbers: {
-    default: false,
-    label: 'Show Row Numbers',
-    order: 2,
-    section: 'Plot',
-    type: 'boolean',
-  },
-  autoSizeEnabled: {
-    default: true,
-    label: 'Enable Auto Sizing',
-    order: 3,
-    section: 'Plot',
-    type: 'boolean',
-  },
-};
-
 const defaultColors = {
   red: '#F36254',
   green: '#4FBC89',
@@ -1031,7 +818,7 @@ const addOptionFontFormats = fields => {
   });
 };
 
-updateColorConfig = (vis, config) => {
+const updateColorConfig = (vis, config) => {
   const originalMidColor = {
     display: 'color',
     display_size: 'third',
