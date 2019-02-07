@@ -5,6 +5,7 @@ const UglifyJSPlugin = require('uglifyjs-webpack-plugin');
 var webpackConfig = {
   entry: {
     advanced_table: './src/examples/advanced_table/advanced_table.js',
+    v1_common: './src/common/common-entry.js',
     hello_world: './src/examples/hello_world/hello_world.js',
     sankey: './src/examples/sankey/sankey.ts',
     liquid_fill_gauge: './src/examples/liquid_fill_gauge/liquid_fill_gauge.ts',
