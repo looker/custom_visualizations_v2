@@ -12,8 +12,7 @@
 
 1. [Ensure you have Yarn installed.](https://yarnpkg.com)
 2. Run `yarn`
-3. Run `yarn start`
-4. :boom: start creating!
+3. :boom: start creating!
 
 # Commands
 
