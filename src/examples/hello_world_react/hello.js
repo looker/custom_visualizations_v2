@@ -2,18 +2,13 @@ import React from 'react'
 
 // Create (or import) our react component
 export default class Hello extends React.Component {
-  constructor () {
+  constructor (props) {
     // So we have access to 'this'
-    super()
-
-    // Set initial state to a loading or no data message
-    this.state = {
-      data: "No Data"
-    }
+    super(props)
   }
 
   // render our data
   render() {
-    return <div>{this.state.data}</div>;
+    return <div>{this.props.data}</div>;
   }
 }
