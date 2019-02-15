@@ -50,11 +50,9 @@ looker.plugins.visualizations.add({
     // Create an element to contain the text.
     this._textElement = container.appendChild(document.createElement("div"));
 
-    this.firstCell = "loading..."
-
     // Render to the target element
     this.chart = ReactDOM.render(
-      <Hello data={this.firstCell}/>,
+      <Hello data="loading..."/>,
       this._textElement
     );
 
@@ -80,10 +78,13 @@ looker.plugins.visualizations.add({
 
     // Grab the first cell of the data
     let firstRow = data[0];
-    this.firstCell = firstRow[queryResponse.fields.dimensions[0].name].value;
+    const firstCell = firstRow[queryResponse.fields.dimensions[0].name].value;
 
     // Finally update the state with our new data
-    // this.chart.setState({data: firstCellValue})
+    this.chart = ReactDOM.render(
+      <Hello data={firstCell}/>,
+      this._textElement
+    );
 
     // We are done rendering! Let Looker know.
     done()
