@@ -80,6 +80,10 @@ const vis: Sankey = {
       .nodePadding(12)
       .extent([[1, 1], [width - 1, height - 6]])
 
+    // TODO: Placeholder until @types catches up with sankey
+    const newSankeyProps: any = sankeyInst
+    newSankeyProps.nodeSort(null)
+
     let link = svg.append('g')
       .attr('class', 'links')
       .attr('fill', 'none')
