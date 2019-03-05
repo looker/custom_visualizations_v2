@@ -106,8 +106,8 @@ const vis: Sankey = {
     data.forEach(function (d: any) {
       // variable number of dimensions
       const path: any[] = []
-      for(const dim of dimensions) {
-        if(d[dim.name].value === null && !config.show_null_points) break
+      for (const dim of dimensions) {
+        if (d[dim.name].value === null && !config.show_null_points) break
         path.push(d[dim.name].value + '')
       }
       path.forEach(function (p: any, i: number) {

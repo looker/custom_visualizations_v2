@@ -45,7 +45,7 @@ function burrow(table: Row[], config: VisConfig) {
 
     // create children as nested objects
     row.taxonomy.value.forEach((key: any) => {
-      if(key === null && !config.show_null_points) {
+      if (key === null && !config.show_null_points) {
         return
       }
       layer[key] = key in layer ? layer[key] : {}

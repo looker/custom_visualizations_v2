@@ -122,10 +122,10 @@
   resolved "https://registry.yarnpkg.com/@types/d3-random/-/d3-random-1.1.0.tgz#2dd08f1159c70719270e4a7c834af85c8b88d2c3"
   integrity sha1-LdCPEVnHBxknDkp8g0r4XIuI0sM=
 
-"@types/d3-sankey@^0.7.2":
-  version "0.7.2"
-  resolved "https://registry.yarnpkg.com/@types/d3-sankey/-/d3-sankey-0.7.2.tgz#44aa7cc7ea53d556579d894e190b1646edcad2ca"
-  integrity sha512-zkybXy3pd/LLNButswwCvYMFityJlniyULU4kj4gvtVXFkEBk/3Rf6C73+g2PNge+Mu99LCXjDB7lJgfrXd2eg==
+"@types/d3-sankey@^0.7.4":
+  version "0.7.4"
+  resolved "https://registry.yarnpkg.com/@types/d3-sankey/-/d3-sankey-0.7.4.tgz#7a3e791ba0cde76e203c9cdf1c0461a27a1b9127"
+  integrity sha512-op962imIvU+KFfuztxQ4IQeiopvqgBU1Ts+5qm+eL+jWpm3xpiWV+Oks1ZuI2dW7MSTflxej3rd2hv5QNtC2kw==
   dependencies:
     "@types/d3-shape" "*"
 
@@ -1975,10 +1975,10 @@ d3-request@1.0.6:
     d3-dsv "1"
     xmlhttprequest "1"
 
-d3-sankey@^0.7.1:
-  version "0.7.1"
-  resolved "https://registry.yarnpkg.com/d3-sankey/-/d3-sankey-0.7.1.tgz#d229832268fc69a7fec84803e96c2256a614c521"
-  integrity sha1-0imDImj8aaf+yEgD6WwiVqYUxSE=
+d3-sankey@^0.10.4:
+  version "0.10.4"
+  resolved "https://registry.yarnpkg.com/d3-sankey/-/d3-sankey-0.10.4.tgz#71756ca6b20bb1a074a98bdb8c1f52b5b52340b3"
+  integrity sha512-MU2haTa/G8dWCbBV67BBYvVaHGF6F8gPC2skDTKzwT/dKoyfmaJovMkXtKGEWr1uehLz/RzbsckYys0J9RDU7A==
   dependencies:
     d3-array "1"
     d3-collection "1"
