@@ -1,5 +1,5 @@
 import * as d3 from 'd3'
-import { sankey, sankeyLinkHorizontal } from 'd3-sankey'
+import { sankey, sankeyLinkHorizontal, sankeyLeft } from 'd3-sankey'
 import { handleErrors } from '../common/utils'
 
 import {
@@ -27,6 +27,11 @@ const vis: Sankey = {
       label: 'Color Range',
       display: 'colors',
       default: ['#dd3333', '#80ce5d', '#f78131', '#369dc1', '#c572d3', '#36c1b3', '#b57052', '#ed69af']
+    },
+    show_null_points: {
+      type: 'boolean',
+      label: 'Plot Null Values',
+      default: true
     }
   },
   // Set up the initial state of the visualization
@@ -70,9 +75,14 @@ const vis: Sankey = {
     const defs = svg.append('defs')
 
     const sankeyInst = sankey()
+      .nodeAlign(sankeyLeft)
       .nodeWidth(10)
       .nodePadding(12)
       .extent([[1, 1], [width - 1, height - 6]])
+
+    // TODO: Placeholder until @types catches up with sankey
+    const newSankeyProps: any = sankeyInst
+    newSankeyProps.nodeSort(null)
 
     let link = svg.append('g')
       .attr('class', 'links')
@@ -95,7 +105,11 @@ const vis: Sankey = {
 
     data.forEach(function (d: any) {
       // variable number of dimensions
-      const path: any = dimensions.map(function (dim) { return d[dim.name].value + '' })
+      const path: any[] = []
+      for(const dim of dimensions) {
+        if(d[dim.name].value === null && !config.show_null_points) break
+        path.push(d[dim.name].value + '')
+      }
       path.forEach(function (p: any, i: number) {
         if (i === path.length - 1) return
         const source: any = path.slice(i, i + 1)[0] + i

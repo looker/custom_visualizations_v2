@@ -4,7 +4,8 @@ import { formatType, handleErrors } from '../common/utils'
 import {
   Row,
   Looker,
-  VisualizationDefinition
+  VisualizationDefinition,
+  VisConfig
 } from '../types/types'
 
 // Global values provided via the API
@@ -34,7 +35,7 @@ function descend(obj: any, depth: number = 0) {
   return arr
 }
 
-function burrow(table: Row[]) {
+function burrow(table: Row[], config: VisConfig) {
   // create nested object
   const obj: any = {}
 
@@ -44,6 +45,9 @@ function burrow(table: Row[]) {
 
     // create children as nested objects
     row.taxonomy.value.forEach((key: any) => {
+      if(key === null && !config.show_null_points) {
+        return
+      }
       layer[key] = key in layer ? layer[key] : {}
       layer = layer[key]
     })
@@ -67,6 +71,11 @@ const vis: SunburstVisualization = {
       label: 'Color Range',
       display: 'colors',
       default: ['#dd3333', '#80ce5d', '#f78131', '#369dc1', '#c572d3', '#36c1b3', '#b57052', '#ed69af']
+    },
+    show_null_points: {
+      type: 'boolean',
+      label: 'Plot Null Values',
+      default: true
     }
   },
   // Set up the initial state of the visualization
@@ -120,7 +129,7 @@ const vis: SunburstVisualization = {
 
     const label = svg.append('text').attr('y', -height / 2 + 20).attr('x', -width / 2 + 20)
 
-    const root = d3.hierarchy(burrow(data)).sum((d: any) => {
+    const root = d3.hierarchy(burrow(data, config)).sum((d: any) => {
       return 'data' in d ? d.data[measure.name].value : 0
     })
     partition(root)
