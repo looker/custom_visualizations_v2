@@ -13,7 +13,7 @@
     "watch": "webpack --config webpack.config.js --watch --progress",
     "lint": "tslint --project tsconfig.json --format stylish 'src/**/*.ts'",
     "lint-fix": "tslint --fix --project tsconfig.json  --format stylish 'src/**/*.ts'",
-    "test": "mocha"
+    "test": "jest"
   },
   "author": "",
   "private": true,
@@ -23,27 +23,27 @@
     "d3": "^4.8.0",
     "jquery": "^3.3.1",
     "jsdom": "^11.11.0",
-    "mocha": "^3.2.0",
     "pivottable": "^2.20.0",
     "subtotal-multiple-aggregates": "4mile/subtotal-multiple-aggregates",
     "to-string-loader": "^1.1.5",
     "ts-loader": "3.2.0",
     "tslint": "5.8.0",
     "tslint-config-standard": "7.0.0",
-    "typescript": "2.6.2",
     "uglifyjs-webpack-plugin": "^1.2.5",
     "webpack": "3.10.0",
     "webpack-dev-server": "2.9.7"
   },
   "dependencies": {
+    "@babel/core": "^7.3.4",
+    "@babel/preset-env": "^7.3.4",
+    "@babel/preset-react": "^7.0.0",
     "@types/d3": "^5.0.0",
     "@types/d3-sankey": "^0.7.4",
-    "babel-core": "^6.26.3",
-    "babel-loader": "7.1.5",
-    "babel-preset-es2015": "6.24.1",
-    "babel-preset-react": "6.24.1",
+    "babel-loader": "^8.0.5",
     "d3-sankey": "^0.10.4",
-    "react": "^16.7.0",
-    "react-dom": "^16.7.0"
+    "jest": "^24.1.0",
+    "react": "^16.8.3",
+    "react-dom": "^16.7.0",
+    "typescript": "^3.3.3333"
   }
 }

@@ -19,24 +19,24 @@ glob.sync("./dist/*.js").forEach((file) => {
 looker.plugins.visualizations.all().forEach((vis) => {
   describe(`${vis.label} (as ${vis.id})`, () => {
 
-    it("should load and not use unavailable things", () => {
+    test("should load and not use unavailable things", () => {
       // TODO what do we need to assert here
       assert(true)
     });
 
-    it("should have a valid ID", () => {
+    test("should have a valid ID", () => {
       assert(/^\w+$/.test(vis.id))
     })
 
-    it("should have a label", () => {
+    test("should have a label", () => {
       assert(/\S/.test(vis.label))
     })
 
-    it("should implement create", () => {
+    test("should implement create", () => {
       assert(typeof vis.create === "function")
     })
 
-    it("should implement update or updateAsync", () => {
+    test("should implement update or updateAsync", () => {
       assert(typeof vis.update === "function" || typeof vis.updateAsync === "function")
     })
 
