@@ -177,11 +177,12 @@ const rowNumberRenderer = obj => obj.rowIndex + 1;
 const aggregate = (values, mType, valueFormat) => {
   if (_.isEmpty(values)) { return; }
   let agg;
+  const avgTypes = ['average', 'average_distinct', 'percent_of_total', 'number'];
   // Looker aggregation type source:
   // https://docs.looker.com/reference/field-reference/measure-type-reference
   if (mType === 'count' || mType === 'count_distinct') {
     agg = countAggFn(values);
-  } else if (mType === 'average' || mType === 'average_distinct' || mType === 'percent_of_total') {
+  } else if (avgTypes.includes(mType)) {
     agg = avgAggFn(values);
   } else if (mType === 'max') {
     agg = maxAggFn(values);
