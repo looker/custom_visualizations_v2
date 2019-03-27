@@ -286,7 +286,8 @@ const groupRowAggNodes = nodes => {
       const data = node.group ? node.aggData : node.data;
       fields.forEach(field => {
         if (typeof data[field] !== 'undefined') {
-          const value = numeral(data[field]).value();
+          let val = cellValue(data[field]);
+          const value = numeral(val).value();
           if (value !== null) {
             result[field].push(value);
           }
