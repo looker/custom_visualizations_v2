@@ -72,6 +72,16 @@ const vis: SunburstVisualization = {
       display: 'colors',
       default: ['#dd3333', '#80ce5d', '#f78131', '#369dc1', '#c572d3', '#36c1b3', '#b57052', '#ed69af']
     },
+    color_by: {
+      type: 'string',
+      label: 'Color By',
+      display: 'select',
+      values: [
+        {"Color By Root": "byroot"},
+        {"Color By Node": "bynode"}
+      ],
+      default: "byroot"
+    },
     show_null_points: {
       type: 'boolean',
       label: 'Plot Null Values',
@@ -142,7 +152,12 @@ const vis: SunburstVisualization = {
     .attr('d', arc)
     .style('fill', (d: any) => {
       if (d.depth === 0) return 'none'
-      return color(d.ancestors().map((p: any) => p.data.name).slice(-2, -1))
+      if (config.color_by === 'bynode') {
+        return color(d.data.name)
+      } else {
+        return color(d.ancestors().map((p: any) => p.data.name).slice(-2, -1))
+      }
+
     })
     .style('fill-opacity', (d: any) => 1 - d.depth * 0.15)
     .style('transition', (d: any) => 'fill-opacity 0.5s')
