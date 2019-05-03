@@ -2,14 +2,22 @@ import * as d3 from 'd3'
 import { formatType, handleErrors } from '../common/utils'
 
 import {
-  Row,
+  Link,
   Looker,
-  VisualizationDefinition,
-  VisConfig
+  LookerChartUtils,
+  Row,
+  VisConfig,
+  VisualizationDefinition
 } from '../types/types'
 
 // Global values provided via the API
 declare var looker: Looker
+declare var LookerCharts: LookerChartUtils
+
+const colorBy = {
+  NODE: 'node',
+  ROOT: 'root'
+}
 
 interface SunburstVisualization extends VisualizationDefinition {
   svg?: any,
@@ -29,6 +37,7 @@ function descend(obj: any, depth: number = 0) {
     }
     if ('__data' in obj[k]) {
       child.data = obj[k].__data
+      child.links = obj[k].__data.taxonomy.links
     }
     arr.push(child)
   }
@@ -62,6 +71,17 @@ function burrow(table: Row[], config: VisConfig) {
   }
 }
 
+const getLinksFromRow = (row: Row): Link[] => {
+  return Object.keys(row).reduce((links: Link[], datum) => {
+    if (row[datum].links) {
+      const datumLinks = row[datum].links as Link[]
+      return links.concat(datumLinks)
+    } else {
+      return links
+    }
+  }, [])
+}
+
 const vis: SunburstVisualization = {
   id: 'sunburst', // id/label not required, but nice for testing and keeping manifests in sync
   label: 'Sunburst',
@@ -77,10 +97,10 @@ const vis: SunburstVisualization = {
       label: 'Color By',
       display: 'select',
       values: [
-        {"Color By Root": "byroot"},
-        {"Color By Node": "bynode"}
+        { 'Color By Root': colorBy.ROOT },
+        { 'Color By Node': colorBy.NODE }
       ],
-      default: "byroot"
+      default: colorBy.ROOT
     },
     show_null_points: {
       type: 'boolean',
@@ -89,7 +109,7 @@ const vis: SunburstVisualization = {
     }
   },
   // Set up the initial state of the visualization
-  create(element, config) {
+  create(element, _config) {
     element.style.fontFamily = `"Open Sans", "Helvetica", sans-serif`
     this.svg = d3.select(element).append('svg')
   },
@@ -110,10 +130,11 @@ const vis: SunburstVisualization = {
     const format = formatType(measure.value_format) || ((s: any): string => s.toString())
 
     const colorScale: d3.ScaleOrdinal<string, null> = d3.scaleOrdinal()
-    const color = colorScale.range(config.color_range)
+    const color = colorScale.range(config.color_range || [])
 
     data.forEach(row => {
       row.taxonomy = {
+        links: getLinksFromRow(row),
         value: dimensions.map((dimension) => row[dimension.name].value)
       }
     })
@@ -152,19 +173,22 @@ const vis: SunburstVisualization = {
     .attr('d', arc)
     .style('fill', (d: any) => {
       if (d.depth === 0) return 'none'
-      if (config.color_by === 'bynode') {
+      if (config.color_by === colorBy.NODE) {
         return color(d.data.name)
       } else {
         return color(d.ancestors().map((p: any) => p.data.name).slice(-2, -1))
       }
-
     })
     .style('fill-opacity', (d: any) => 1 - d.depth * 0.15)
     .style('transition', (d: any) => 'fill-opacity 0.5s')
     .style('stroke', (d: any) => '#fff')
     .style('stroke-width', (d: any) => '0.5px')
-    .on('click', (d: any) => {
-      console.log(d)
+    .on('click', function (this: any, d: any) {
+      const event: object = { pageX: d3.event.pageX, pageY: d3.event.pageY }
+      LookerCharts.Utils.openDrillMenu({
+        links: d.data.links,
+        event: event
+      })
     })
     .on('mouseenter', (d: any) => {
       const ancestorText = (

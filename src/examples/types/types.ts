@@ -111,6 +111,7 @@ export interface VisOption {
   max?: number
   step?: number
   required?: boolean
+  supports?: string[]
 }
 
 export interface VisualizationError {
