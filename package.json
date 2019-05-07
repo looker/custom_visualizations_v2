@@ -1,8 +1,8 @@
 {
   "name": "looker-visualization-api-examples",
-  "version": "2.0.19",
+  "version": "2.0.20",
   "license": "MIT",
-  "description": "",
+  "description": "A selection of sample visualizations for use as Looker visualizations",
   "main": "demo/index.html",
   "directories": {
     "lib": "lib",
