@@ -28,6 +28,16 @@ const vis: Sankey = {
       display: 'colors',
       default: ['#dd3333', '#80ce5d', '#f78131', '#369dc1', '#c572d3', '#36c1b3', '#b57052', '#ed69af']
     },
+    label_type: {
+      default: 'name',
+      display: 'select',
+      label: 'Label Type',
+      type: 'string',
+      values: [
+        { 'Name': 'name' },
+        { 'Name (value)': 'name_value' }
+      ]
+    },
     show_null_points: {
       type: 'boolean',
       label: 'Plot Null Values',
@@ -240,7 +250,16 @@ const vis: Sankey = {
       .style('font-weight', 'bold')
       .attr('text-anchor', 'end')
       .style('fill', '#222')
-      .text(function (d: Cell) { return d.name })
+      .text(function (d: Cell) {
+        switch (config.label_type) {
+          case 'name':
+            return d.name
+          case 'name_value':
+            return `${d.name} (${d.value})`
+          default:
+            return ''
+        }
+      })
       .filter(function (d: Cell) { return d.x0 < width / 2 })
       .attr('x', function (d: Cell) { return d.x1 + 6 })
       .attr('text-anchor', 'start')
