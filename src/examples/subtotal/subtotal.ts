@@ -96,7 +96,7 @@ const vis: Subtotal = {
       for (const key of Object.keys(row)) {
         const obj = row[key]
         if (pivotSet[key]) continue
-        ptRow[key] = obj.value
+        ptRow[key] = obj.html || obj.value
       }
       if (pivots.length === 0) {
         // No pivoting, just add each data row.
@@ -111,7 +111,8 @@ const vis: Subtotal = {
                 pivotRow[pivot] = LOOKER_ROW_TOTAL_KEY
               }
               for (const measure of measures) {
-                pivotRow[measure.name] = row[measure.name][pivotKey].value
+                const value = row[measure.name][pivotKey].html || row[measure.name][pivotKey].value
+                pivotRow[measure.name] = value
               }
             }
           } else {
@@ -120,7 +121,8 @@ const vis: Subtotal = {
               pivotRow[pivots[i]] = pivotValues[i]
             }
             for (const measure of measures) {
-              pivotRow[measure.name] = row[measure.name][flatKey].value
+              const value = row[measure.name][flatKey].html || row[measure.name][flatKey].value
+              pivotRow[measure.name] = value
             }
           }
           ptData.push(pivotRow)
