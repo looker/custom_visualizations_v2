@@ -7676,7 +7676,7 @@ strip-json-comments@~2.0.1:
 
 subtotal-multiple-aggregates@4mile/subtotal-multiple-aggregates:
   version "1.11.0-alpha.0"
-  resolved "https://codeload.github.com/4mile/subtotal-multiple-aggregates/tar.gz/68efa13c15e9333ed44d014175d2ec3a3e1b2737"
+  resolved "https://codeload.github.com/4mile/subtotal-multiple-aggregates/tar.gz/dc031eb35d00977e60f93e45618d5ff8989f13bc"
   dependencies:
     array-flatten "^2.1.1"
     pivottable ">=2.7.0"
