@@ -7,9 +7,10 @@ declare var require: any
 const themeClassic = require('subtotal-multiple-aggregates/dist/looker-classic.css')
 const themeWhite = require('subtotal-multiple-aggregates/dist/looker-white.css')
 
-import { Looker, VisualizationDefinition } from '../types/types'
+import { Looker, VisualizationDefinition, LookerChartUtils, Cell } from '../types/types'
 
 declare var looker: Looker
+declare var LookerCharts: LookerChartUtils
 
 type Formatter = ((s: any) => string)
 const defaultFormatter: Formatter = (x) => x.toString()
@@ -94,9 +95,10 @@ const vis: Subtotal = {
     for (const row of data) {
       const ptRow: { [key: string]: any } = {}
       for (const key of Object.keys(row)) {
-        const obj = row[key]
+        const obj = row[key] as Cell
         if (pivotSet[key]) continue
-        ptRow[key] = obj.html || obj.value
+        const value = obj.html ? LookerCharts.Utils.htmlForCell(obj) : obj.value
+        ptRow[key] = value
       }
       if (pivots.length === 0) {
         // No pivoting, just add each data row.
@@ -111,7 +113,8 @@ const vis: Subtotal = {
                 pivotRow[pivot] = LOOKER_ROW_TOTAL_KEY
               }
               for (const measure of measures) {
-                const value = row[measure.name][pivotKey].html || row[measure.name][pivotKey].value
+                const obj = row[measure.name][pivotKey]
+                const value = obj.html ? LookerCharts.Utils.htmlForCell(obj) : obj.value
                 pivotRow[measure.name] = value
               }
             }
@@ -121,7 +124,8 @@ const vis: Subtotal = {
               pivotRow[pivots[i]] = pivotValues[i]
             }
             for (const measure of measures) {
-              const value = row[measure.name][flatKey].html || row[measure.name][flatKey].value
+              const obj = row[measure.name][flatKey]
+              const value = obj.html ? LookerCharts.Utils.htmlForCell(obj) : obj.value
               pivotRow[measure.name] = value
             }
           }
