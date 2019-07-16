@@ -7,9 +7,10 @@ declare var require: any
 const themeClassic = require('subtotal-multiple-aggregates/dist/looker-classic.css')
 const themeWhite = require('subtotal-multiple-aggregates/dist/looker-white.css')
 
-import { Looker, VisualizationDefinition } from '../types/types'
+import { Looker, VisualizationDefinition, LookerChartUtils, Cell } from '../types/types'
 
 declare var looker: Looker
+declare var LookerCharts: LookerChartUtils
 
 type Formatter = ((s: any) => string)
 const defaultFormatter: Formatter = (x) => x.toString()
@@ -90,13 +91,18 @@ const vis: Subtotal = {
       pivotSet[pivot] = true
     }
 
+    const htmlForCell = (cell: Cell) => {
+      return cell.html ? LookerCharts.Utils.htmlForCell(cell) : cell.value
+    }
+
     const ptData = []
     for (const row of data) {
       const ptRow: { [key: string]: any } = {}
       for (const key of Object.keys(row)) {
-        const obj = row[key]
+        const cell = row[key] as Cell
         if (pivotSet[key]) continue
-        ptRow[key] = obj.html || obj.value
+        const cellValue = htmlForCell(cell)
+        ptRow[key] = cellValue
       }
       if (pivots.length === 0) {
         // No pivoting, just add each data row.
@@ -111,8 +117,9 @@ const vis: Subtotal = {
                 pivotRow[pivot] = LOOKER_ROW_TOTAL_KEY
               }
               for (const measure of measures) {
-                const value = row[measure.name][pivotKey].html || row[measure.name][pivotKey].value
-                pivotRow[measure.name] = value
+                const cell = row[measure.name][pivotKey] as Cell
+                const cellValue = htmlForCell(cell)
+                pivotRow[measure.name] = cellValue
               }
             }
           } else {
@@ -121,8 +128,9 @@ const vis: Subtotal = {
               pivotRow[pivots[i]] = pivotValues[i]
             }
             for (const measure of measures) {
-              const value = row[measure.name][flatKey].html || row[measure.name][flatKey].value
-              pivotRow[measure.name] = value
+              const cell = row[measure.name][flatKey] as Cell
+              const cellValue = htmlForCell(cell)
+              pivotRow[measure.name] = cellValue
             }
           }
           ptData.push(pivotRow)
