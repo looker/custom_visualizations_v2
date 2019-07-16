@@ -91,14 +91,18 @@ const vis: Subtotal = {
       pivotSet[pivot] = true
     }
 
+    const htmlForCell = (cell: Cell) => {
+      return cell.html ? LookerCharts.Utils.htmlForCell(cell) : cell.value
+    }
+
     const ptData = []
     for (const row of data) {
       const ptRow: { [key: string]: any } = {}
       for (const key of Object.keys(row)) {
-        const obj = row[key] as Cell
+        const cell = row[key] as Cell
         if (pivotSet[key]) continue
-        const value = obj.html ? LookerCharts.Utils.htmlForCell(obj) : obj.value
-        ptRow[key] = value
+        const cellValue = htmlForCell(cell)
+        ptRow[key] = cellValue
       }
       if (pivots.length === 0) {
         // No pivoting, just add each data row.
@@ -113,9 +117,9 @@ const vis: Subtotal = {
                 pivotRow[pivot] = LOOKER_ROW_TOTAL_KEY
               }
               for (const measure of measures) {
-                const obj = row[measure.name][pivotKey]
-                const value = obj.html ? LookerCharts.Utils.htmlForCell(obj) : obj.value
-                pivotRow[measure.name] = value
+                const cell = row[measure.name][pivotKey] as Cell
+                const cellValue = htmlForCell(cell)
+                pivotRow[measure.name] = cellValue
               }
             }
           } else {
@@ -124,9 +128,9 @@ const vis: Subtotal = {
               pivotRow[pivots[i]] = pivotValues[i]
             }
             for (const measure of measures) {
-              const obj = row[measure.name][flatKey]
-              const value = obj.html ? LookerCharts.Utils.htmlForCell(obj) : obj.value
-              pivotRow[measure.name] = value
+              const cell = row[measure.name][flatKey] as Cell
+              const cellValue = htmlForCell(cell)
+              pivotRow[measure.name] = cellValue
             }
           }
           ptData.push(pivotRow)
