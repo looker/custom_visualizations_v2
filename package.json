@@ -26,12 +26,13 @@
     "pivottable": "^2.20.0",
     "subtotal-multiple-aggregates": "4mile/subtotal-multiple-aggregates",
     "to-string-loader": "^1.1.5",
-    "ts-loader": "3.2.0",
+    "ts-loader": "6.2.1",
     "tslint": "5.8.0",
     "tslint-config-standard": "7.0.0",
     "uglifyjs-webpack-plugin": "^1.2.5",
-    "webpack": "3.10.0",
-    "webpack-dev-server": "2.9.7"
+    "webpack": "4.41.2",
+    "webpack-cli": "^3.3.10",
+    "webpack-dev-server": "3.9.0"
   },
   "dependencies": {
     "@babel/core": "^7.7.2",

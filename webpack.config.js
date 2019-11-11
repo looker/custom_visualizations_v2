@@ -3,6 +3,7 @@ var path = require('path')
 const UglifyJSPlugin = require('uglifyjs-webpack-plugin');
 
 var webpackConfig = {
+  mode: 'production',
   entry: {
     advanced_table: './src/examples/advanced_table/advanced_table.js',
     v1_common: './src/common/common-entry.js',
@@ -29,7 +30,7 @@ var webpackConfig = {
     new UglifyJSPlugin()
   ],
   module: {
-    loaders: [
+    rules: [
       { test: /\.js$/, loader: "babel-loader" },
       { test: /\.ts$/, loader: "ts-loader" },
       { test: /\.css$/, loader: [ 'to-string-loader', 'css-loader' ] }
@@ -37,6 +38,11 @@ var webpackConfig = {
   },
   stats: {
     warningsFilter: /export.*liquidfillgauge.*was not found/
+  },
+  performance: {
+    hints: false,
+    maxEntrypointSize: 512000,
+    maxAssetSize: 512000
   }
 }
 
