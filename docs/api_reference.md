@@ -111,7 +111,7 @@ These properties are added to your object automatically by Looker after the visu
 
 ## The `create` function
 
-The `create` function will be pased two parameters, `element` and `config`.
+The `create` function will be passed two parameters, `element` and `config`.
 
 ```js
 create: function(element, config){
