@@ -76,7 +76,6 @@ export default class ImageViewer extends React.Component {
 
   // render our data
   render() {
-    // const { column } = this.props;
     if (!this.state.data) {
       return (
         <div>No Image Data Found</div>

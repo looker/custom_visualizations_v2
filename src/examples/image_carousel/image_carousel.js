@@ -18,8 +18,6 @@ looker.plugins.visualizations.add({
         .c3-image_carousel {
           /* Vertical centering */
           height: 100%;
-          /* height: 430px; */
-          /* width: 565px; */
           display: flex;
           flex-direction: column;
           justify-content: center;
