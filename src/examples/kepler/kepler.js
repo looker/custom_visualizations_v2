@@ -101,14 +101,13 @@ looker.plugins.visualizations.add({
       return
     }
 
-    const columnHeaders = Object.keys(data[0]).join(",")
-    const rows = data.map(
-      row =>
-        `${Object.values(row)
-          .map(cell => cell.value)
-          .join(",")}\n`
-    )
-    const dataAsCSV = `${columnHeaders}\n${rows.join("")}`
+    if (data.length == 0) {
+      this.addError({
+        title: "No Data",
+        message: "Can't render Kepler visualisation without data rows."
+      })
+      return
+    }
 
     // Finally update the state with our new data
     this.chart = ReactDOM.render(
@@ -117,7 +116,7 @@ looker.plugins.visualizations.add({
         token={
           "pk.eyJ1IjoidWJlcmRhdGEiLCJhIjoiY2poczJzeGt2MGl1bTNkcm1lcXVqMXRpMyJ9.9o2DrYg8C8UWmprj-tcVpQ"
         }
-        dataAsCSV={dataAsCSV}
+        data={data}
         store={store}
         width={element.offsetWidth}
         height={element.offsetHeight}
