@@ -33,6 +33,19 @@ looker.plugins.visualizations.add({
     // Insert a <style> tag with some styles we'll use later.
     element.innerHTML = `
       <style>
+        html, body, #vis {
+          width: 100%;
+          height: 100%;
+          margin: 0;
+          padding: 0;
+        }
+        .mapboxgl-canvas {
+          position: absolute;
+          top: 0;
+          bottom: 0;
+          width: 100%;
+          height: 100%;
+        }
         .hello-world-vis {
           width: 100%;
           height: 100%;
@@ -67,7 +80,14 @@ looker.plugins.visualizations.add({
   updateAsync: function(data, element, config, queryResponse, details, done) {
     console.log({ data, element, config, queryResponse, details, done })
 
-    if (!config.mapbox_token) return
+    // if (!config.mapbox_token) {
+    //   this.addError({
+    //     title: "Missing Mapbox token",
+    //     message:
+    //       "Can't render Kepler visualisation without it, please set in the settings."
+    //   })
+    //   return
+    // }
 
     // Clear any errors from previous updates
     this.clearErrors()
@@ -93,7 +113,10 @@ looker.plugins.visualizations.add({
     // Finally update the state with our new data
     this.chart = ReactDOM.render(
       <Map
-        token={config.mapbox_token}
+        // token={config.mapbox_token}
+        token={
+          "pk.eyJ1IjoidWJlcmRhdGEiLCJhIjoiY2poczJzeGt2MGl1bTNkcm1lcXVqMXRpMyJ9.9o2DrYg8C8UWmprj-tcVpQ"
+        }
         dataAsCSV={dataAsCSV}
         store={store}
         width={element.offsetWidth}

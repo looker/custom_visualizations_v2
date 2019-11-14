@@ -4,6 +4,7 @@ import { connect } from "react-redux"
 import KeplerGl from "kepler.gl"
 import { addDataToMap, toggleModal } from "kepler.gl/actions"
 import { processCsvData } from "kepler.gl/processors"
+import "mapbox-gl/dist/mapbox-gl.css"
 
 class Map extends Component {
   componentDidMount = () => {
