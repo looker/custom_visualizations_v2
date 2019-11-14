@@ -1,8 +1,7 @@
 const path = require("path")
-const UglifyJsPlugin = require("uglifyjs-webpack-plugin")
 
 const webpackConfig = {
-  mode: "production",
+  mode: process.env.NODE_ENV || "development",
   entry: {
     advanced_table: "./src/examples/advanced_table/advanced_table.js",
     v1_common: "./src/common/common-entry.js",
@@ -26,9 +25,6 @@ const webpackConfig = {
   },
   resolve: {
     extensions: [".ts", ".js"]
-  },
-  optimization: {
-    minimizer: [new UglifyJsPlugin()]
   },
   module: {
     rules: [
