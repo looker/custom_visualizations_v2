@@ -10,7 +10,7 @@
   },
   "scripts": {
     "build": "webpack --config webpack.config.js",
-    "watch": "webpack --config webpack.config.js --watch --progress",
+    "watch": "webpack --config webpack.config.js --mode=development --watch --progress",
     "lint": "tslint --project tsconfig.json --format stylish 'src/**/*.ts'",
     "lint-fix": "tslint --fix --project tsconfig.json  --format stylish 'src/**/*.ts'",
     "test": "jest"
@@ -29,13 +29,12 @@
     "ts-loader": "6.2.1",
     "tslint": "5.8.0",
     "tslint-config-standard": "7.0.0",
-    "uglifyjs-webpack-plugin": "^1.2.5",
+    "uglifyjs-webpack-plugin": "^2.2.0",
     "webpack": "4.41.2",
     "webpack-cli": "^3.3.10",
     "webpack-dev-server": "3.9.0"
   },
   "dependencies": {
-
     "@babel/core": "^7.7.2",
     "@babel/plugin-proposal-class-properties": "^7.7.0",
     "@babel/preset-env": "^7.7.1",
@@ -45,9 +44,9 @@
     "babel-loader": "^8.0.6",
     "d3-sankey": "^0.10.4",
     "jest": "^24.9.0",
-    "kepler.gl": "^1.1.10",
-    "react": "^16.8.3",
-    "react-dom": "^16.7.0",
+    "kepler.gl": "^1.1.11",
+    "react": "^16.11.0",
+    "react-dom": "^16.11.0",
     "react-responsive-carousel": "^3.1.51",
     "styled-components": "^4.4.1",
     "typescript": "^3.3.3333"
