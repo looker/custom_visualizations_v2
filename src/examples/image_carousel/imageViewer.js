@@ -2,7 +2,7 @@ import React from 'react';
 import { Carousel } from 'react-responsive-carousel';
 
 const URLREGEX = new RegExp("((http|https)(:\/\/))?([a-zA-Z0-9]+[.]{1}){2}[a-zA-Z0-9]+(\/{1}[a-zA-Z0-9]+)*\/?", "igm");
-const B64REGEX = new RegExp("^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)?$", "igm");
+const b64re = /^(?:[A-Za-z\d+\/]{4})*?(?:[A-Za-z\d+\/]{2}(?:==)?|[A-Za-z\d+\/]{3}=?)?$/;
 
 const DOTS_THRESHOLD = 15;
 
@@ -11,7 +11,7 @@ const isUrlCheck = (strToCheck) => {
 }
 
 const isBase64StringCheck = (strToCheck) => {
-  if (strToCheck && strToCheck.length > 150 && B64REGEX.test(strToCheck)) {
+  if (strToCheck && strToCheck.length > 150 && b64re.test(strToCheck)) {
     try {
         return btoa(atob(strToCheck)) === strToCheck;
     } catch (err) {
