@@ -2,6 +2,8 @@ import React from 'react';
 import { Carousel } from 'react-responsive-carousel';
 
 const URLREGEX = new RegExp("((http|https)(:\/\/))?([a-zA-Z0-9]+[.]{1}){2}[a-zA-Z0-9]+(\/{1}[a-zA-Z0-9]+)*\/?", "igm");
+// Regular expression to check formal correctness of base64 encoded strings
+// https://developer.mozilla.org/en-US/docs/Web/API/WindowOrWorkerGlobalScope/atob
 const b64re = /^(?:[A-Za-z\d+\/]{4})*?(?:[A-Za-z\d+\/]{2}(?:==)?|[A-Za-z\d+\/]{3}=?)?$/;
 
 const DOTS_THRESHOLD = 15;
