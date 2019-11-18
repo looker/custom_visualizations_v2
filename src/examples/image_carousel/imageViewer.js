@@ -13,7 +13,7 @@ const isUrlCheck = (strToCheck) => {
 const isBase64StringCheck = (strToCheck) => {
   if (strToCheck && strToCheck.length > 150 && B64REGEX.test(strToCheck)) {
     try {
-        return btoa(atob(strToCheck)) == strToCheck;
+        return btoa(atob(strToCheck)) === strToCheck;
     } catch (err) {
         return false;
     }
