@@ -45,6 +45,7 @@
     "jest": "^24.9.0",
     "react": "^16.8.3",
     "react-dom": "^16.7.0",
+    "react-responsive-carousel": "^3.1.51",
     "typescript": "^3.3.3333"
   }
 }
