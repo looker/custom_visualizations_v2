@@ -1,12 +1,15 @@
 import React, { Component } from "react"
 import { connect } from "react-redux"
+import isEqual from "lodash.isequal"
 
 import KeplerGl from "kepler.gl"
 import {
   addDataToMap,
   toggleSidePanel,
   toggleModal,
-  fitBounds
+  fitBounds,
+  inputMapStyle,
+  addCustomMapStyle
 } from "kepler.gl/actions"
 import { processCsvData } from "kepler.gl/processors"
 import "mapbox-gl/dist/mapbox-gl.css"
@@ -25,6 +28,8 @@ class Map extends Component {
           .map(([name, cell]) => {
             const value = cell.value
             // column detection based on https://github.com/keplergl/kepler.gl/blob/master/docs/user-guides/b-kepler-gl-workflow/a-add-data-to-the-map.md#2-layer-detection-based-on-column-names
+            // TODO: use https://github.com/keplergl/kepler.gl/blob/master/src/constants/default-settings.js#L236
+            // or even https://github.com/keplergl/kepler.gl/blob/master/src/utils/dataset-utils.js#L124
             // TODO: we should also parse Looker native Location columns into lat / lon or Point
             if (value && (name.includes("lat") || name.includes("latitude"))) {
               latMin = Math.min(latMin, parseFloat(value))
@@ -46,19 +51,21 @@ class Map extends Component {
 
     this.props.dispatch(
       addDataToMap({
-        datasets: {
-          info: {
-            label: "Kepler visualisation",
-            id: "looker_kepler"
-          },
-          data: processCsvData(dataAsCSV)
-        },
+        datasets: [
+          {
+            info: {
+              label: "Kepler visualisation",
+              id: "looker_kepler"
+            },
+            data: processCsvData(dataAsCSV)
+          }
+        ],
         options: {
           centerMap: true,
           readOnly: false
         },
         config: {
-          mapStyle: { styleType: "light" }
+          mapStyle: this.props.mapboxStyle
         }
       })
     )
@@ -77,6 +84,11 @@ class Map extends Component {
   }
 
   componentDidMount = () => {
+    if (this.props.mapboxStyle["url"]) {
+      this.props.dispatch(inputMapStyle(this.props.mapboxStyle))
+      this.props.dispatch(addCustomMapStyle())
+    }
+
     // hide the modal & sidepanel on first load
     this.props.dispatch(toggleSidePanel())
     this.props.dispatch(toggleModal())
@@ -87,11 +99,7 @@ class Map extends Component {
   componentDidUpdate(prevProps) {
     if (
       this.props.data.length != prevProps.data.length ||
-      !this.props.data
-        .sort()
-        .every(
-          (value, index) => value.value === prevProps.data.sort()[index].value
-        )
+      !isEqual(this.props.data, prevProps.data)
     ) {
       this._updateMapData()
     }
@@ -100,7 +108,6 @@ class Map extends Component {
   render() {
     return (
       <KeplerGl
-        // mint={false}
         mapboxApiAccessToken={this.props.token}
         id="map"
         width={this.props.width}

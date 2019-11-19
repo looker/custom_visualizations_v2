@@ -26,6 +26,11 @@ looker.plugins.visualizations.add({
       type: "string",
       label: "Mapbox token",
       placeholder: "pk.eyJ1Ijoi..."
+    },
+    mapbox_style: {
+      type: "string",
+      label: "Mapbox style URL",
+      placeholder: "mapbox://styles/..."
     }
   },
   // Set up the initial state of the visualization
@@ -80,14 +85,31 @@ looker.plugins.visualizations.add({
   updateAsync: function(data, element, config, queryResponse, details, done) {
     console.log({ data, element, config, queryResponse, details, done })
 
-    // if (!config.mapbox_token) {
-    //   this.addError({
-    //     title: "Missing Mapbox token",
-    //     message:
-    //       "Can't render Kepler visualisation without it, please set in the settings."
-    //   })
-    //   return
-    // }
+    let mapboxToken
+    let mapboxStyle
+    if (config.mapbox_token && config.mapbox_style) {
+      mapboxToken = config.mapbox_token
+      mapboxStyle = config.mapbox_style
+    } else {
+      try {
+        mapboxToken = document
+          .querySelector('script[src^="mapboxtoken:"]')
+          .src.split(":")[1]
+        mapboxStyle = {
+          id: "custom_style",
+          label: "Custom style",
+          url: document.querySelector('script[src^="mapbox://"]').src,
+          icon: ""
+        }
+      } catch (error) {
+        console.log(
+          "No custom Mapbox token or style set as part of Looker Visualization Dependencies, using default."
+        )
+        mapboxToken =
+          "pk.eyJ1IjoidWJlcmRhdGEiLCJhIjoiY2poczJzeGt2MGl1bTNkcm1lcXVqMXRpMyJ9.9o2DrYg8C8UWmprj-tcVpQ"
+        mapboxStyle = { styleType: "light" }
+      }
+    }
 
     // Clear any errors from previous updates
     this.clearErrors()
@@ -112,10 +134,8 @@ looker.plugins.visualizations.add({
     // Finally update the state with our new data
     this.chart = ReactDOM.render(
       <Map
-        // token={config.mapbox_token}
-        token={
-          "pk.eyJ1IjoidWJlcmRhdGEiLCJhIjoiY2poczJzeGt2MGl1bTNkcm1lcXVqMXRpMyJ9.9o2DrYg8C8UWmprj-tcVpQ"
-        }
+        mapboxStyle={mapboxStyle}
+        token={mapboxToken}
         data={data}
         store={store}
         width={element.offsetWidth}
