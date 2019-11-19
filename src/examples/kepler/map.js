@@ -1,6 +1,7 @@
 import React, { Component } from "react"
 import { connect } from "react-redux"
 import isEqual from "lodash.isequal"
+import normalizeGeojson from "@mapbox/geojson-normalize"
 
 import KeplerGl from "kepler.gl"
 import {
@@ -11,8 +12,24 @@ import {
   inputMapStyle,
   addCustomMapStyle
 } from "kepler.gl/actions"
-import { processCsvData } from "kepler.gl/processors"
+import { processCsvData, processGeojson } from "kepler.gl/processors"
 import "mapbox-gl/dist/mapbox-gl.css"
+
+function mergeGeoJson(inputs) {
+  var output = {
+    type: "FeatureCollection",
+    features: []
+  }
+  for (var i = 0; i < inputs.length; i++) {
+    var normalized = normalizeGeojson(inputs[i])
+    if (normalized) {
+      for (var j = 0; j < normalized.features.length; j++) {
+        output.features.push(normalized.features[j])
+      }
+    }
+  }
+  return output
+}
 
 class Map extends Component {
   _updateMapData = () => {
@@ -21,7 +38,13 @@ class Map extends Component {
       lngMax = -1000,
       latMax = -1000
 
-    const columnHeaders = Object.keys(this.props.data[0]).join(",")
+    const columnHeaders = Object.keys(this.props.data[0])
+      .map(column =>
+        column.includes("pos")
+          ? [`${column}_lat`, `${column}_lon`].join(",")
+          : column
+      )
+      .join(",")
     const rows = this.props.data.map(
       row =>
         `${Object.entries(row)
@@ -43,22 +66,54 @@ class Map extends Component {
               lngMin = Math.min(lngMin, parseFloat(value))
               lngMax = Math.max(lngMax, parseFloat(value))
             }
-            return value
+            return value && (name.includes("geom") || name.includes("route"))
+              ? `"${value.replace(/"/g, '""')}"`
+              : value
           })
           .join(",")}\n`
     )
     const dataAsCSV = `${columnHeaders}\n${rows.join("")}`
+
+    const processedData = processCsvData(dataAsCSV)
+
+    console.log("processedData", processedData)
+
+    const geoJsonDatasetIndices = []
+    processedData.fields.forEach((field, index) => {
+      if (field.type === "geojson") {
+        geoJsonDatasetIndices.push(index)
+      }
+    })
+
+    const geoJsonDatasets = geoJsonDatasetIndices.map(index => {
+      const geojson_merged = processedData.rows.reduce(
+        (previousValue, currentValue) =>
+          mergeGeoJson([previousValue, JSON.parse(currentValue[index])]),
+        {}
+      )
+
+      return {
+        info: {
+          label: processedData.fields[index].name,
+          id: processedData.fields[index].name
+        },
+        data: processGeojson(geojson_merged)
+      }
+    })
+
+    console.log(geoJsonDatasets)
 
     this.props.dispatch(
       addDataToMap({
         datasets: [
           {
             info: {
-              label: "Kepler visualisation",
-              id: "looker_kepler"
+              label: "Looker visualization",
+              id: "looker_viz"
             },
-            data: processCsvData(dataAsCSV)
-          }
+            data: processedData
+          },
+          ...geoJsonDatasets
         ],
         options: {
           centerMap: true,
@@ -124,7 +179,4 @@ const mapStateToProps = state => {
 
 const dispatchToProps = dispatch => ({ dispatch })
 
-export default connect(
-  mapStateToProps,
-  dispatchToProps
-)(Map)
+export default connect(mapStateToProps, dispatchToProps)(Map)

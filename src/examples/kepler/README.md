@@ -27,3 +27,8 @@ global level, rather than having to do it every time the visualization is chosen
 
 Open the visualization settings in the Look (or Explore) after you chose Kepler by clicking on Edit
 and input both the Mapbox token and stlye URL.
+
+## TODO
+
+- Open Drill menu (see https://github.com/looker/custom_visualizations_v2/blob/master/docs/api_reference.md#rendering-data)
+- Store Kepler config changes (see https://github.com/looker/custom_visualizations_v2/blob/master/docs/api_reference.md#available-events)
