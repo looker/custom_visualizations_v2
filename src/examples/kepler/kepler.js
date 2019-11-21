@@ -31,6 +31,26 @@ looker.plugins.visualizations.add({
       type: "string",
       label: "Mapbox style URL",
       placeholder: "mapbox://styles/..."
+    },
+    latitude_column_strings: {
+      type: "array",
+      label: "Latitude column strings",
+      default: ["latitude", "lat"]
+    },
+    longitude_column_strings: {
+      type: "array",
+      label: "Longitude column strings",
+      default: ["longitude", "lon", "lng"]
+    },
+    position_column_strings: {
+      type: "array",
+      label: "Position (lat / lon) column strings",
+      default: ["pos", "loc"]
+    },
+    geojson_column_strings: {
+      type: "array",
+      label: "GeoJSON column strings",
+      default: ["geom", "route"]
     }
   },
   // Set up the initial state of the visualization
@@ -137,6 +157,7 @@ looker.plugins.visualizations.add({
         mapboxStyle={mapboxStyle}
         token={mapboxToken}
         data={data}
+        config={config}
         store={store}
         width={element.offsetWidth}
         height={element.offsetHeight}

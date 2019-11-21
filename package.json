@@ -11,6 +11,7 @@
   "scripts": {
     "build": "NODE_ENV=production webpack --config webpack.config.js",
     "watch": "NODE_ENV=development webpack --config webpack.config.js --watch --progress",
+    "start": "webpack-dev-server",
     "lint": "tslint --project tsconfig.json --format stylish 'src/**/*.ts'",
     "lint-fix": "tslint --fix --project tsconfig.json  --format stylish 'src/**/*.ts'",
     "test": "jest"

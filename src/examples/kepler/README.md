@@ -3,6 +3,20 @@
 This custom Looker visualization integrates the Kepler.gl mapping library, which enables large-scale
 visualization of geo-data.
 
+## Geo data type detection
+
+Currently these are the rules for using various columns as different type of geo data points.
+
+If column name contains a certain substring then it's assumed to be the following geo data type:
+
+- "latitude", "lat" – Latitude float value
+- "longitude", "lon", "lon" – Longitude float value
+- "pos", "loc" – Latitude + longitude separated with a comma
+- "geom", "route" – GeoJSON as string
+
+If these don't cover your use cases the values are exposed as visualization config fields (with the
+above values set as default).
+
 ## Custom style
 
 To enable a custom Mapbox style, you need to have your own token and style set up already.

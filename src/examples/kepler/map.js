@@ -33,19 +33,29 @@ function mergeGeoJson(inputs) {
 
 class Map extends Component {
   _updateMapData = () => {
+    const {
+      config: {
+        latitude_column_strings,
+        longitude_column_strings,
+        position_column_strings,
+        geojson_column_strings
+      },
+      data
+    } = this.props
+
     let lngMin = 1000,
       latMin = 1000,
       lngMax = -1000,
       latMax = -1000
 
-    const columnHeaders = Object.keys(this.props.data[0])
+    const columnHeaders = Object.keys(data[0])
       .map(column =>
         column.includes("pos") || column.includes("loc")
           ? [`${column}_lat`, `${column}_lon`].join(",")
           : column
       )
       .join(",")
-    const rows = this.props.data.map(
+    const rows = data.map(
       row =>
         `${Object.entries(row)
           .map(([name, cell]) => {
@@ -53,22 +63,34 @@ class Map extends Component {
             // column detection based on https://github.com/keplergl/kepler.gl/blob/master/docs/user-guides/b-kepler-gl-workflow/a-add-data-to-the-map.md#2-layer-detection-based-on-column-names
             // TODO: use https://github.com/keplergl/kepler.gl/blob/master/src/constants/default-settings.js#L236
             // or even https://github.com/keplergl/kepler.gl/blob/master/src/utils/dataset-utils.js#L124
-            // TODO: we should also parse Looker native Location columns into lat / lon or Point
-            if (value && (name.includes("lat") || name.includes("latitude"))) {
+            if (
+              value &&
+              latitude_column_strings.some(item => name.includes(item))
+            ) {
               latMin = Math.min(latMin, parseFloat(value))
               latMax = Math.max(latMax, parseFloat(value))
             } else if (
               value &&
-              (name.includes("lng") ||
-                name.includes("lon") ||
-                name.includes("longitude"))
+              longitude_column_strings.some(item => name.includes(item))
             ) {
               lngMin = Math.min(lngMin, parseFloat(value))
               lngMax = Math.max(lngMax, parseFloat(value))
             }
-            return value && (name.includes("geom") || name.includes("route"))
-              ? `"${value.replace(/"/g, '""')}"`
-              : value
+
+            let parsedValue = value
+            if (
+              value &&
+              geojson_column_strings.some(item => name.includes(item))
+            ) {
+              parsedValue = `"${value.replace(/"/g, '""')}"`
+            } else if (
+              !value &&
+              position_column_strings.some(item => name.includes(item))
+            ) {
+              parsedValue = ","
+            }
+
+            return parsedValue
           })
           .join(",")}\n`
     )
@@ -101,7 +123,7 @@ class Map extends Component {
       }
     })
 
-    console.log(geoJsonDatasets)
+    console.log("geoJsonDatasets", geoJsonDatasets)
 
     this.props.dispatch(
       addDataToMap({
@@ -126,16 +148,17 @@ class Map extends Component {
     )
 
     // for some reason we need to pad the bounds to get the right zoom level which shows all points
-    const lngDiff = Math.max(Math.abs(lngMax - lngMin), 0.05)
-    const latDiff = Math.max(Math.abs(latMax - latMin), 0.05)
-    this.props.dispatch(
-      fitBounds([
-        lngMin - lngDiff * 0.5,
-        latMin - latDiff * 0.5,
-        lngMax + lngDiff * 0.5,
-        latMax + latDiff * 0.5
-      ])
-    )
+    // TODO: disabled for now as it'll need to handle geojson and wkt too
+    // const lngDiff = Math.max(Math.abs(lngMax - lngMin), 0.05)
+    // const latDiff = Math.max(Math.abs(latMax - latMin), 0.05)
+    // this.props.dispatch(
+    //   fitBounds([
+    //     lngMin - lngDiff * 0.5,
+    //     latMin - latDiff * 0.5,
+    //     lngMax + lngDiff * 0.5,
+    //     latMax + latDiff * 0.5
+    //   ])
+    // )
   }
 
   componentDidMount = () => {

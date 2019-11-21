@@ -33,6 +33,13 @@ const webpackConfig = {
       { test: /\.css$/, use: ["to-string-loader", "css-loader"] }
     ]
   },
+  devServer: {
+    contentBase: path.join(__dirname, "dist"),
+    disableHostCheck: true, // this is insecure, but the only way to make the iframe work...
+    compress: true,
+    https: true,
+    port: 9000
+  },
   stats: {
     warningsFilter: /export.*liquidfillgauge.*was not found/
   },
