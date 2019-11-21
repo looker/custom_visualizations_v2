@@ -40,7 +40,7 @@ class Map extends Component {
 
     const columnHeaders = Object.keys(this.props.data[0])
       .map(column =>
-        column.includes("pos")
+        column.includes("pos") || column.includes("loc")
           ? [`${column}_lat`, `${column}_lon`].join(",")
           : column
       )
