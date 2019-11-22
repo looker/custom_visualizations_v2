@@ -51,6 +51,11 @@ looker.plugins.visualizations.add({
       type: "array",
       label: "GeoJSON column strings",
       default: ["geom", "route"]
+    },
+    kepler_map_config: {
+      type: "string",
+      label: "Kepler map config",
+      placeholder: "Will be filled as you change map settings"
     }
   },
   // Set up the initial state of the visualization
@@ -151,6 +156,10 @@ looker.plugins.visualizations.add({
       return
     }
 
+    const configUpdateCallback = keplerConfig => {
+      this.trigger("updateConfig", [{ kepler_map_config: keplerConfig }])
+    }
+
     // Finally update the state with our new data
     this.chart = ReactDOM.render(
       <Map
@@ -158,6 +167,7 @@ looker.plugins.visualizations.add({
         token={mapboxToken}
         data={data}
         config={config}
+        configUpdateCallback={configUpdateCallback}
         store={store}
         width={element.offsetWidth}
         height={element.offsetHeight}
