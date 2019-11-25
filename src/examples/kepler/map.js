@@ -37,9 +37,34 @@ function mergeGeoJson(inputs) {
 class Map extends Component {
   _updateMapData = () => {
     const {
-      config: { position_column_strings, geojson_column_strings },
+      config: {
+        position_column_strings,
+        geojson_column_strings,
+        latitude_column_strings,
+        longitude_column_strings
+      },
       data
     } = this.props
+
+    // It seems Looker sometimes sends data, but not the config in the first `updateAsync` callback
+    // But it can also be a problem of invalid entry in the visualization settings
+    if (
+      !position_column_strings ||
+      !geojson_column_strings ||
+      !latitude_column_strings ||
+      !longitude_column_strings
+    ) {
+      console.warn(
+        "One or more geo column identifier configuration value is missing:",
+        {
+          position_column_strings,
+          geojson_column_strings,
+          latitude_column_strings,
+          longitude_column_strings
+        }
+      )
+      return
+    }
 
     // We are using CSV as a convenient intermediate format between Looker and Kepler
     // First we process the column headers
@@ -64,6 +89,7 @@ class Map extends Component {
               geojson_column_strings.some(item => name.includes(item))
             ) {
               // We need to espace GeoJSON column values otherwise they'll be split up
+              // See: https://github.com/keplergl/kepler.gl/issues/736#issuecomment-552087721
               parsedValue = `"${value.replace(/"/g, '""')}"`
             } else if (
               !value &&
@@ -161,6 +187,7 @@ class Map extends Component {
             },
             data: processedCsvDataWithoutGeoJson
           },
+          // ...positionDatasets,
           ...geoJsonDatasets
         ],
         options: {
@@ -169,6 +196,9 @@ class Map extends Component {
         },
         config: {
           mapStyle: this.props.mapboxStyle
+          // visState: {
+          //   layerBlending: "subtractive"
+          // }
         }
       })
     )
@@ -190,11 +220,17 @@ class Map extends Component {
   componentDidUpdate(prevProps) {
     if (
       this.props.data.length != prevProps.data.length ||
-      !isEqual(this.props.data, prevProps.data)
+      !isEqual(this.props.data, prevProps.data) ||
+      !isEqual(this.props.config, prevProps.config)
     ) {
       this._updateMapData()
     }
   }
+
+  // TODO: implement calling this.props.configUpdateCallback
+
+  // TODO: load saved config on startup
+  // https://github.com/keplergl/kepler.gl/blob/1d503f3c5a832223ea32bf8b26e31f322b124676/docs/api-reference/actions/actions.md#receivemapconfig
 
   render() {
     return (
