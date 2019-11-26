@@ -11,41 +11,54 @@ looker.plugins.visualizations.add({
   id: "kepler",
   label: "Kepler",
   options: {
-    mapbox_token: {
+    mapboxToken: {
       type: "string",
       label: "Mapbox token",
       placeholder: "pk.eyJ1Ijoi..."
     },
-    mapbox_style: {
+    mapboxStyle: {
       type: "string",
       label: "Mapbox style URL",
       placeholder: "mapbox://styles/..."
     },
-    latitude_column_strings: {
+    latitudeColumnStrings: {
       type: "array",
       label: "Latitude column strings",
       default: ["latitude", "lat"]
     },
-    longitude_column_strings: {
+    longitudeColumnStrings: {
       type: "array",
       label: "Longitude column strings",
       default: ["longitude", "lon", "lng"]
     },
-    position_column_strings: {
+    positionColumnStrings: {
       type: "array",
       label: "Position (lat / lon) column strings",
       default: ["pos", "loc"]
     },
-    geojson_column_strings: {
+    geojsonColumnStrings: {
       type: "array",
       label: "GeoJSON column strings",
       default: ["geom", "route"]
     },
-    kepler_map_config: {
+    keplerMapConfig: {
       type: "string",
       label: "Kepler map config",
       placeholder: "Will be filled as you change map settings",
       default: {}
+    },
+    gbfsFeeds: {
+      type: "array",
+      label: "GBFS feeds to load as GeoJSON FeatureCollections",
+      placeholder: "List of HTTPS URLs separated with comma",
+      default: [
+        "https://storage.googleapis.com/gbfs.basis-pdn.bike/BCP/system_regions.json",
+        "https://storage.googleapis.com/gbfs.basis-pdn.bike/BCP/station_information.json",
+        "https://storage.googleapis.com/gbfs.basis-pdn.bike/Hereford/system_regions.json",
+        "https://storage.googleapis.com/gbfs.basis-pdn.bike/Hereford/station_information.json",
+        "https://storage.googleapis.com/gbfs.basis-pdn.bike/London/system_regions.json",
+        "https://storage.googleapis.com/gbfs.basis-pdn.bike/London/station_information.json"
+      ]
     }
   },
   // Set up the initial state of the visualization
@@ -102,9 +115,9 @@ looker.plugins.visualizations.add({
 
     let mapboxToken
     let mapboxStyle
-    if (config.mapbox_token && config.mapbox_style) {
-      mapboxToken = config.mapbox_token
-      mapboxStyle = config.mapbox_style
+    if (config.mapboxToken && config.mapboxStyle) {
+      mapboxToken = config.mapboxToken
+      mapboxStyle = config.mapboxStyle
     } else {
       try {
         mapboxToken = document
@@ -146,8 +159,8 @@ looker.plugins.visualizations.add({
       return
     }
 
-    const configUpdateCallback = keplerConfig => {
-      this.trigger("updateConfig", [{ kepler_map_config: keplerConfig }])
+    const configUpdateCallback = keplerMapConfig => {
+      this.trigger("updateConfig", [{ keplerMapConfig }])
     }
 
     // Finally update the state with our new data

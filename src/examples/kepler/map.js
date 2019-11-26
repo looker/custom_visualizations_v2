@@ -2,7 +2,6 @@ import React, { Component } from "react"
 import { connect } from "react-redux"
 import isEqual from "lodash.isequal"
 import uniqWith from "lodash.uniqwith"
-import normalizeGeojson from "@mapbox/geojson-normalize"
 import wktParser from "wellknown"
 import { createStore, combineReducers, applyMiddleware, compose } from "redux"
 import { taskMiddleware } from "react-palm/tasks"
@@ -18,6 +17,8 @@ import {
 import { processCsvData, processGeojson } from "kepler.gl/processors"
 import keplerGlReducer, { combinedUpdaters } from "kepler.gl/reducers"
 import "mapbox-gl/dist/mapbox-gl.css"
+import normalizeGeojson from "@mapbox/geojson-normalize"
+// import { geoToH3, h3ToGeoBoundary } from "h3-js"
 
 function mergeGeoJson(inputs) {
   const output = {
@@ -29,9 +30,6 @@ function mergeGeoJson(inputs) {
     const normalized = normalizeGeojson(inputs[i])
     if (normalized) {
       output.features = [...output.features, ...normalized.features]
-      // for (var j = 0; j < normalized.features.length; j++) {
-      //   output.features.push(normalized.features[j])
-      // }
     }
   }
   return output
@@ -72,7 +70,10 @@ const composedReducer = (state, action) => {
                 "bottomMapStyle"
               )
                 ? processedPayload.keplerGl.map.mapState.zoom
-                : processedPayload.keplerGl.map.mapState.zoom - 1
+                : Math.floor(
+                    processedPayload.keplerGl.map.mapState.zoom -
+                      7 / processedPayload.keplerGl.map.mapState.zoom
+                  )
             },
             visState: {
               ...processedPayload.keplerGl.map.visState,
@@ -82,9 +83,13 @@ const composedReducer = (state, action) => {
                     // make sure all of the point layers are shown, even if Kepler hides them
                     layer.config.isVisible = true
                   } else if (layer.type === "geojson") {
-                    // remove geojson shape fills, but make stroke thicker
-                    layer.config.visConfig.filled = false
-                    layer.config.visConfig.thickness = 5
+                    if (layer.meta.featureTypes.hasOwnProperty("point")) {
+                      layer.config.visConfig.stroked = true
+                    } else if (
+                      layer.meta.featureTypes.hasOwnProperty("polygon")
+                    ) {
+                      layer.config.visConfig.filled = false
+                    }
                   }
                   return layer
                 })
@@ -106,14 +111,110 @@ export const store = createStore(
   composeEnhancers(applyMiddleware(taskMiddleware))
 )
 
+async function loadGbfsFeedsAsKeplerDatasets(urls) {
+  if (!Array.isArray(urls)) {
+    console.error("Invalid GBFS feed URLs:", urls)
+    return null
+  }
+
+  const datasets = []
+  // Using Promise.all to make requests happen in parallel
+  await Promise.all(
+    urls.map(async (url, index) => {
+      console.log("Requesting ", url)
+      try {
+        const response = await fetch(url, { cors: true })
+        const body = await response.json()
+        console.log("Got GBFS data ", body)
+        if (
+          body.hasOwnProperty("data") &&
+          body.data.hasOwnProperty("regions")
+        ) {
+          datasets.push({
+            info: {
+              label: `Service areas ${body.data.regions[0].name || url}`,
+              id: `GBFS_Service_areas_${index}`
+            },
+            data: processGeojson({
+              type: "FeatureCollection",
+              features: body.data.regions.map(region => {
+                const { region_id, geom, ...properties } = region
+                return {
+                  type: "Feature",
+                  geometry: geom,
+                  properties: {
+                    ...properties,
+                    id: region_id,
+                    fillColor: false,
+                    lineColor: [200, 0, 0]
+                  }
+                }
+              })
+            })
+          })
+        } else if (
+          body.hasOwnProperty("data") &&
+          body.data.hasOwnProperty("stations")
+        ) {
+          datasets.push({
+            info: {
+              label: `Stations ${url}`,
+              id: `GBFS_Stations_${index}`
+            },
+            data: processGeojson({
+              type: "FeatureCollection",
+              features: body.data.stations.map(station => {
+                const { station_id, lat, lon, ...properties } = station
+                return {
+                  type: "Feature",
+                  // geometry: {
+                  //   type: "Polygon",
+                  //   coordinates: [h3ToGeoBoundary(geoToH3(lat, lon, 11), true)]
+                  // },
+                  geometry: {
+                    type: "Point",
+                    coordinates: [lon, lat]
+                  },
+                  properties: {
+                    ...properties,
+                    id: station_id,
+                    lineColor: [200, 200, 200],
+                    lineWidth: 5,
+                    fillColor: [200, 200, 200],
+                    radius: 25
+                  }
+                }
+              })
+            })
+          })
+        } else {
+          console.warn(
+            'Only "regions" and "stations" GBFS feeds are supported, but got: ',
+            body.data
+          )
+        }
+      } catch (e) {
+        console.error("Could not load GBFS feed, error: ", e)
+        // TODO: does this fail the promise?
+        return null
+      }
+    })
+  )
+
+  console.log("GBFS datasets", datasets)
+
+  return datasets
+}
+
 class Map extends Component {
-  _updateMapData = () => {
+  _updateMapData = async () => {
     const {
       config: {
-        position_column_strings,
-        geojson_column_strings,
-        latitude_column_strings,
-        longitude_column_strings
+        positionColumnStrings,
+        geojsonColumnStrings,
+        latitudeColumnStrings,
+        longitudeColumnStrings,
+        gbfsFeeds
       },
       data
     } = this.props
@@ -121,18 +222,18 @@ class Map extends Component {
     // It seems Looker sometimes sends data, but not the config in the first `updateAsync` callback
     // But it can also be a problem of invalid entry in the visualization settings
     if (
-      !position_column_strings ||
-      !geojson_column_strings ||
-      !latitude_column_strings ||
-      !longitude_column_strings
+      !positionColumnStrings ||
+      !geojsonColumnStrings ||
+      !latitudeColumnStrings ||
+      !longitudeColumnStrings
     ) {
       console.warn(
         "One or more geo column identifier configuration value is missing:",
         {
-          position_column_strings,
-          geojson_column_strings,
-          latitude_column_strings,
-          longitude_column_strings
+          positionColumnStrings,
+          geojsonColumnStrings,
+          latitudeColumnStrings,
+          longitudeColumnStrings
         }
       )
       return
@@ -143,7 +244,7 @@ class Map extends Component {
     const columnHeaders = Object.keys(data[0])
       .map(column =>
         // Looker native Location data is "lat,lon" format so we need to split the column header
-        position_column_strings.some(item => column.includes(item))
+        positionColumnStrings.some(item => column.includes(item))
           ? [`${column}_lat`, `${column}_lon`].join(",")
           : column
       )
@@ -158,14 +259,14 @@ class Map extends Component {
             let parsedValue = value
             if (
               value &&
-              geojson_column_strings.some(item => name.includes(item))
+              geojsonColumnStrings.some(item => name.includes(item))
             ) {
               // We need to espace GeoJSON column values otherwise they'll be split up
               // See: https://github.com/keplergl/kepler.gl/issues/736#issuecomment-552087721
               parsedValue = `"${value.replace(/"/g, '""')}"`
             } else if (
               !value &&
-              position_column_strings.some(item => name.includes(item))
+              positionColumnStrings.some(item => name.includes(item))
             ) {
               // Null location value needs a comma to prevent it from shifting CSV columns
               parsedValue = ","
@@ -249,6 +350,8 @@ class Map extends Component {
       processedCsvDataWithoutGeoJson
     )
 
+    // TODO: we might need to flush previous data first as sometimes there are some weird lingerers
+
     this.props.dispatch(
       addDataToMap({
         datasets: [
@@ -259,7 +362,8 @@ class Map extends Component {
             },
             data: processedCsvDataWithoutGeoJson
           },
-          ...geoJsonDatasets
+          ...geoJsonDatasets,
+          ...(await loadGbfsFeedsAsKeplerDatasets(gbfsFeeds))
         ],
         options: {
           centerMap: true,
