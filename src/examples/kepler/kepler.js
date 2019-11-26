@@ -2,71 +2,7 @@ import Map from "./map"
 import React from "react"
 import ReactDOM from "react-dom"
 
-import { createStore, combineReducers, applyMiddleware, compose } from "redux"
-import keplerGlReducer, { combinedUpdaters } from "kepler.gl/reducers"
-import { taskMiddleware } from "react-palm/tasks"
-
-const reducers = combineReducers({
-  keplerGl: keplerGlReducer
-})
-
-const composedReducer = (state, action) => {
-  switch (action.type) {
-    case "@@kepler.gl/ADD_DATA_TO_MAP":
-      const processedPayload = {
-        ...state,
-        keplerGl: {
-          ...state.keplerGl,
-          map: combinedUpdaters.addDataToMapUpdater(state.keplerGl.map, {
-            payload: {
-              datasets: action.payload.datasets,
-              options: action.payload.options,
-              config: action.payload.config
-            }
-          })
-        }
-      }
-      console.log("processedPayload", processedPayload)
-      // We need to do a bit of post-processing here to change Kepler's default behavior
-      return {
-        ...processedPayload,
-        keplerGl: {
-          ...processedPayload.keplerGl,
-          map: {
-            ...processedPayload.keplerGl.map,
-            mapState: {
-              ...processedPayload.keplerGl.map.mapState,
-              zoom: processedPayload.keplerGl.map.mapState.zoom - 1
-            },
-            visState: {
-              ...processedPayload.keplerGl.map.visState,
-              layers: [
-                ...processedPayload.keplerGl.map.visState.layers.map(layer => {
-                  if (layer.type === "point") {
-                    layer.config.isVisible = true
-                  } else if (layer.type === "geojson") {
-                    layer.config.visConfig.filled = false
-                    layer.config.visConfig.thickness = 5
-                  }
-                  return layer
-                })
-              ]
-            }
-          }
-        }
-      }
-  }
-  return reducers(state, action)
-}
-
-let composeEnhancers = compose
-// NOTE: uncomment this to enable Redux Devtools – it's very slow, so off by default
-// composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose
-const store = createStore(
-  composedReducer,
-  {},
-  composeEnhancers(applyMiddleware(taskMiddleware))
-)
+import { store } from "./map"
 
 looker.plugins.visualizations.add({
   // Id and Label are legacy properties that no longer have any function besides documenting

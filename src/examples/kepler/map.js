@@ -4,6 +4,8 @@ import isEqual from "lodash.isequal"
 import uniqWith from "lodash.uniqwith"
 import normalizeGeojson from "@mapbox/geojson-normalize"
 import wktParser from "wellknown"
+import { createStore, combineReducers, applyMiddleware, compose } from "redux"
+import { taskMiddleware } from "react-palm/tasks"
 
 import KeplerGl from "kepler.gl"
 import {
@@ -14,6 +16,7 @@ import {
   addCustomMapStyle
 } from "kepler.gl/actions"
 import { processCsvData, processGeojson } from "kepler.gl/processors"
+import keplerGlReducer, { combinedUpdaters } from "kepler.gl/reducers"
 import "mapbox-gl/dist/mapbox-gl.css"
 
 function mergeGeoJson(inputs) {
@@ -33,6 +36,75 @@ function mergeGeoJson(inputs) {
   }
   return output
 }
+
+const reducers = combineReducers({
+  keplerGl: keplerGlReducer
+})
+
+const composedReducer = (state, action) => {
+  switch (action.type) {
+    case "@@kepler.gl/ADD_DATA_TO_MAP":
+      const processedPayload = {
+        ...state,
+        keplerGl: {
+          ...state.keplerGl,
+          map: combinedUpdaters.addDataToMapUpdater(state.keplerGl.map, {
+            payload: {
+              datasets: action.payload.datasets,
+              options: action.payload.options,
+              config: action.payload.config
+            }
+          })
+        }
+      }
+      console.log("processedPayload", processedPayload)
+      // We need to do a bit of post-processing here to change Kepler's default behavior
+      return {
+        ...processedPayload,
+        keplerGl: {
+          ...processedPayload.keplerGl,
+          map: {
+            ...processedPayload.keplerGl.map,
+            mapState: {
+              ...processedPayload.keplerGl.map.mapState,
+              // zoom out a bit to fit everything in viewport, but only on first load
+              zoom: processedPayload.keplerGl.map.mapStyle.hasOwnProperty(
+                "bottomMapStyle"
+              )
+                ? processedPayload.keplerGl.map.mapState.zoom
+                : processedPayload.keplerGl.map.mapState.zoom - 1
+            },
+            visState: {
+              ...processedPayload.keplerGl.map.visState,
+              layers: [
+                ...processedPayload.keplerGl.map.visState.layers.map(layer => {
+                  if (layer.type === "point") {
+                    // make sure all of the point layers are shown, even if Kepler hides them
+                    layer.config.isVisible = true
+                  } else if (layer.type === "geojson") {
+                    // remove geojson shape fills, but make stroke thicker
+                    layer.config.visConfig.filled = false
+                    layer.config.visConfig.thickness = 5
+                  }
+                  return layer
+                })
+              ]
+            }
+          }
+        }
+      }
+  }
+  return reducers(state, action)
+}
+
+let composeEnhancers = compose
+// NOTE: uncomment this to enable Redux Devtools – it's very slow, so off by default
+// composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose
+export const store = createStore(
+  composedReducer,
+  {},
+  composeEnhancers(applyMiddleware(taskMiddleware))
+)
 
 class Map extends Component {
   _updateMapData = () => {
@@ -187,7 +259,6 @@ class Map extends Component {
             },
             data: processedCsvDataWithoutGeoJson
           },
-          // ...positionDatasets,
           ...geoJsonDatasets
         ],
         options: {
