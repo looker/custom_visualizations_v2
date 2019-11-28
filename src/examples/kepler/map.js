@@ -1,33 +1,32 @@
-import React, { Component } from "react"
-import { connect } from "react-redux"
-import isEqual from "lodash.isequal"
-import uniqWith from "lodash.uniqwith"
-import wktParser from "wellknown"
-import { createStore, combineReducers, applyMiddleware, compose } from "redux"
-import { taskMiddleware } from "react-palm/tasks"
+import React, { Component } from 'react'
+import { connect } from 'react-redux'
+import isEqual from 'lodash.isequal'
+import wktParser from 'wellknown'
+import { createStore, combineReducers, applyMiddleware, compose } from 'redux'
+import { taskMiddleware } from 'react-palm/tasks'
 
-import KeplerGl from "kepler.gl"
+import KeplerGl from 'kepler.gl'
 import {
   addDataToMap,
   removeDataset,
   toggleSidePanel,
   toggleModal,
   inputMapStyle,
-  addCustomMapStyle
-} from "kepler.gl/actions"
-import { processCsvData, processGeojson } from "kepler.gl/processors"
-import keplerGlReducer, { combinedUpdaters } from "kepler.gl/reducers"
-import "mapbox-gl/dist/mapbox-gl.css"
-import normalizeGeojson from "@mapbox/geojson-normalize"
+  addCustomMapStyle,
+} from 'kepler.gl/actions'
+import { processCsvData, processGeojson } from 'kepler.gl/processors'
+import keplerGlReducer, { combinedUpdaters } from 'kepler.gl/reducers'
+import 'mapbox-gl/dist/mapbox-gl.css'
+import normalizeGeojson from '@mapbox/geojson-normalize'
 // import { geoToH3, h3ToGeoBoundary } from "h3-js"
 
 const reducers = combineReducers({
-  keplerGl: keplerGlReducer
+  keplerGl: keplerGlReducer,
 })
 
 const composedReducer = (state, action) => {
   switch (action.type) {
-    case "@@kepler.gl/ADD_DATA_TO_MAP":
+    case '@@kepler.gl/ADD_DATA_TO_MAP':
       const processedPayload = {
         ...state,
         keplerGl: {
@@ -36,12 +35,12 @@ const composedReducer = (state, action) => {
             payload: {
               datasets: action.payload.datasets,
               options: action.payload.options,
-              config: action.payload.config
-            }
-          })
-        }
+              config: action.payload.config,
+            },
+          }),
+        },
       }
-      console.log("ADD_DATA_TO_MAP processed payload", processedPayload)
+      console.log('ADD_DATA_TO_MAP processed payload', processedPayload)
       // We need to do a bit of post-processing here to change Kepler's default behavior
       return {
         ...processedPayload,
@@ -51,38 +50,32 @@ const composedReducer = (state, action) => {
             ...processedPayload.keplerGl.map,
             mapState: {
               ...processedPayload.keplerGl.map.mapState,
-              // zoom out a bit to fit everything in viewport, but only on first load
-              zoom: processedPayload.keplerGl.map.mapStyle.hasOwnProperty(
-                "bottomMapStyle"
-              )
-                ? processedPayload.keplerGl.map.mapState.zoom
-                : Math.floor(
-                    processedPayload.keplerGl.map.mapState.zoom -
-                      7 / processedPayload.keplerGl.map.mapState.zoom
-                  )
+              // zoom out a bit to fit everything in viewport
+              zoom: Math.floor(
+                processedPayload.keplerGl.map.mapState.zoom -
+                  7 / processedPayload.keplerGl.map.mapState.zoom,
+              ),
             },
             visState: {
               ...processedPayload.keplerGl.map.visState,
               layers: [
                 ...processedPayload.keplerGl.map.visState.layers.map(layer => {
-                  if (layer.type === "point") {
+                  if (layer.type === 'point') {
                     // make sure all of the point layers are shown, even if Kepler hides them
                     layer.config.isVisible = true
-                  } else if (layer.type === "geojson") {
-                    if (layer.meta.featureTypes.hasOwnProperty("point")) {
+                  } else if (layer.type === 'geojson') {
+                    if (layer.meta.featureTypes.hasOwnProperty('point')) {
                       layer.config.visConfig.stroked = true
-                    } else if (
-                      layer.meta.featureTypes.hasOwnProperty("polygon")
-                    ) {
+                    } else if (layer.meta.featureTypes.hasOwnProperty('polygon')) {
                       layer.config.visConfig.filled = false
                     }
                   }
                   return layer
-                })
-              ]
-            }
-          }
-        }
+                }),
+              ],
+            },
+          },
+        },
       }
   }
   return reducers(state, action)
@@ -94,15 +87,12 @@ let composeEnhancers = compose
 export const store = createStore(
   composedReducer,
   {},
-  composeEnhancers(applyMiddleware(taskMiddleware))
+  composeEnhancers(applyMiddleware(taskMiddleware)),
 )
 
 async function loadGbfsFeedsAsKeplerDatasets(urls) {
   if (!Array.isArray(urls)) {
-    console.error(
-      "Invalid GBFS feed URLs (should be an Array of Strings):",
-      urls
-    )
+    console.error('Invalid GBFS feed URLs (should be an Array of Strings):', urls)
     return null
   }
 
@@ -110,63 +100,57 @@ async function loadGbfsFeedsAsKeplerDatasets(urls) {
   // Using Promise.all to make requests happen in parallel
   await Promise.all(
     urls.map(async (url, index) => {
-      console.log("Requesting ", url)
+      console.log('Requesting ', url)
       try {
         const response = await fetch(url, { cors: true })
         const body = await response.json()
-        console.log("Got GBFS data ", body)
-        if (
-          body.hasOwnProperty("data") &&
-          body.data.hasOwnProperty("regions")
-        ) {
+        console.log('Got GBFS data ', body)
+        if (body.hasOwnProperty('data') && body.data.hasOwnProperty('regions')) {
           const datasetId = `GBFS_Service_areas_${index}`
           currentDatasetNames.push(datasetId)
           datasets.push({
             info: {
               label: `Service areas ${body.data.regions[0].name || url}`,
-              id: datasetId
+              id: datasetId,
             },
             data: processGeojson({
-              type: "FeatureCollection",
+              type: 'FeatureCollection',
               features: body.data.regions.map(region => {
                 const { region_id, geom, ...properties } = region
                 return {
-                  type: "Feature",
+                  type: 'Feature',
                   geometry: geom,
                   properties: {
                     ...properties,
                     id: region_id,
                     fillColor: false,
-                    lineColor: [200, 0, 0]
-                  }
+                    lineColor: [200, 0, 0],
+                  },
                 }
-              })
-            })
+              }),
+            }),
           })
-        } else if (
-          body.hasOwnProperty("data") &&
-          body.data.hasOwnProperty("stations")
-        ) {
+        } else if (body.hasOwnProperty('data') && body.data.hasOwnProperty('stations')) {
           const datasetId = `GBFS_Stations_${index}`
           currentDatasetNames.push(datasetId)
           datasets.push({
             info: {
               label: `Stations ${url}`,
-              id: datasetId
+              id: datasetId,
             },
             data: processGeojson({
-              type: "FeatureCollection",
+              type: 'FeatureCollection',
               features: body.data.stations.map(station => {
                 const { station_id, lat, lon, ...properties } = station
                 return {
-                  type: "Feature",
+                  type: 'Feature',
                   // geometry: {
                   //   type: "Polygon",
                   //   coordinates: [h3ToGeoBoundary(geoToH3(lat, lon, 11), true)]
                   // },
                   geometry: {
-                    type: "Point",
-                    coordinates: [lon, lat]
+                    type: 'Point',
+                    coordinates: [lon, lat],
                   },
                   properties: {
                     ...properties,
@@ -174,27 +158,27 @@ async function loadGbfsFeedsAsKeplerDatasets(urls) {
                     lineColor: [200, 200, 200],
                     lineWidth: 5,
                     fillColor: [200, 200, 200],
-                    radius: 25
-                  }
+                    radius: 25,
+                  },
                 }
-              })
-            })
+              }),
+            }),
           })
         } else {
           console.warn(
             'Only "regions" and "stations" GBFS feeds are supported, but got: ',
-            body.data
+            body.data,
           )
         }
       } catch (e) {
-        console.error("Could not load GBFS feed, error: ", e)
+        console.error('Could not load GBFS feed, error: ', e)
         // TODO: does this fail the promise?
         return null
       }
-    })
+    }),
   )
 
-  console.log("GBFS datasets", datasets)
+  console.log('GBFS datasets', datasets)
 
   return datasets
 }
@@ -209,9 +193,9 @@ class Map extends Component {
         geojsonColumnStrings,
         latitudeColumnStrings,
         longitudeColumnStrings,
-        gbfsFeeds
+        gbfsFeeds,
       },
-      data
+      data,
     } = this.props
 
     // It seems Looker sometimes sends data, but not the config in the first `updateAsync` callback
@@ -222,21 +206,18 @@ class Map extends Component {
       !latitudeColumnStrings ||
       !longitudeColumnStrings
     ) {
-      console.warn(
-        "One or more geo column identifier configuration value is missing:",
-        {
-          positionColumnStrings,
-          geojsonColumnStrings,
-          latitudeColumnStrings,
-          longitudeColumnStrings
-        }
-      )
+      console.warn('One or more geo column identifier configuration value is missing:', {
+        positionColumnStrings,
+        geojsonColumnStrings,
+        latitudeColumnStrings,
+        longitudeColumnStrings,
+      })
       return
     }
 
     // Clear up previous datasets, except GBFS as we don't expect that to change
     currentDatasetNames = currentDatasetNames.filter(item => {
-      if (!item.includes("GBFS")) {
+      if (!item.includes('GBFS')) {
         this.props.dispatch(removeDataset(item))
         return false
       }
@@ -249,10 +230,10 @@ class Map extends Component {
       .map(column =>
         // Looker native Location data is "lat,lon" format so we need to split the column header
         positionColumnStrings.some(item => column.includes(item))
-          ? [`${column}_lat`, `${column}_lon`].join(",")
-          : column
+          ? [`${column}_lat`, `${column}_lon`].join(',')
+          : column,
       )
-      .join(",")
+      .join(',')
 
     // Then the value rows
     const rows = data.map(
@@ -261,30 +242,25 @@ class Map extends Component {
           .map(([name, cell]) => {
             const { value } = cell
             let parsedValue = value
-            if (
-              value &&
-              geojsonColumnStrings.some(item => name.includes(item))
-            ) {
+            if (value && geojsonColumnStrings.some(item => name.includes(item))) {
               // We need to espace GeoJSON column values otherwise they'll be split up
               // See: https://github.com/keplergl/kepler.gl/issues/736#issuecomment-552087721
               parsedValue = `"${value.replace(/"/g, '""')}"`
-            } else if (
-              !value &&
-              positionColumnStrings.some(item => name.includes(item))
-            ) {
+            } else if (!value && positionColumnStrings.some(item => name.includes(item))) {
               // Null location value needs a comma to prevent it from shifting CSV columns
-              parsedValue = ","
+              parsedValue = ','
             }
 
             return parsedValue
           })
-          .join(",")}\n`
+          .join(',')}\n`,
     )
     // Finally we join them all togeter into a big old CSV string
-    const dataAsCSV = `${columnHeaders}\n${rows.join("")}`
+    const dataAsCSV = `${columnHeaders}\n${rows.join('')}`
 
     // We're using Kepler's own processing tool to generate it's dataset
     const processedCsvData = processCsvData(dataAsCSV)
+    console.log('processedCsvData', processedCsvData)
 
     // Currently Kepler only takes the first Feature from a GeoJSON, see:
     // https://github.com/keplergl/kepler.gl/blob/master/src/layers/geojson-layer/geojson-utils.js#L134
@@ -292,15 +268,24 @@ class Map extends Component {
     // First we need to find the indices of columns which are GeoJSON or WKT
     const geoJsonDatasetIndices = []
     processedCsvData.fields.forEach((field, index) => {
-      if (field.type === "geojson") {
+      if (field.type === 'geojson') {
         geoJsonDatasetIndices.push(index)
       }
     })
 
+    // Remove GeoJSON columns from original dataset as we're adding them separately
+    const processedCsvDataWithoutGeoJson = {
+      fields: processedCsvData.fields.filter((_, index) => !geoJsonDatasetIndices.includes(index)),
+      rows: processedCsvData.rows.map(row =>
+        row.filter((_, index) => !geoJsonDatasetIndices.includes(index)),
+      ),
+    }
+    console.log('processedCsvDataWithoutGeoJson', processedCsvDataWithoutGeoJson)
+
     // Then merge the contents of all rows so that we would get all the features in a flat array
     const geoJsonDatasets = geoJsonDatasetIndices.map(index => {
       const geojson_merged = processedCsvData.rows.reduce(
-        (previousValue, currentValue) => {
+        (previousValue, currentValue, rowIndex) => {
           let parsedGeo
           try {
             parsedGeo = JSON.parse(currentValue[index])
@@ -311,93 +296,106 @@ class Map extends Component {
             } catch (e) {}
           }
           if (parsedGeo) {
-            // TODO: add row data back into features as metadata
-            // TODO: set styling using Look defaults as we don't want fill in ServiceArea polygons,
+            // TODO: set separate styling for each feature type
             // see: https://github.com/keplergl/kepler.gl/blob/ba656d14209f4320818baf06b4240d2ec39486fa/docs/user-guides/b-kepler-gl-workflow/a-add-data-to-the-map.md#2-auto-styling
             return {
-              type: "FeatureCollection",
-              features: [previousValue, parsedGeo].flatMap(
-                item => normalizeGeojson(item).features
-              )
+              type: 'FeatureCollection',
+              features: [previousValue, parsedGeo].flatMap(item =>
+                normalizeGeojson(item).features.map(feature => {
+                  if (feature && feature.hasOwnProperty('properties')) {
+                    feature.properties = {
+                      ...feature.properties,
+                      // lineColor: [
+                      //   Math.floor(Math.random() * 256),
+                      //   Math.floor(Math.random() * 256),
+                      //   Math.floor(Math.random() * 256),
+                      // ],
+                      // We need to add the rest of the data fields to the Feature to show on hover
+                      ...processedCsvDataWithoutGeoJson.fields.reduce(
+                        (previousValue, currentValue, fieldIndex) => ({
+                          ...previousValue,
+                          // But we need to filter out lat / lon columns as those would be rendered
+                          ...(!latitudeColumnStrings.some(item =>
+                            currentValue.name.includes(item),
+                          ) &&
+                            !longitudeColumnStrings.some(item =>
+                              currentValue.name.includes(item),
+                            ) && {
+                              [currentValue.name]:
+                                processedCsvDataWithoutGeoJson.rows[rowIndex][fieldIndex],
+                            }),
+                        }),
+                        {},
+                      ),
+                    }
+                  }
+                  return feature
+                }),
+              ),
             }
           }
           return previousValue
         },
-        { type: "FeatureCollection", features: [] }
+        { type: 'FeatureCollection', features: [] },
       )
-
-      // Finally we need to remove duplicates to not have stacks of the same thing on the map
-      const geojson_merged_deduped = {
-        type: "FeatureCollection",
-        // TODO: can we do the dedupe on the string representation instead as it's cheaper?
-        features: uniqWith(geojson_merged.features, isEqual)
-      }
 
       const datasetName = processedCsvData.fields[index].name
       currentDatasetNames.push(datasetName)
       return {
         info: {
           label: datasetName,
-          id: datasetName
+          id: datasetName,
         },
-        data: processGeojson(geojson_merged_deduped)
+        data: processGeojson(geojson_merged),
       }
     })
-    console.log("geoJsonDatasets", geoJsonDatasets)
+    console.log('geoJsonDatasets', geoJsonDatasets)
 
-    // Remove GeoJSON columns from original dataset as we're adding them separately
-    const processedCsvDataWithoutGeoJson = {
-      fields: processedCsvData.fields.filter(
-        (_, index) => !geoJsonDatasetIndices.includes(index)
-      ),
-      rows: processedCsvData.rows.map(row =>
-        row.filter((_, index) => !geoJsonDatasetIndices.includes(index))
+    if (!currentDatasetNames.some(item => item.includes('GBFS'))) {
+      this.props.dispatch(
+        addDataToMap({
+          datasets: await loadGbfsFeedsAsKeplerDatasets(gbfsFeeds),
+        }),
       )
     }
 
-    console.log("processedCsvData", processedCsvData)
-    console.log(
-      "processedCsvDataWithoutGeoJson",
-      processedCsvDataWithoutGeoJson
-    )
-
-    const lookerDatasetName = "looker_data"
+    const lookerDatasetName = 'looker_data'
     currentDatasetNames.push(lookerDatasetName)
     this.props.dispatch(
       addDataToMap({
         datasets: [
           {
             info: {
-              label: "Looker data",
-              id: lookerDatasetName
+              label: 'Looker data',
+              id: lookerDatasetName,
             },
-            data: processedCsvDataWithoutGeoJson
+            data: processedCsvDataWithoutGeoJson,
           },
           ...geoJsonDatasets,
-          ...(currentDatasetNames.some(item => item.includes("GBFS"))
-            ? []
-            : await loadGbfsFeedsAsKeplerDatasets(gbfsFeeds))
+          // ...(currentDatasetNames.some(item => item.includes('GBFS'))
+          //   ? []
+          //   : await loadGbfsFeedsAsKeplerDatasets(gbfsFeeds)),
         ],
         options: {
           centerMap: true,
-          readOnly: false
+          readOnly: false,
         },
         // TODO: remove and use config loader to set defaults
         config: {
-          mapStyle: this.props.mapboxStyle
+          mapStyle: this.props.mapboxStyle,
           // visState: {
           //   layerBlending: "subtractive"
           // }
-        }
-      })
+        },
+      }),
     )
 
     this.props.lookerDoneCallback()
   }
 
   componentDidMount = () => {
-    console.log("componentDidMount")
-    if (this.props.mapboxStyle["url"]) {
+    console.log('componentDidMount')
+    if (this.props.mapboxStyle['url']) {
       this.props.dispatch(inputMapStyle(this.props.mapboxStyle))
       this.props.dispatch(addCustomMapStyle())
     }
@@ -415,10 +413,7 @@ class Map extends Component {
       !isEqual(this.props.config, prevProps.config) ||
       !isEqual(this.props.data, prevProps.data)
     ) {
-      console.log(
-        "componentDidUpdate",
-        "data or config change detected, reloading..."
-      )
+      console.log('componentDidUpdate', 'data or config change detected, reloading...')
       this._updateMapData()
     }
   }
