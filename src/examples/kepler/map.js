@@ -9,6 +9,7 @@ import { taskMiddleware } from "react-palm/tasks"
 import KeplerGl from "kepler.gl"
 import {
   addDataToMap,
+  removeDataset,
   toggleSidePanel,
   toggleModal,
   inputMapStyle,
@@ -19,21 +20,6 @@ import keplerGlReducer, { combinedUpdaters } from "kepler.gl/reducers"
 import "mapbox-gl/dist/mapbox-gl.css"
 import normalizeGeojson from "@mapbox/geojson-normalize"
 // import { geoToH3, h3ToGeoBoundary } from "h3-js"
-
-function mergeGeoJson(inputs) {
-  const output = {
-    type: "FeatureCollection",
-    features: []
-  }
-  // TODO: rewrite with flatMap?
-  for (let i = 0; i < inputs.length; i++) {
-    const normalized = normalizeGeojson(inputs[i])
-    if (normalized) {
-      output.features = [...output.features, ...normalized.features]
-    }
-  }
-  return output
-}
 
 const reducers = combineReducers({
   keplerGl: keplerGlReducer
@@ -55,7 +41,7 @@ const composedReducer = (state, action) => {
           })
         }
       }
-      console.log("processedPayload", processedPayload)
+      console.log("ADD_DATA_TO_MAP processed payload", processedPayload)
       // We need to do a bit of post-processing here to change Kepler's default behavior
       return {
         ...processedPayload,
@@ -113,7 +99,10 @@ export const store = createStore(
 
 async function loadGbfsFeedsAsKeplerDatasets(urls) {
   if (!Array.isArray(urls)) {
-    console.error("Invalid GBFS feed URLs:", urls)
+    console.error(
+      "Invalid GBFS feed URLs (should be an Array of Strings):",
+      urls
+    )
     return null
   }
 
@@ -130,10 +119,12 @@ async function loadGbfsFeedsAsKeplerDatasets(urls) {
           body.hasOwnProperty("data") &&
           body.data.hasOwnProperty("regions")
         ) {
+          const datasetId = `GBFS_Service_areas_${index}`
+          currentDatasetNames.push(datasetId)
           datasets.push({
             info: {
               label: `Service areas ${body.data.regions[0].name || url}`,
-              id: `GBFS_Service_areas_${index}`
+              id: datasetId
             },
             data: processGeojson({
               type: "FeatureCollection",
@@ -156,10 +147,12 @@ async function loadGbfsFeedsAsKeplerDatasets(urls) {
           body.hasOwnProperty("data") &&
           body.data.hasOwnProperty("stations")
         ) {
+          const datasetId = `GBFS_Stations_${index}`
+          currentDatasetNames.push(datasetId)
           datasets.push({
             info: {
               label: `Stations ${url}`,
-              id: `GBFS_Stations_${index}`
+              id: datasetId
             },
             data: processGeojson({
               type: "FeatureCollection",
@@ -206,6 +199,8 @@ async function loadGbfsFeedsAsKeplerDatasets(urls) {
   return datasets
 }
 
+// We're storing dataset names so we can manage data updates better
+let currentDatasetNames = []
 class Map extends Component {
   _updateMapData = async () => {
     const {
@@ -238,6 +233,15 @@ class Map extends Component {
       )
       return
     }
+
+    // Clear up previous datasets, except GBFS as we don't expect that to change
+    currentDatasetNames = currentDatasetNames.filter(item => {
+      if (!item.includes("GBFS")) {
+        this.props.dispatch(removeDataset(item))
+        return false
+      }
+      return true
+    })
 
     // We are using CSV as a convenient intermediate format between Looker and Kepler
     // First we process the column headers
@@ -310,11 +314,16 @@ class Map extends Component {
             // TODO: add row data back into features as metadata
             // TODO: set styling using Look defaults as we don't want fill in ServiceArea polygons,
             // see: https://github.com/keplergl/kepler.gl/blob/ba656d14209f4320818baf06b4240d2ec39486fa/docs/user-guides/b-kepler-gl-workflow/a-add-data-to-the-map.md#2-auto-styling
-            return mergeGeoJson([previousValue, parsedGeo])
+            return {
+              type: "FeatureCollection",
+              features: [previousValue, parsedGeo].flatMap(
+                item => normalizeGeojson(item).features
+              )
+            }
           }
           return previousValue
         },
-        {}
+        { type: "FeatureCollection", features: [] }
       )
 
       // Finally we need to remove duplicates to not have stacks of the same thing on the map
@@ -324,10 +333,12 @@ class Map extends Component {
         features: uniqWith(geojson_merged.features, isEqual)
       }
 
+      const datasetName = processedCsvData.fields[index].name
+      currentDatasetNames.push(datasetName)
       return {
         info: {
-          label: processedCsvData.fields[index].name,
-          id: processedCsvData.fields[index].name
+          label: datasetName,
+          id: datasetName
         },
         data: processGeojson(geojson_merged_deduped)
       }
@@ -350,25 +361,28 @@ class Map extends Component {
       processedCsvDataWithoutGeoJson
     )
 
-    // TODO: we might need to flush previous data first as sometimes there are some weird lingerers
-
+    const lookerDatasetName = "looker_data"
+    currentDatasetNames.push(lookerDatasetName)
     this.props.dispatch(
       addDataToMap({
         datasets: [
           {
             info: {
-              label: "Looker visualization",
-              id: "looker_viz"
+              label: "Looker data",
+              id: lookerDatasetName
             },
             data: processedCsvDataWithoutGeoJson
           },
           ...geoJsonDatasets,
-          ...(await loadGbfsFeedsAsKeplerDatasets(gbfsFeeds))
+          ...(currentDatasetNames.some(item => item.includes("GBFS"))
+            ? []
+            : await loadGbfsFeedsAsKeplerDatasets(gbfsFeeds))
         ],
         options: {
           centerMap: true,
           readOnly: false
         },
+        // TODO: remove and use config loader to set defaults
         config: {
           mapStyle: this.props.mapboxStyle
           // visState: {
@@ -377,9 +391,12 @@ class Map extends Component {
         }
       })
     )
+
+    this.props.lookerDoneCallback()
   }
 
   componentDidMount = () => {
+    console.log("componentDidMount")
     if (this.props.mapboxStyle["url"]) {
       this.props.dispatch(inputMapStyle(this.props.mapboxStyle))
       this.props.dispatch(addCustomMapStyle())
@@ -395,9 +412,13 @@ class Map extends Component {
   componentDidUpdate(prevProps) {
     if (
       this.props.data.length != prevProps.data.length ||
-      !isEqual(this.props.data, prevProps.data) ||
-      !isEqual(this.props.config, prevProps.config)
+      !isEqual(this.props.config, prevProps.config) ||
+      !isEqual(this.props.data, prevProps.data)
     ) {
+      console.log(
+        "componentDidUpdate",
+        "data or config change detected, reloading..."
+      )
       this._updateMapData()
     }
   }
