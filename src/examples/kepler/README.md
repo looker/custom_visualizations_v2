@@ -7,15 +7,22 @@ visualization of geo-data.
 
 Currently these are the rules for using various columns as different type of geo data points.
 
-If column name contains a certain substring then it's assumed to be the following geo data type:
+If column name contains a certain string then it's assumed to be the following geo data type:
 
 - "latitude", "lat" – Latitude float value
 - "longitude", "lon", "lon" – Longitude float value
 - "pos", "loc" – Latitude + longitude separated with a comma
 - "geom", "route" – GeoJSON as string
 
-If these don't cover your use cases the values are exposed as visualization config fields (with the
+If these don't cover your use cases, the values are exposed as visualization config fields (with the
 above values set as default).
+
+### Trip timestamps
+
+If there are `LineString` features, we'll look for `start` and `end` or `duration` in the names of
+properties in the same row or the feature itself and if they are found, try to parse them as date
+and use that interval to enrich the points in the `LineString` so that Kepler can animate these as
+trips. For more info see [Trip layer in Kepler docs](https://github.com/keplergl/kepler.gl/blob/master/docs/user-guides/c-types-of-layers/k.trip.md#how-to-use-trip-layer-to-animate-path).
 
 ## Custom style
 

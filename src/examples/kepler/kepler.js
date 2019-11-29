@@ -41,7 +41,7 @@ looker.plugins.visualizations.add({
     },
     serialisedKeplerMapConfig: {
       type: 'string',
-      label: 'Kepler map config',
+      label: 'Kepler map config (do not edit, updated automatically as Kepler is customized)',
       placeholder: 'Will be filled as you change map settings',
       default: '',
     },
@@ -130,12 +130,16 @@ looker.plugins.visualizations.add({
       return
     }
 
+    // This keeps the loading spinner on until we're ready
+    this.trigger('loadingStart', [])
+
     let mapboxToken
     let mapboxStyle
     if (config.mapboxToken && config.mapboxStyle) {
       mapboxToken = config.mapboxToken
       mapboxStyle = config.mapboxStyle
     } else {
+      // Here we try to extract global Mapbox style settings from visualization Dependencies
       try {
         mapboxToken = document.querySelector('script[src^="mapboxtoken:"]').src.split(':')[1]
         mapboxStyle = {
@@ -145,6 +149,7 @@ looker.plugins.visualizations.add({
           icon: '',
         }
       } catch (e) {
+        // Or just fall back to standard Uber style
         mapboxToken =
           'pk.eyJ1IjoidWJlcmRhdGEiLCJhIjoiY2poczJzeGt2MGl1bTNkcm1lcXVqMXRpMyJ9.9o2DrYg8C8UWmprj-tcVpQ'
         mapboxStyle = { styleType: 'light' }
@@ -163,7 +168,11 @@ looker.plugins.visualizations.add({
         data={data}
         config={config}
         configUpdateCallback={configUpdateCallback}
-        lookerDoneCallback={done}
+        lookerDoneCallback={() => {
+          // We'll call this once everything is loaded and rendered
+          this.trigger('loadingEnd', [])
+          done()
+        }}
         store={store}
         width={element.offsetWidth}
         height={element.offsetHeight}

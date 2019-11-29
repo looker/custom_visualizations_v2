@@ -45,7 +45,7 @@
     "jquery": "^3.3.1",
     "kepler.gl": "^1.1.11",
     "lodash.isequal": "^4.5.0",
-    "lodash.uniqwith": "^4.5.0",
+    "pako": "^1.0.10",
     "pivottable": "^2.20.0",
     "react": "^16.11.0",
     "react-dom": "^16.11.0",
