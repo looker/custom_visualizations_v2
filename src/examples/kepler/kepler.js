@@ -50,12 +50,12 @@ looker.plugins.visualizations.add({
       label: 'GBFS feeds to load as GeoJSON FeatureCollections',
       placeholder: 'List of HTTPS URLs separated with comma',
       default: [
-        'https://storage.googleapis.com/gbfs.basis-pdn.bike/BCP/system_regions.json',
         'https://storage.googleapis.com/gbfs.basis-pdn.bike/BCP/station_information.json',
-        'https://storage.googleapis.com/gbfs.basis-pdn.bike/Hereford/system_regions.json',
+        'https://storage.googleapis.com/gbfs.basis-pdn.bike/BCP/system_regions.json',
         'https://storage.googleapis.com/gbfs.basis-pdn.bike/Hereford/station_information.json',
-        'https://storage.googleapis.com/gbfs.basis-pdn.bike/London/system_regions.json',
+        'https://storage.googleapis.com/gbfs.basis-pdn.bike/Hereford/system_regions.json',
         'https://storage.googleapis.com/gbfs.basis-pdn.bike/London/station_information.json',
+        'https://storage.googleapis.com/gbfs.basis-pdn.bike/London/system_regions.json',
       ],
     },
   },
@@ -103,7 +103,7 @@ looker.plugins.visualizations.add({
   },
   // Render in response to the data or settings changing
   updateAsync: function(data, element, config, queryResponse, details, done) {
-    console.log('updateAsync', new Date().toTimeString(), {
+    console.log('updateAsync', new Date(), {
       data,
       element,
       config,

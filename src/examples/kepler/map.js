@@ -1,5 +1,6 @@
 import React, { Component } from 'react'
 import { connect } from 'react-redux'
+import debounce from 'lodash.debounce'
 import isEqual from 'lodash.isequal'
 import wktParser from 'wellknown'
 import { createStore, combineReducers, applyMiddleware, compose } from 'redux'
@@ -18,33 +19,37 @@ import {
   inputMapStyle,
   addCustomMapStyle,
   removeLayer,
+  fitBounds,
+  addFilter,
+  setFilter,
 } from 'kepler.gl/actions'
 import { processCsvData, processGeojson } from 'kepler.gl/processors'
 import keplerGlReducer, { combinedUpdaters } from 'kepler.gl/reducers'
 import KeplerGlSchema from 'kepler.gl/schemas'
 
+import {
+  getLayerBounds,
+  enrichLinestringFeatureToTrip,
+  loadGbfsFeedsAsKeplerDatasets,
+} from './utils'
+
 const reducers = combineReducers({
   keplerGl: keplerGlReducer,
 })
 
-const configChangeActions = [
-  'LAYER_CONFIG_CHANGE',
-  'MAP_STYLE_CHANGE',
-  'MAP_CONFIG_CHANGE',
-  'SET_FILTER',
-  'REMOVE_FILTER',
-  'ADD_LAYER',
-  'REMOVE_LAYER',
-]
 const nonConfigActions = [
   'redux/INIT',
   'LAYER_HOVER',
   'MOUSE_MOVE',
   'REGISTER_ENTRY',
-  'UPDATE_MAP',
   'LAYER_CLICK',
 ]
-let updateLookerConfig
+let updateLookerConfig = () => false
+const debouncedLookerConfigUpdater = debounce((updatedState, action) => {
+  const configToSave = KeplerGlSchema.getConfigToSave(updatedState.keplerGl.map)
+  console.log('configToSave', new Date(), action.type, configToSave)
+  updateLookerConfig(btoa(pako.deflate(JSON.stringify(configToSave), { to: 'string' })))
+}, 1000)
 const composedReducer = (state, action) => {
   switch (action.type) {
     case '@@kepler.gl/ADD_DATA_TO_MAP':
@@ -63,47 +68,25 @@ const composedReducer = (state, action) => {
       }
       console.log('ADD_DATA_TO_MAP processed payload', processedPayload)
       // We need to do a bit of post-processing here to change Kepler's default behavior
-      return {
-        ...processedPayload,
-        keplerGl: {
-          ...processedPayload.keplerGl,
-          map: {
-            ...processedPayload.keplerGl.map,
-            mapState: {
-              ...processedPayload.keplerGl.map.mapState,
-              // zoom out a bit to fit everything in viewport
-              zoom: Math.floor(
-                processedPayload.keplerGl.map.mapState.zoom -
-                  7 / processedPayload.keplerGl.map.mapState.zoom,
-              ),
-            },
-            visState: {
-              ...processedPayload.keplerGl.map.visState,
-              layers: [
-                ...processedPayload.keplerGl.map.visState.layers.map(layer => {
-                  if (layer.type === 'point') {
-                    // make sure all of the point layers are shown, even if Kepler hides them
-                    layer.config.isVisible = true
-                  } else if (layer.type === 'geojson') {
-                    if (layer.meta.featureTypes.hasOwnProperty('point')) {
-                      layer.config.visConfig.stroked = true
-                    } else if (layer.meta.featureTypes.hasOwnProperty('polygon')) {
-                      layer.config.visConfig.filled = false
-                    }
-                  }
-                  return layer
-                }),
-              ],
-            },
-          },
+      processedPayload.keplerGl.map.visState.layers = processedPayload.keplerGl.map.visState.layers.map(
+        layer => {
+          if (layer.type === 'point') {
+            // make sure all of the point layers are shown, even if Kepler hides them
+            layer.config.isVisible = true
+          }
+          return layer
         },
-      }
+      )
+      return processedPayload
   }
   const updatedState = reducers(state, action)
-  if (configChangeActions.some(item => action.type.includes(item))) {
-    const configToSave = KeplerGlSchema.getConfigToSave(updatedState.keplerGl.map)
-    console.log('configToSave', configToSave)
-    updateLookerConfig(btoa(pako.deflate(JSON.stringify(configToSave), { to: 'string' })))
+  if (
+    !nonConfigActions.some(item => action.type.includes(item)) &&
+    updatedState.keplerGl &&
+    updatedState.keplerGl.map &&
+    updatedState.keplerGl.map.visState
+  ) {
+    debouncedLookerConfigUpdater(updatedState, action)
   }
   return updatedState
 }
@@ -116,129 +99,6 @@ export const store = createStore(
   {},
   composeEnhancers(applyMiddleware(taskMiddleware)),
 )
-
-function enrichLinestringFeatureToTrip(feature) {
-  // If it's a LineString it could be a trip so try to add timestamps to points in it
-  if (feature && feature.properties && feature.geometry && feature.geometry.type === 'LineString') {
-    const propertyKeys = Object.keys(feature.properties)
-    if (
-      propertyKeys.some(item => item.includes('start')) &&
-      (propertyKeys.some(item => item.includes('duration')) ||
-        propertyKeys.some(item => item.includes('end')))
-    ) {
-      try {
-        const startDateProperty = propertyKeys.find(item => item.includes('start'))
-        const startTimestamp = Date.parse(feature.properties[startDateProperty])
-        const durationProperty = propertyKeys.find(item => item.includes('duration'))
-        const duration = feature.properties[durationProperty]
-        const endDateProperty = propertyKeys.find(item => item.includes('end'))
-        const endTimestamp = Date.parse(feature.properties[endDateProperty])
-        const tripDuration = duration ? duration * 1000 : endTimestamp - startTimestamp
-        feature.geometry.coordinates = feature.geometry.coordinates.map((item, index, array) => [
-          ...item,
-          0,
-          Math.round(startTimestamp + (tripDuration / (array.length - 1)) * index),
-        ])
-      } catch (e) {
-        // Well, we tried...
-      }
-    }
-  }
-  return feature
-}
-
-async function loadGbfsFeedsAsKeplerDatasets(urls) {
-  if (!Array.isArray(urls)) {
-    console.error('Invalid GBFS feed URLs (should be an Array of Strings):', urls)
-    return null
-  }
-
-  const datasets = []
-  // Using Promise.all to make requests happen in parallel
-  await Promise.all(
-    urls.map(async (url, index) => {
-      console.log('Requesting ', url)
-      try {
-        const response = await fetch(url, { cors: true })
-        const body = await response.json()
-        console.log('Got GBFS data ', body)
-        if (body.hasOwnProperty('data') && body.data.hasOwnProperty('regions')) {
-          const datasetId = `GBFS_Service_areas_${index}`
-          currentDatasetNames.push(datasetId)
-          datasets.push({
-            info: {
-              label: `Service areas ${body.data.regions[0].name || url}`,
-              id: datasetId,
-            },
-            data: processGeojson({
-              type: 'FeatureCollection',
-              features: body.data.regions.map(region => {
-                const { region_id, geom, ...properties } = region
-                return {
-                  type: 'Feature',
-                  geometry: geom,
-                  properties: {
-                    ...properties,
-                    id: region_id,
-                    fillColor: false,
-                    lineColor: [200, 0, 0],
-                  },
-                }
-              }),
-            }),
-          })
-        } else if (body.hasOwnProperty('data') && body.data.hasOwnProperty('stations')) {
-          const datasetId = `GBFS_Stations_${index}`
-          currentDatasetNames.push(datasetId)
-          datasets.push({
-            info: {
-              label: `Stations ${url}`,
-              id: datasetId,
-            },
-            data: processGeojson({
-              type: 'FeatureCollection',
-              features: body.data.stations.map(station => {
-                const { station_id, lat, lon, ...properties } = station
-                return {
-                  type: 'Feature',
-                  // geometry: {
-                  //   type: "Polygon",
-                  //   coordinates: [h3ToGeoBoundary(geoToH3(lat, lon, 11), true)]
-                  // },
-                  geometry: {
-                    type: 'Point',
-                    coordinates: [lon, lat],
-                  },
-                  properties: {
-                    ...properties,
-                    id: station_id,
-                    lineColor: [200, 200, 200],
-                    lineWidth: 5,
-                    fillColor: [200, 200, 200],
-                    radius: 25,
-                  },
-                }
-              }),
-            }),
-          })
-        } else {
-          console.warn(
-            'Only "regions" and "stations" GBFS feeds are supported, but got: ',
-            body.data,
-          )
-        }
-      } catch (e) {
-        console.error('Could not load GBFS feed, error: ', e)
-        // TODO: does this fail the promise?
-        return null
-      }
-    }),
-  )
-
-  console.log('GBFS datasets', datasets)
-
-  return datasets
-}
 
 // We're storing dataset names so we can manage data updates better
 let currentDatasetNames = []
@@ -413,13 +273,48 @@ class Map extends Component {
     })
     console.log('geoJsonDatasets', geoJsonDatasets)
 
-    // Add the GBFS layers separately as we don't want to include them in map bounds calculation
     if (!gbfsDatasets) {
       gbfsDatasets = await loadGbfsFeedsAsKeplerDatasets(gbfsFeeds)
+      currentDatasetNames.push(gbfsDatasets.map(dataset => dataset.info.id))
     }
+
+    const lookerDatasetName = 'looker_data'
+    currentDatasetNames.push(lookerDatasetName)
+    const datasetsToAdd = [
+      {
+        info: {
+          label: 'Looker data',
+          id: lookerDatasetName,
+        },
+        data: processedCsvDataWithoutGeoJson,
+      },
+      ...geoJsonDatasets,
+    ]
+
+    let config = {
+      mapStyle: this.props.mapboxStyle,
+    }
+    if (this.props.config.serialisedKeplerMapConfig) {
+      const decompressedConfig = JSON.parse(
+        pako.inflate(atob(this.props.config.serialisedKeplerMapConfig), {
+          to: 'string',
+        }),
+      )
+      const loadedConfig = KeplerGlSchema.parseSavedConfig(decompressedConfig)
+      console.log('loaded config', loadedConfig)
+      if (loadedConfig.visState.layers.length > 0) {
+        config = loadedConfig
+      }
+    }
+
     this.props.dispatch(
       addDataToMap({
-        datasets: gbfsDatasets,
+        datasets: [...datasetsToAdd, ...gbfsDatasets],
+        options: {
+          centerMap: false,
+          readOnly: false,
+        },
+        config,
       }),
     )
 
@@ -433,43 +328,26 @@ class Map extends Component {
       this.props.dispatch(removeLayer(ghostLayerIndex))
     }
 
-    let config = {
-      mapStyle: this.props.mapboxStyle,
-    }
-    if (this.props.config.serialisedKeplerMapConfig) {
-      const decompressedConfig = JSON.parse(
-        pako.inflate(atob(this.props.config.serialisedKeplerMapConfig), {
-          to: 'string',
-        }),
+    // We only want to center the map around non-GBFS layers and only if there's no saved config
+    if (!config.hasOwnProperty('mapState')) {
+      const nonGbfsLayers = this.props.keplerGl.map.visState.layers.filter(
+        layer => !layer.config.dataId.includes('GBFS'),
       )
-      console.log('decompressedConfig', decompressedConfig)
-      // TODO: need to reconcile ids in datasets: https://github.com/keplergl/kepler.gl/blob/master/docs/api-reference/advanced-usages/saving-loading-w-schema.md#match-config-with-another-dataset
-      // config = KeplerGlSchema.load([], decompressedConfig).config
+      if (nonGbfsLayers.length > 0) {
+        this.props.dispatch(fitBounds(getLayerBounds(nonGbfsLayers)))
+      }
     }
 
-    const lookerDatasetName = 'looker_data'
-    currentDatasetNames.push(lookerDatasetName)
-    this.props.dispatch(
-      addDataToMap({
-        datasets: [
-          {
-            info: {
-              label: 'Looker data',
-              id: lookerDatasetName,
-            },
-            data: processedCsvDataWithoutGeoJson,
-          },
-          ...geoJsonDatasets,
-        ],
-        options: {
-          centerMap: true,
-          readOnly: false,
-        },
-        config,
-      }),
-    )
-
-    // TODO: add filter if there's a time property – addFilter & enlargeFilter
+    if (this.props.keplerGl.map.visState.filters.length === 0) {
+      // TODO: add filter if there's a time property – addFilter & enlargeFilter
+      const timeFields = processedCsvDataWithoutGeoJson.fields.filter(
+        field => field.type === 'timestamp',
+      )
+      if (timeFields.length > 0) {
+        this.props.dispatch(addFilter('looker_data'))
+        this.props.dispatch(setFilter(0, 'name', timeFields[0].name))
+      }
+    }
 
     this.props.lookerDoneCallback()
   }
@@ -493,7 +371,7 @@ class Map extends Component {
   }
 
   componentDidUpdate(prevProps) {
-    // We don't want to rerender when the stored Kepler config changes as it'll trash around a lot
+    // We don't want to rerender when the stored Kepler config changes as it'd trash around a lot
     const { serialisedKeplerMapConfig: nope, ...newConfigWithoutKeplerConfig } = this.props.config
     const { serialisedKeplerMapConfig: nah, ...prevConfigWithoutKeplerConfig } = prevProps.config
     if (
@@ -505,11 +383,6 @@ class Map extends Component {
       this._updateMapData()
     }
   }
-
-  // TODO: implement calling this.props.configUpdateCallback
-
-  // TODO: load saved config on startup
-  // https://github.com/keplergl/kepler.gl/blob/1d503f3c5a832223ea32bf8b26e31f322b124676/docs/api-reference/actions/actions.md#receivemapconfig
 
   render() {
     return (
