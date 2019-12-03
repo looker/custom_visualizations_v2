@@ -142,7 +142,11 @@ class Map extends Component {
     }
 
     // Clear up previous datasets, except GBFS as we don't expect those to change
-    if (this.props.keplerGl.map.hasOwnProperty('visState')) {
+    if (
+      this.props.keplerGl &&
+      this.props.keplerGl.map &&
+      this.props.keplerGl.map.hasOwnProperty('visState')
+    ) {
       const nonGbfsDatasets = Object.keys(this.props.keplerGl.map.visState.datasets).filter(
         datasetId => !datasetId.includes('GBFS'),
       )
