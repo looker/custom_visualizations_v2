@@ -27,42 +27,58 @@ export function getLayerBounds(layers) {
   const lonDiff = newBounds[0] - newBounds[2]
   const latDiff = newBounds[1] - newBounds[3]
   // NOTE: Kepler zooms in too much so we need to increase the bounds' extent
-  return [
-    newBounds[0] + lonDiff * 0.4,
-    newBounds[1] + latDiff * 0.4,
-    newBounds[2] - lonDiff * 0.4,
-    newBounds[3] - latDiff * 0.4,
+  // We need a bit more space on longitude max side so that filters can fit on the bottom of viewport
+  const extendedBounds = [
+    newBounds[0] + lonDiff * 0.5,
+    newBounds[1] + latDiff * 1,
+    newBounds[2] - lonDiff * 0.5,
+    newBounds[3] - latDiff * 0.5,
   ]
+  console.log('Recentering viewport around', extendedBounds)
+  return extendedBounds
+}
+
+export function doesLinestringHaveTimes(feature) {
+  const propertyKeys = Object.keys(feature.properties)
+  return (
+    propertyKeys.some(item => item.includes('start')) &&
+    (propertyKeys.some(item => item.includes('duration')) ||
+      propertyKeys.some(item => item.includes('end')))
+  )
 }
 
 export function enrichLinestringFeatureToTrip(feature) {
-  // If it's a LineString it could be a trip so try to add timestamps to points in it
-  if (feature && feature.properties && feature.geometry && feature.geometry.type === 'LineString') {
-    const propertyKeys = Object.keys(feature.properties)
-    if (
-      propertyKeys.some(item => item.includes('start')) &&
-      (propertyKeys.some(item => item.includes('duration')) ||
-        propertyKeys.some(item => item.includes('end')))
-    ) {
-      try {
-        const startDateProperty = propertyKeys.find(item => item.includes('start'))
-        const startTimestamp = Date.parse(feature.properties[startDateProperty])
-        const durationProperty = propertyKeys.find(item => item.includes('duration'))
-        const duration = feature.properties[durationProperty]
-        const endDateProperty = propertyKeys.find(item => item.includes('end'))
-        const endTimestamp = Date.parse(feature.properties[endDateProperty])
-        const tripDuration = duration ? duration * 1000 : endTimestamp - startTimestamp
-        feature.geometry.coordinates = feature.geometry.coordinates.map((item, index, array) => [
-          ...item,
-          0,
-          Math.round(startTimestamp + (tripDuration / (array.length - 1)) * index),
-        ])
-      } catch (e) {
-        // Well, we tried...
-      }
+  let coordinates
+  const propertyKeys = Object.keys(feature.properties)
+  if (doesLinestringHaveTimes(feature)) {
+    try {
+      const startDateProperty = propertyKeys.find(item => item.includes('start'))
+      const startTimestamp = Date.parse(feature.properties[startDateProperty])
+      const durationProperty = propertyKeys.find(item => item.includes('duration'))
+      const duration = feature.properties[durationProperty]
+      const endDateProperty = propertyKeys.find(item => item.includes('end'))
+      const endTimestamp = Date.parse(feature.properties[endDateProperty])
+      const tripDuration = duration ? duration * 1000 : endTimestamp - startTimestamp
+      coordinates = feature.geometry.coordinates.map((item, index, array) => [
+        ...item,
+        0,
+        Math.round(startTimestamp + (tripDuration / (array.length - 1)) * index),
+      ])
+    } catch (e) {
+      // Well, we tried...
     }
   }
-  return feature
+  // We need to create a new object here as mutating would change the original LineString
+  return {
+    type: 'Feature',
+    geometry: { type: 'LineString', coordinates },
+    // NOTE: styling features below don't work ATM 😿
+    properties: {
+      ...feature.properties,
+      lineWidth: 2,
+      fillColor: [1, 1, 1],
+    },
+  }
 }
 
 export async function loadGbfsFeedsAsKeplerDatasets(urls) {
@@ -149,4 +165,10 @@ export async function loadGbfsFeedsAsKeplerDatasets(urls) {
   console.log('GBFS datasets', datasets)
 
   return datasets
+}
+
+export function mergeArrayProperties(objValue, srcValue) {
+  if (Array.isArray(objValue)) {
+    return objValue.concat(srcValue)
+  }
 }

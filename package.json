@@ -46,6 +46,7 @@
     "kepler.gl": "^1.1.11",
     "lodash.debounce": "^4.0.8",
     "lodash.isequal": "^4.5.0",
+    "lodash.mergewith": "^4.6.2",
     "pako": "^1.0.10",
     "pivottable": "^2.20.0",
     "react": "^16.11.0",

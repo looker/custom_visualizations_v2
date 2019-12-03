@@ -2,6 +2,7 @@ import React, { Component } from 'react'
 import { connect } from 'react-redux'
 import debounce from 'lodash.debounce'
 import isEqual from 'lodash.isequal'
+import mergeWith from 'lodash.mergewith'
 import wktParser from 'wellknown'
 import { createStore, combineReducers, applyMiddleware, compose } from 'redux'
 import { taskMiddleware } from 'react-palm/tasks'
@@ -20,6 +21,7 @@ import {
   addCustomMapStyle,
   removeLayer,
   fitBounds,
+  resetMapConfig,
   addFilter,
   setFilter,
 } from 'kepler.gl/actions'
@@ -29,8 +31,10 @@ import KeplerGlSchema from 'kepler.gl/schemas'
 
 import {
   getLayerBounds,
+  doesLinestringHaveTimes,
   enrichLinestringFeatureToTrip,
   loadGbfsFeedsAsKeplerDatasets,
+  mergeArrayProperties,
 } from './utils'
 
 const reducers = combineReducers({
@@ -66,20 +70,24 @@ const composedReducer = (state, action) => {
           }),
         },
       }
-      console.log('ADD_DATA_TO_MAP processed payload', processedPayload)
       // We need to do a bit of post-processing here to change Kepler's default behavior
       processedPayload.keplerGl.map.visState.layers = processedPayload.keplerGl.map.visState.layers.map(
         layer => {
           if (layer.type === 'point') {
             // make sure all of the point layers are shown, even if Kepler hides them
             layer.config.isVisible = true
+          } else if (layer.type === 'trip') {
+            // make trip trails longer
+            layer.config.visConfig.trailLength = 1000
           }
           return layer
         },
       )
+      console.log('ADD_DATA_TO_MAP', 'processedPayload', processedPayload)
       return processedPayload
   }
   const updatedState = reducers(state, action)
+  // Update saved config except on noisy / irrelevant actions – also debounce to improve performance
   if (
     !nonConfigActions.some(item => action.type.includes(item)) &&
     updatedState.keplerGl &&
@@ -100,10 +108,10 @@ export const store = createStore(
   composeEnhancers(applyMiddleware(taskMiddleware)),
 )
 
-// We're storing dataset names so we can manage data updates better
-let currentDatasetNames = []
-let gbfsDatasets
 class Map extends Component {
+  previousColumnsHeaders = null
+  gbfsDatasets = null
+
   _updateMapData = async () => {
     const {
       config: {
@@ -133,14 +141,13 @@ class Map extends Component {
       return
     }
 
-    // Clear up previous datasets, except GBFS as we don't expect that to change
-    currentDatasetNames = currentDatasetNames.filter(item => {
-      if (!item.includes('GBFS')) {
-        this.props.dispatch(removeDataset(item))
-        return false
-      }
-      return true
-    })
+    // Clear up previous datasets, except GBFS as we don't expect those to change
+    if (this.props.keplerGl.map.hasOwnProperty('visState')) {
+      const nonGbfsDatasets = Object.keys(this.props.keplerGl.map.visState.datasets).filter(
+        datasetId => !datasetId.includes('GBFS'),
+      )
+      nonGbfsDatasets.forEach(datasetId => this.props.dispatch(removeDataset(datasetId)))
+    }
 
     // We are using CSV as a convenient intermediate format between Looker and Kepler
     // First we process the column headers
@@ -176,7 +183,7 @@ class Map extends Component {
     // Finally we join them all togeter into a big old CSV string
     const dataAsCSV = `${columnHeaders}\n${rows.join('')}`
 
-    // We're using Kepler's own processing tool to generate its dataset
+    // We're using Kepler's own processing utility to generate its dataset
     const processedCsvData = processCsvData(dataAsCSV)
     console.log('processedCsvData', processedCsvData)
 
@@ -200,116 +207,118 @@ class Map extends Component {
     }
     console.log('processedCsvDataWithoutGeoJson', processedCsvDataWithoutGeoJson)
 
-    // Then merge the contents of all rows so that we would get all the features in a flat array
-    const geoJsonDatasets = geoJsonDatasetIndices.map(index => {
-      const geojsonMerged = processedCsvData.rows.reduce(
-        (previousValue, currentValue, rowIndex) => {
-          let parsedGeo
+    // Then merge the contents of all GeoJSON rows and then sort them into datasets by feature type
+    const geoJsonDatasets = geoJsonDatasetIndices.flatMap(index => {
+      const geojsonMerged = processedCsvData.rows.reduce((previousRows, currentRow, rowIndex) => {
+        let parsedGeo
+        try {
+          parsedGeo = JSON.parse(currentRow[index])
+        } catch (e) {}
+        if (!parsedGeo) {
           try {
-            parsedGeo = JSON.parse(currentValue[index])
+            parsedGeo = wktParser(currentRow[index])
           } catch (e) {}
-          if (!parsedGeo) {
-            try {
-              parsedGeo = wktParser(currentValue[index])
-            } catch (e) {}
-          }
-          if (parsedGeo) {
-            // TODO: set separate styling for each feature type
-            // see: https://github.com/keplergl/kepler.gl/blob/ba656d14209f4320818baf06b4240d2ec39486fa/docs/user-guides/b-kepler-gl-workflow/a-add-data-to-the-map.md#2-auto-styling
-            // TODO: partition each feature type into their own dataset
-            return {
-              type: 'FeatureCollection',
-              features: [previousValue, parsedGeo].flatMap(item =>
-                normalizeGeojson(item).features.map(feature => {
-                  if (feature && feature.hasOwnProperty('properties')) {
-                    feature.properties = {
-                      ...feature.properties,
-                      // lineColor: [
-                      //   Math.floor(Math.random() * 256),
-                      //   Math.floor(Math.random() * 256),
-                      //   Math.floor(Math.random() * 256),
-                      // ],
-                      // We need to add the rest of the data fields to the Feature to show on hover
-                      ...processedCsvDataWithoutGeoJson.fields.reduce(
-                        (previousValue, currentValue, fieldIndex) => {
-                          // But we need to filter out lat / lon columns as those would be rendered
-                          if (
-                            !latitudeColumnStrings.some(item => currentValue.name.includes(item)) &&
-                            !longitudeColumnStrings.some(item => currentValue.name.includes(item))
-                          ) {
-                            return {
-                              ...previousValue,
-                              [currentValue.name]:
-                                processedCsvDataWithoutGeoJson.rows[rowIndex][fieldIndex],
-                            }
-                          }
-                          return previousValue
-                        },
-                        {},
-                      ),
-                    }
-                  }
-                  return feature
-                }),
-              ),
-            }
-          }
-          return previousValue
-        },
-        { type: 'FeatureCollection', features: [] },
-      )
+        }
+        if (parsedGeo) {
+          return mergeWith(
+            previousRows,
+            normalizeGeojson(parsedGeo).features.reduce((previousFeatures, feature) => {
+              if (feature && feature.hasOwnProperty('properties')) {
+                feature.properties = {
+                  ...feature.properties,
+                  // We need to add the rest of the data fields to the Feature to show on hover
+                  ...processedCsvDataWithoutGeoJson.fields.reduce(
+                    (previousFields, currentField, fieldIndex) => {
+                      // But we need to filter out lat / lon columns as those would be rendered
+                      if (
+                        !latitudeColumnStrings.some(item => currentField.name.includes(item)) &&
+                        !longitudeColumnStrings.some(item => currentField.name.includes(item))
+                      ) {
+                        return {
+                          ...previousFields,
+                          [currentField.name]:
+                            processedCsvDataWithoutGeoJson.rows[rowIndex][fieldIndex],
+                        }
+                      }
+                      return previousFields
+                    },
+                    {},
+                  ),
+                }
+                return mergeWith(
+                  previousFeatures,
+                  {
+                    // If it's a LineString it could be a trip so try to add timestamps to points in it
+                    ...(feature.geometry.type === 'LineString' &&
+                      doesLinestringHaveTimes(feature) && {
+                        Trip: [enrichLinestringFeatureToTrip(feature)],
+                      }),
+                    [feature.geometry.type]: [feature],
+                  },
+                  mergeArrayProperties,
+                )
+              }
+              return previousFeatures
+            }, {}),
+            mergeArrayProperties,
+          )
+        }
+        return previousRows
+      }, {})
 
-      geojsonMerged.features = geojsonMerged.features.map(enrichLinestringFeatureToTrip)
-
-      const datasetName = processedCsvData.fields[index].name
-      currentDatasetNames.push(datasetName)
-      return {
+      return Object.entries(geojsonMerged).map(([featureType, features]) => ({
         info: {
-          label: datasetName,
-          id: datasetName,
+          label: `${processedCsvData.fields[index].name.split('.').slice(1)}_${featureType}s`,
+          id: `${processedCsvData.fields[index].name}_${featureType}s`,
         },
-        data: processGeojson(geojsonMerged),
-      }
+        data: processGeojson({ type: 'FeatureCollection', features }),
+      }))
     })
     console.log('geoJsonDatasets', geoJsonDatasets)
 
-    if (!gbfsDatasets) {
-      gbfsDatasets = await loadGbfsFeedsAsKeplerDatasets(gbfsFeeds)
-      currentDatasetNames.push(gbfsDatasets.map(dataset => dataset.info.id))
+    // Load GBFS datasets if this is the first time we add data
+    if (this.gbfsDatasets === null) {
+      this.gbfsDatasets = await loadGbfsFeedsAsKeplerDatasets(gbfsFeeds)
     }
-
-    const lookerDatasetName = 'looker_data'
-    currentDatasetNames.push(lookerDatasetName)
-    const datasetsToAdd = [
-      {
-        info: {
-          label: 'Looker data',
-          id: lookerDatasetName,
-        },
-        data: processedCsvDataWithoutGeoJson,
-      },
-      ...geoJsonDatasets,
-    ]
 
     let config = {
       mapStyle: this.props.mapboxStyle,
     }
-    if (this.props.config.serialisedKeplerMapConfig) {
+    let loadedConfig
+    // Let's try to apply the previous config, but we need to reset it if data columns have changed
+    // to prevent strange behaviour
+    if (
+      this.props.config.serialisedKeplerMapConfig &&
+      (this.previousColumnsHeaders === null || this.previousColumnsHeaders === columnHeaders)
+    ) {
       const decompressedConfig = JSON.parse(
         pako.inflate(atob(this.props.config.serialisedKeplerMapConfig), {
           to: 'string',
         }),
       )
-      const loadedConfig = KeplerGlSchema.parseSavedConfig(decompressedConfig)
+      loadedConfig = KeplerGlSchema.parseSavedConfig(decompressedConfig)
       console.log('loaded config', loadedConfig)
       if (loadedConfig.visState.layers.length > 0) {
         config = loadedConfig
       }
+    } else {
+      this.props.dispatch(resetMapConfig())
     }
+    this.previousColumnsHeaders = columnHeaders
 
-    this.props.dispatch(
+    await this.props.dispatch(
       addDataToMap({
-        datasets: [...datasetsToAdd, ...gbfsDatasets],
+        datasets: [
+          {
+            info: {
+              label: 'Looker data',
+              id: 'looker_data',
+            },
+            data: processedCsvDataWithoutGeoJson,
+          },
+          ...geoJsonDatasets,
+          ...this.gbfsDatasets,
+        ],
         options: {
           centerMap: false,
           readOnly: false,
@@ -328,23 +337,31 @@ class Map extends Component {
       this.props.dispatch(removeLayer(ghostLayerIndex))
     }
 
-    // We only want to center the map around non-GBFS layers and only if there's no saved config
-    if (!config.hasOwnProperty('mapState')) {
-      const nonGbfsLayers = this.props.keplerGl.map.visState.layers.filter(
-        layer => !layer.config.dataId.includes('GBFS'),
-      )
-      if (nonGbfsLayers.length > 0) {
-        this.props.dispatch(fitBounds(getLayerBounds(nonGbfsLayers)))
-      }
+    // Let's re-center the map around non-GBFS layers
+    const nonGbfsLayers = this.props.keplerGl.map.visState.layers.filter(
+      layer => !layer.config.dataId.includes('GBFS'),
+    )
+    if (nonGbfsLayers.length > 0) {
+      this.props.dispatch(fitBounds(getLayerBounds(nonGbfsLayers)))
     }
 
-    if (this.props.keplerGl.map.visState.filters.length === 0) {
-      // TODO: add filter if there's a time property – addFilter & enlargeFilter
-      const timeFields = processedCsvDataWithoutGeoJson.fields.filter(
+    // Let's add filter if there's a timestamp property, but only if there are no filters added yet
+    // NOTE: Doesn't apply to GeoJSON layers, waiting for https://github.com/keplergl/kepler.gl/issues/768
+    if (!loadedConfig && this.props.keplerGl.map.visState.filters.length === 0) {
+      const timeFields = this.props.keplerGl.map.visState.datasets.looker_data.fields.filter(
         field => field.type === 'timestamp',
       )
       if (timeFields.length > 0) {
-        this.props.dispatch(addFilter('looker_data'))
+        this.props.dispatch(
+          addFilter(
+            ['looker_data'],
+            // Object.keys(this.props.keplerGl.map.visState.datasets).filter(datasetId =>
+            //   this.props.keplerGl.map.visState.datasets[datasetId].fields.some(
+            //     field => field.name === timeFields[0].name,
+            //   ),
+            // ),
+          ),
+        )
         this.props.dispatch(setFilter(0, 'name', timeFields[0].name))
       }
     }
@@ -353,9 +370,7 @@ class Map extends Component {
   }
 
   componentDidMount = () => {
-    console.log('componentDidMount')
-
-    // This needs to be stored in a variable outside of the class as the reducer can't access it
+    // Needs to be stored in a variable outside of the class otherwise the reducer can't access it
     updateLookerConfig = this.props.configUpdateCallback
 
     if (this.props.mapboxStyle['url']) {
@@ -366,8 +381,6 @@ class Map extends Component {
     // hide the modal & sidepanel on first load
     this.props.dispatch(toggleSidePanel())
     this.props.dispatch(toggleModal())
-
-    this._updateMapData()
   }
 
   componentDidUpdate(prevProps) {
