@@ -381,6 +381,8 @@ class Map extends Component {
     // hide the modal & sidepanel on first load
     this.props.dispatch(toggleSidePanel())
     this.props.dispatch(toggleModal())
+
+    this._updateMapData()
   }
 
   componentDidUpdate(prevProps) {
