@@ -184,7 +184,9 @@ class Map extends Component {
               parsedValue = ','
             }
 
-            return `"${parsedValue}"`
+            return positionColumnStrings.some(item => name.includes(item))
+              ? parsedValue
+              : `"${parsedValue}"`
           })
           .join(',')}\n`,
     )
