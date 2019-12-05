@@ -47,6 +47,10 @@ const nonConfigActions = [
   'MOUSE_MOVE',
   'REGISTER_ENTRY',
   'LAYER_CLICK',
+  'FIT_BOUNDS',
+  'UPDATE_MAP',
+  'TOGGLE_MODAL',
+  'TOGGLE_SIDE_PANEL',
 ]
 let updateLookerConfig = () => false
 const debouncedLookerConfigUpdater = debounce((updatedState, action) => {
@@ -174,13 +178,13 @@ class Map extends Component {
             if (value && geojsonColumnStrings.some(item => name.includes(item))) {
               // We need to espace GeoJSON column values otherwise they'll be split up
               // See: https://github.com/keplergl/kepler.gl/issues/736#issuecomment-552087721
-              parsedValue = `"${value.replace(/"/g, '""')}"`
+              parsedValue = `${value.replace(/"/g, '""')}`
             } else if (!value && positionColumnStrings.some(item => name.includes(item))) {
               // Null location value needs a comma to prevent it from shifting CSV columns
               parsedValue = ','
             }
 
-            return parsedValue
+            return `"${parsedValue}"`
           })
           .join(',')}\n`,
     )
@@ -272,7 +276,7 @@ class Map extends Component {
 
       return Object.entries(geojsonMerged).map(([featureType, features]) => ({
         info: {
-          label: `${processedCsvData.fields[index].name.split('.').slice(1)}_${featureType}s`,
+          label: `${processedCsvData.fields[index].name}_${featureType}s`,
           id: `${processedCsvData.fields[index].name}_${featureType}s`,
         },
         data: processGeojson({ type: 'FeatureCollection', features }),

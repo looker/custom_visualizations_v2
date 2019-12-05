@@ -29,10 +29,10 @@ export function getLayerBounds(layers) {
   // NOTE: Kepler zooms in too much so we need to increase the bounds' extent
   // We need a bit more space on longitude max side so that filters can fit on the bottom of viewport
   const extendedBounds = [
-    newBounds[0] + lonDiff * 0.5,
+    newBounds[0] + lonDiff * 0.6,
     newBounds[1] + latDiff * 1,
-    newBounds[2] - lonDiff * 0.5,
-    newBounds[3] - latDiff * 0.5,
+    newBounds[2] - lonDiff * 0.6,
+    newBounds[3] - latDiff * 0.6,
   ]
   console.log('Recentering viewport around', extendedBounds)
   return extendedBounds
