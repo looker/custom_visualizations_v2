@@ -51,6 +51,9 @@ const nonConfigActions = [
   'UPDATE_MAP',
   'TOGGLE_MODAL',
   'TOGGLE_SIDE_PANEL',
+  'REQUEST_MAP_STYLES',
+  'LOAD_MAP_STYLES',
+  'LOAD_CUSTOM_MAP_STYLE',
 ]
 let updateLookerConfig = () => false
 const debouncedLookerConfigUpdater = debounce((updatedState, action) => {
@@ -61,7 +64,7 @@ const debouncedLookerConfigUpdater = debounce((updatedState, action) => {
 const composedReducer = (state, action) => {
   switch (action.type) {
     case '@@kepler.gl/ADD_DATA_TO_MAP':
-      const processedPayload = {
+      const processedState = {
         ...state,
         keplerGl: {
           ...state.keplerGl,
@@ -75,7 +78,7 @@ const composedReducer = (state, action) => {
         },
       }
       // We need to do a bit of post-processing here to change Kepler's default behavior
-      processedPayload.keplerGl.map.visState.layers = processedPayload.keplerGl.map.visState.layers.map(
+      processedState.keplerGl.map.visState.layers = processedState.keplerGl.map.visState.layers.map(
         layer => {
           if (layer.type === 'point') {
             // make sure all of the point layers are shown, even if Kepler hides them
@@ -87,8 +90,9 @@ const composedReducer = (state, action) => {
           return layer
         },
       )
-      console.log('ADD_DATA_TO_MAP', 'processedPayload', processedPayload)
-      return processedPayload
+      console.log('ADD_DATA_TO_MAP', 'processedState', processedState)
+      debouncedLookerConfigUpdater(processedState, action)
+      return processedState
   }
   const updatedState = reducers(state, action)
   // Update saved config except on noisy / irrelevant actions – also debounce to improve performance
@@ -162,7 +166,12 @@ class Map extends Component {
     const columnHeaders = Object.keys(data[0])
       .map(column =>
         // Looker native Location data is "lat,lon" format so we need to split the column header
-        positionColumnStrings.some(item => column.includes(item))
+        positionColumnStrings.some(item =>
+          column
+            .split('.')
+            .slice(-1)[0]
+            .includes(item),
+        )
           ? [`${column}_lat`, `${column}_lon`].join(',')
           : column,
       )
@@ -175,16 +184,37 @@ class Map extends Component {
           .map(([name, cell]) => {
             const { value } = cell
             let parsedValue = value
-            if (value && geojsonColumnStrings.some(item => name.includes(item))) {
+            if (
+              value &&
+              geojsonColumnStrings.some(item =>
+                name
+                  .split('.')
+                  .slice(-1)[0]
+                  .includes(item),
+              )
+            ) {
               // We need to espace GeoJSON column values otherwise they'll be split up
               // See: https://github.com/keplergl/kepler.gl/issues/736#issuecomment-552087721
               parsedValue = `${value.replace(/"/g, '""')}`
-            } else if (!value && positionColumnStrings.some(item => name.includes(item))) {
+            } else if (
+              !value &&
+              positionColumnStrings.some(item =>
+                name
+                  .split('.')
+                  .slice(-1)[0]
+                  .includes(item),
+              )
+            ) {
               // Null location value needs a comma to prevent it from shifting CSV columns
               parsedValue = ','
             }
 
-            return positionColumnStrings.some(item => name.includes(item))
+            return positionColumnStrings.some(item =>
+              name
+                .split('.')
+                .slice(-1)[0]
+                .includes(item),
+            )
               ? parsedValue
               : `"${parsedValue}"`
           })
@@ -241,8 +271,18 @@ class Map extends Component {
                     (previousFields, currentField, fieldIndex) => {
                       // But we need to filter out lat / lon columns as those would be rendered
                       if (
-                        !latitudeColumnStrings.some(item => currentField.name.includes(item)) &&
-                        !longitudeColumnStrings.some(item => currentField.name.includes(item))
+                        !latitudeColumnStrings.some(item =>
+                          currentField.name
+                            .split('.')
+                            .slice(-1)[0]
+                            .includes(item),
+                        ) &&
+                        !longitudeColumnStrings.some(item =>
+                          currentField.name
+                            .split('.')
+                            .slice(-1)[0]
+                            .includes(item),
+                        )
                       ) {
                         return {
                           ...previousFields,

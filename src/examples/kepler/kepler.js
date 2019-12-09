@@ -70,12 +70,12 @@ looker.plugins.visualizations.add({
           margin: 0;
           padding: 0;
         }
-        .mapboxgl-canvas {
+        .mapboxgl-canvas-container, .mapboxgl-canvas {
           position: absolute;
           top: 0;
           bottom: 0;
-          width: 100%;
-          height: 100%;
+          left: 0;
+          right: 0;
         }
         .container {
           width: 100%;
@@ -86,20 +86,23 @@ looker.plugins.visualizations.add({
           text-align: center;
         }
         .text-large {
-          font-size: 36px;
+          font-size: 24px;
+          font-weight: 100;
+          color: #3e3f40;
+          font-family: "Open Sans","Noto Sans JP","Noto Sans","Noto Sans CJK KR",Helvetica,Arial,sans-serif;
         }
       </style>
     `
 
-    // Create a container element to let us center the text.
-    let container = element.appendChild(document.createElement('div'))
-    container.className = 'container'
+    // Create a container element to let us center the contents
+    this.container = element.appendChild(document.createElement('div'))
+    this.container.className = 'container'
 
-    // Create an element to contain the text.
-    this._targetElement = container.appendChild(document.createElement('div'))
-
-    // Render to the target element
-    this.chart = ReactDOM.render(<h1 className="text-large">Loading...</h1>, this._targetElement)
+    // Render to the container element
+    this.chart = ReactDOM.render(
+      <h1 className="text-large">Loading visualization...</h1>,
+      this.container,
+    )
   },
   // Render in response to the data or settings changing
   updateAsync: function(data, element, config, queryResponse, details, done) {
@@ -177,7 +180,7 @@ looker.plugins.visualizations.add({
         width={element.offsetWidth}
         height={element.offsetHeight}
       />,
-      this._targetElement,
+      this.container,
     )
   },
 })
