@@ -4,61 +4,63 @@ import ReactDOM from 'react-dom'
 
 import { store } from './map'
 
+const options = {
+  mapboxToken: {
+    type: 'string',
+    label: 'Mapbox token',
+    placeholder: 'pk.eyJ1Ijoi...',
+  },
+  mapboxStyleUrl: {
+    type: 'string',
+    label: 'Mapbox style URL',
+    placeholder: 'mapbox://styles/...',
+  },
+  latitudeColumnStrings: {
+    type: 'array',
+    label: 'Latitude column strings',
+    default: ['latitude', 'lat'],
+  },
+  longitudeColumnStrings: {
+    type: 'array',
+    label: 'Longitude column strings',
+    default: ['longitude', 'lon', 'lng'],
+  },
+  positionColumnStrings: {
+    type: 'array',
+    label: 'Position (lat,lon) column strings',
+    default: ['pos', 'loc'],
+  },
+  geojsonColumnStrings: {
+    type: 'array',
+    label: 'GeoJSON column strings',
+    default: ['geom', 'route'],
+  },
+  serialisedKeplerMapConfig: {
+    type: 'string',
+    label: 'Kepler map config (do not edit, updated automatically as Kepler is customized)',
+    placeholder: 'Will be filled as you change map settings',
+    default: '',
+  },
+  gbfsFeeds: {
+    type: 'array',
+    label: 'GBFS feeds to load as GeoJSON FeatureCollections',
+    placeholder: 'List of HTTPS URLs separated with comma',
+    default: [
+      'https://storage.googleapis.com/gbfs.basis-pdn.bike/BCP/station_information.json',
+      'https://storage.googleapis.com/gbfs.basis-pdn.bike/BCP/system_regions.json',
+      'https://storage.googleapis.com/gbfs.basis-pdn.bike/Hereford/station_information.json',
+      'https://storage.googleapis.com/gbfs.basis-pdn.bike/Hereford/system_regions.json',
+      'https://storage.googleapis.com/gbfs.basis-pdn.bike/London/station_information.json',
+      'https://storage.googleapis.com/gbfs.basis-pdn.bike/London/system_regions.json',
+    ],
+  },
+}
+
 // For Looker API see: https://github.com/looker/custom_visualizations_v2/blob/master/docs/api_reference.md
 looker.plugins.visualizations.add({
   id: 'kepler',
   label: 'Kepler',
-  options: {
-    mapboxToken: {
-      type: 'string',
-      label: 'Mapbox token',
-      placeholder: 'pk.eyJ1Ijoi...',
-    },
-    mapboxStyle: {
-      type: 'string',
-      label: 'Mapbox style URL',
-      placeholder: 'mapbox://styles/...',
-    },
-    latitudeColumnStrings: {
-      type: 'array',
-      label: 'Latitude column strings',
-      default: ['latitude', 'lat'],
-    },
-    longitudeColumnStrings: {
-      type: 'array',
-      label: 'Longitude column strings',
-      default: ['longitude', 'lon', 'lng'],
-    },
-    positionColumnStrings: {
-      type: 'array',
-      label: 'Position (lat,lon) column strings',
-      default: ['pos', 'loc'],
-    },
-    geojsonColumnStrings: {
-      type: 'array',
-      label: 'GeoJSON column strings',
-      default: ['geom', 'route'],
-    },
-    serialisedKeplerMapConfig: {
-      type: 'string',
-      label: 'Kepler map config (do not edit, updated automatically as Kepler is customized)',
-      placeholder: 'Will be filled as you change map settings',
-      default: '',
-    },
-    gbfsFeeds: {
-      type: 'array',
-      label: 'GBFS feeds to load as GeoJSON FeatureCollections',
-      placeholder: 'List of HTTPS URLs separated with comma',
-      default: [
-        'https://storage.googleapis.com/gbfs.basis-pdn.bike/BCP/station_information.json',
-        'https://storage.googleapis.com/gbfs.basis-pdn.bike/BCP/system_regions.json',
-        'https://storage.googleapis.com/gbfs.basis-pdn.bike/Hereford/station_information.json',
-        'https://storage.googleapis.com/gbfs.basis-pdn.bike/Hereford/system_regions.json',
-        'https://storage.googleapis.com/gbfs.basis-pdn.bike/London/station_information.json',
-        'https://storage.googleapis.com/gbfs.basis-pdn.bike/London/system_regions.json',
-      ],
-    },
-  },
+  options,
   // Set up the initial state of the visualization
   create: function(element, config) {
     // Insert a <style> tag with some styles we'll use later.
@@ -114,6 +116,9 @@ looker.plugins.visualizations.add({
       details,
     })
 
+    // We need to bail if we don't get a properly populated config object or Kepler will crash
+    if (!Object.keys(options).every(item => Object.keys(config).includes(item))) return
+
     // Clear any errors from previous updates
     this.clearErrors()
 
@@ -137,10 +142,15 @@ looker.plugins.visualizations.add({
     this.trigger('loadingStart', [])
 
     let mapboxToken
-    let mapboxStyle
-    if (config.mapboxToken && config.mapboxStyle) {
+    let mapboxStyle = {}
+    if (config.mapboxToken && config.mapboxStyleUrl) {
       mapboxToken = config.mapboxToken
-      mapboxStyle = config.mapboxStyle
+      mapboxStyle = {
+        id: 'custom_style',
+        label: 'Custom style',
+        url: config.mapboxStyleUrl,
+        icon: '',
+      }
     } else {
       // Here we try to extract global Mapbox style settings from visualization Dependencies
       try {
@@ -155,7 +165,6 @@ looker.plugins.visualizations.add({
         // Or just fall back to standard Uber style
         mapboxToken =
           'pk.eyJ1IjoidWJlcmRhdGEiLCJhIjoiY2poczJzeGt2MGl1bTNkcm1lcXVqMXRpMyJ9.9o2DrYg8C8UWmprj-tcVpQ'
-        mapboxStyle = { styleType: 'light' }
       }
     }
 

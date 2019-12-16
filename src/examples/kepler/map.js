@@ -132,23 +132,6 @@ class Map extends Component {
       data,
     } = this.props
 
-    // It seems Looker sometimes sends data, but not the config in the first `updateAsync` callback
-    // But it can also be a problem of invalid entry in the visualization settings
-    if (
-      !positionColumnStrings ||
-      !geojsonColumnStrings ||
-      !latitudeColumnStrings ||
-      !longitudeColumnStrings
-    ) {
-      console.warn('One or more geo column identifier configuration value is missing:', {
-        positionColumnStrings,
-        geojsonColumnStrings,
-        latitudeColumnStrings,
-        longitudeColumnStrings,
-      })
-      return
-    }
-
     // Clear up previous datasets, except GBFS as we don't expect those to change
     if (
       this.props.keplerGl &&
@@ -332,7 +315,11 @@ class Map extends Component {
     }
 
     let config = {
-      mapStyle: this.props.mapboxStyle,
+      mapStyle: {
+        styleType: this.props.mapboxStyle.hasOwnProperty('id')
+          ? this.props.mapboxStyle.id
+          : 'light',
+      },
     }
     let loadedConfig
     // Let's try to apply the previous config, but we need to reset it if data columns have changed
@@ -415,15 +402,13 @@ class Map extends Component {
         this.props.dispatch(setFilter(0, 'name', timeFields[0].name))
       }
     }
-
-    this.props.lookerDoneCallback()
   }
 
   componentDidMount = () => {
     // Needs to be stored in a variable outside of the class otherwise the reducer can't access it
     updateLookerConfig = this.props.configUpdateCallback
 
-    if (this.props.mapboxStyle['url']) {
+    if (this.props.mapboxStyle.hasOwnProperty('url')) {
       this.props.dispatch(inputMapStyle(this.props.mapboxStyle))
       this.props.dispatch(addCustomMapStyle())
     }
@@ -431,6 +416,8 @@ class Map extends Component {
     // hide the modal & sidepanel on first load
     this.props.dispatch(toggleSidePanel())
     this.props.dispatch(toggleModal())
+
+    this.props.lookerDoneCallback()
 
     this._updateMapData()
   }

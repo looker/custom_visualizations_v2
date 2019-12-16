@@ -866,10 +866,17 @@
     "@babel/plugin-transform-react-jsx-self" "^7.0.0"
     "@babel/plugin-transform-react-jsx-source" "^7.0.0"
 
-"@babel/runtime@^7.0.0", "@babel/runtime@^7.1.2", "@babel/runtime@^7.2.0", "@babel/runtime@^7.3.1", "@babel/runtime@^7.6.3":
+"@babel/runtime@^7.0.0", "@babel/runtime@^7.2.0", "@babel/runtime@^7.3.1", "@babel/runtime@^7.6.3":
   version "7.7.4"
   resolved "https://registry.yarnpkg.com/@babel/runtime/-/runtime-7.7.4.tgz#b23a856751e4bf099262f867767889c0e3fe175b"
   integrity sha512-r24eVUUr0QqNZa+qrImUk8fn5SPhHq+IfYvIoIMg0do3GdK9sMdiLKP3GYVVaxpPKORgm8KRKaNTEhAjgIpLMw==
+  dependencies:
+    regenerator-runtime "^0.13.2"
+
+"@babel/runtime@^7.5.5":
+  version "7.7.6"
+  resolved "https://registry.yarnpkg.com/@babel/runtime/-/runtime-7.7.6.tgz#d18c511121aff1b4f2cd1d452f1bac9601dd830f"
+  integrity sha512-BWAJxpNVa0QlE5gZdWjSxXtemZyZ9RmrmVozxt3NUXeZhVIJ5ANyqmMc0JDrivBZyxUuQvFxlvH4OWWOogGfUw==
   dependencies:
     regenerator-runtime "^0.13.2"
 
@@ -6255,10 +6262,10 @@ kdbush@^3.0.0:
   resolved "https://registry.yarnpkg.com/kdbush/-/kdbush-3.0.0.tgz#f8484794d47004cc2d85ed3a79353dbe0abc2bf0"
   integrity sha512-hRkd6/XW4HTsA9vjVpY9tuXJYLSlelnkTmVFu4M9/7MIYQtFcHpbugAU7UbOfjOiVSVYl2fqgBuJ32JUmRo5Ew==
 
-kepler.gl@^1.1.11:
-  version "1.1.11"
-  resolved "https://registry.yarnpkg.com/kepler.gl/-/kepler.gl-1.1.11.tgz#1f43d97f0ac9e8c8625298647f3488e112a4d018"
-  integrity sha512-asFD4GMvQbBI6vcGuw3kqbWfJdngt/l6X2XIuCWxBOuV8rtqXXiPyeHBaZGTX/zCrLAU4zLp86Nfzd3qVUgKPw==
+kepler.gl@^1.1.12:
+  version "1.1.12"
+  resolved "https://registry.yarnpkg.com/kepler.gl/-/kepler.gl-1.1.12.tgz#ffead86cacb760599bd5948b372ed634f7d58027"
+  integrity sha512-ETnbxF5r0BPBWONf8vczX91Iv6poG9ejRJTF4y0CJRfDca8I0bEQ8meBbTD4njjWv4r5JTOycOpTKnoCdwypzg==
   dependencies:
     "@mapbox/geo-viewport" "^0.2.2"
     "@mapbox/geojson-normalize" "0.0.1"
@@ -6295,14 +6302,14 @@ kepler.gl@^1.1.11:
     pbf "^3.1.0"
     prop-types "^15.6.0"
     react-color "^2.17.3"
-    react-file-drop "^0.1.9"
     react-json-pretty "^1.7.9"
+    react-lifecycles-compat "^3.0.4"
     react-map-gl "^5.0.3"
     react-markdown "^4.0.6"
     react-modal "^3.8.1"
     react-onclickoutside "^6.7.1"
     react-palm "^3.1.2"
-    react-redux "^5.1.1"
+    react-redux "^7.1.3"
     react-sortable-hoc "^1.8.3"
     react-tooltip "^3.10.0"
     react-virtualized "^9.21.1"
@@ -8025,7 +8032,7 @@ prompts@^2.0.1:
     kleur "^3.0.2"
     sisteransi "^1.0.0"
 
-prop-types@^15.5.10, prop-types@^15.5.4, prop-types@^15.5.7, prop-types@^15.5.8, prop-types@^15.6.0, prop-types@^15.6.1, prop-types@^15.7.2:
+prop-types@^15.5.10, prop-types@^15.5.4, prop-types@^15.5.7, prop-types@^15.5.8, prop-types@^15.6.0, prop-types@^15.7.2:
   version "15.7.2"
   resolved "https://registry.yarnpkg.com/prop-types/-/prop-types-15.7.2.tgz#52c41e75b8c87e72b9d9360e0206b99dcbffa6c5"
   integrity sha512-8QQikdH7//R2vurIJSutZ1smHYTcLpRWEOlHnzcWHmBYrOGUysKwSsrC89BCiFj3CbrfJ/nXFdJepOVrY1GCHQ==
@@ -8240,15 +8247,7 @@ react-easy-swipe@^0.0.16:
   dependencies:
     prop-types "^15.5.8"
 
-react-file-drop@^0.1.9:
-  version "0.1.9"
-  resolved "https://registry.yarnpkg.com/react-file-drop/-/react-file-drop-0.1.9.tgz#97102ebdfcddafd948bb20c16bfe3f07ddaf7a52"
-  integrity sha512-fKXuOdGHGLpy+pQrUdUVa7yhOrrMQ91edIUi6c99OnUetUrC4Fm6Gg2vLUe9E0DCwtwSG6AadMlWVd0sdSl2rw==
-  dependencies:
-    create-react-class "^15.5.2"
-    prop-types "^15.5.8"
-
-react-is@^16.6.0, react-is@^16.7.0, react-is@^16.8.1, react-is@^16.8.6:
+react-is@^16.6.0, react-is@^16.7.0, react-is@^16.8.1, react-is@^16.8.6, react-is@^16.9.0:
   version "16.12.0"
   resolved "https://registry.yarnpkg.com/react-is/-/react-is-16.12.0.tgz#2cc0fe0fba742d97fd527c42a13bec4eeb06241c"
   integrity sha512-rPCkf/mWBtKc97aLL9/txD8DZdemK0vkA3JMLShjlJB3Pj3s+lpf1KaBzMfQrAmhMQB0n1cU/SUGgKKBCe837Q==
@@ -8340,18 +8339,17 @@ react-reconciler@^0.12.0:
     object-assign "^4.1.1"
     prop-types "^15.6.0"
 
-react-redux@^5.1.1:
-  version "5.1.2"
-  resolved "https://registry.yarnpkg.com/react-redux/-/react-redux-5.1.2.tgz#b19cf9e21d694422727bf798e934a916c4080f57"
-  integrity sha512-Ns1G0XXc8hDyH/OcBHOxNgQx9ayH3SPxBnFCOidGKSle8pKihysQw2rG/PmciUQRoclhVBO8HMhiRmGXnDja9Q==
+react-redux@^7.1.3:
+  version "7.1.3"
+  resolved "https://registry.yarnpkg.com/react-redux/-/react-redux-7.1.3.tgz#717a3d7bbe3a1b2d535c94885ce04cdc5a33fc79"
+  integrity sha512-uI1wca+ECG9RoVkWQFF4jDMqmaw0/qnvaSvOoL/GA4dNxf6LoV8sUAcNDvE5NWKs4hFpn0t6wswNQnY3f7HT3w==
   dependencies:
-    "@babel/runtime" "^7.1.2"
+    "@babel/runtime" "^7.5.5"
     hoist-non-react-statics "^3.3.0"
     invariant "^2.2.4"
-    loose-envify "^1.1.0"
-    prop-types "^15.6.1"
-    react-is "^16.6.0"
-    react-lifecycles-compat "^3.0.0"
+    loose-envify "^1.4.0"
+    prop-types "^15.7.2"
+    react-is "^16.9.0"
 
 react-responsive-carousel@^3.1.51:
   version "3.1.51"
