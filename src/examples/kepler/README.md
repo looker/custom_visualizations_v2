@@ -91,3 +91,4 @@ NOTE: this only works at the moment on the non-GeoJSON Looker dataset. Waiting f
 ## Future features considered
 
 - Open Drill menu (see https://github.com/looker/custom_visualizations_v2/blob/master/docs/api_reference.md#rendering-data)
+- Prefill Mapbox token for HTML export

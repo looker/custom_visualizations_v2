@@ -9,11 +9,13 @@ const options = {
     type: 'string',
     label: 'Mapbox token',
     placeholder: 'pk.eyJ1Ijoi...',
+    default: '',
   },
   mapboxStyleUrl: {
     type: 'string',
     label: 'Mapbox style URL',
     placeholder: 'mapbox://styles/...',
+    default: '',
   },
   latitudeColumnStrings: {
     type: 'array',
