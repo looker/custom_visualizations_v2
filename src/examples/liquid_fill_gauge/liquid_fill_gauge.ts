@@ -229,8 +229,10 @@ const vis: LiquidFillGaugeVisualization = {
 
     const datumField = queryResponse.fields.measure_like[0]
     try {
+      // @ts-ignore
       const datum = data[0][datumField.name]
     }
+    // @ts-ignore
     catch(err) {
       // @ts-ignore
       this.addError({ group: 'data', title: 'No results.' })
