@@ -208,7 +208,7 @@ const vis: LiquidFillGaugeVisualization = {
     this.svg.attr('id', elementId)
   },
   // Render in response to the data or settings changing
-  update(data, element, config, queryResponse) {
+  updateAsync(data, element, config, queryResponse, details, done) {
     if (!handleErrors(this, queryResponse, {
       min_pivots: 0, max_pivots: 0,
       min_dimensions: 0, max_dimensions: undefined,
@@ -228,7 +228,15 @@ const vis: LiquidFillGaugeVisualization = {
     }
 
     const datumField = queryResponse.fields.measure_like[0]
-    const datum = data[0][datumField.name]
+    try {
+      const datum = data[0][datumField.name]
+    }
+    catch(err) {
+      // @ts-ignore
+      this.addError({ group: 'data', title: 'No results.' })
+      done()
+    }
+    // @ts-ignore
     let value = datum.value
 
     const compareField = queryResponse.fields.measure_like[1]
