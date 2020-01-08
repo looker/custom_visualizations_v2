@@ -240,7 +240,7 @@ const vis: LiquidFillGaugeVisualization = {
     let value = datum.value
 
 
-    const compareField = queryResponse.fields.measure_like[1] ? queryResponse.fields.measure_like[1] : null
+    const compareField = queryResponse.fields.measure_like[1]
     if (compareField && gaugeConfig.showComparison) {
       const compareDatum = data[0][compareField.name]
       gaugeConfig.maxValue = compareDatum.value
