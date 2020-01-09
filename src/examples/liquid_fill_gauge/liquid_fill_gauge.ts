@@ -222,9 +222,9 @@ const vis: LiquidFillGaugeVisualization = {
       if (gaugeConfig.maxValue <= 0) {
         this.addError({ group: 'config', title: 'Max value must be greater than zero.' })
         return
-      } else if (data.length == 0) {
-        this.addError({ title: 'No results.' });
-        return;
+      } else if (data.length === 0) {
+        this.addError({ title: 'No results.' })
+        return
       } else {
         this.clearErrors('config')
       }
