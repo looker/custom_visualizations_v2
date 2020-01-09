@@ -208,7 +208,7 @@ const vis: LiquidFillGaugeVisualization = {
     this.svg.attr('id', elementId)
   },
   // Render in response to the data or settings changing
-  updateAsync(data, element, config, queryResponse, details, done) {
+  update(data, element, config, queryResponse, details) {
     if (!handleErrors(this, queryResponse, {
       min_pivots: 0, max_pivots: 0,
       min_dimensions: 0, max_dimensions: undefined,
@@ -222,14 +222,12 @@ const vis: LiquidFillGaugeVisualization = {
       if (gaugeConfig.maxValue <= 0) {
         this.addError({ group: 'config', title: 'Max value must be greater than zero.' })
         return
+      } else if (data.length == 0) {
+        this.addError({ title: 'No results.' });
+        return;
       } else {
         this.clearErrors('config')
       }
-    }
-    if (data.length == 0) { 
-      // @ts-ignore 
-      this.addError({ group: 'data', title: 'No results.' }) 
-      done() 
     }
 
     const datumField = queryResponse.fields.measure_like[0]
