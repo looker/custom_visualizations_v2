@@ -258,14 +258,9 @@ const vis: LiquidFillGaugeVisualization = {
         waveAnimate: false,
         waveRise: false
       })
-      // @ts-ignore
-      d3.liquidfillgauge(this.svg, value, gaugeConfig)
-      return
-    } else {
-      // @ts-ignore
-      d3.liquidfillgauge(this.svg, value, gaugeConfig)
-      return
     }
+    // @ts-ignore
+    d3.liquidfillgauge(this.svg, value, gaugeConfig)
 
   }
 }
