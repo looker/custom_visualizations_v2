@@ -250,6 +250,16 @@ const vis: LiquidFillGaugeVisualization = {
     this.svg.attr('height', element.clientHeight - 20)
 
     // @ts-ignore
+    if (details['print']) {
+      Object.assign(gaugeConfig, {
+        valueCountUp: false,
+        waveAnimateTime: 0,
+        waveRiseTime: 0,
+        waveAnimate: false,
+        waveRise: false
+      })
+    }
+    // @ts-ignore
     d3.liquidfillgauge(this.svg, value, gaugeConfig)
 
   }
