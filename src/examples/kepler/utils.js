@@ -72,11 +72,8 @@ export function enrichLinestringFeatureToTrip(feature) {
   return {
     type: 'Feature',
     geometry: { type: 'LineString', coordinates },
-    // NOTE: styling features below don't work ATM 😿
     properties: {
       ...feature.properties,
-      lineWidth: 2,
-      fillColor: [1, 1, 1],
     },
   }
 }
@@ -91,7 +88,6 @@ export async function loadGbfsFeedsAsKeplerDatasets(urls) {
   // Using Promise.all to make requests happen in parallel
   await Promise.all(
     urls.map(async (url, index) => {
-      console.log('Requesting ', url)
       try {
         const response = await fetch(url, { cors: true })
         const body = await response.json()
@@ -120,7 +116,7 @@ export async function loadGbfsFeedsAsKeplerDatasets(urls) {
             }),
           })
         } else if (body.hasOwnProperty('data') && body.data.hasOwnProperty('stations')) {
-          datasets.push({
+          datasets.splice(0, 0, {
             info: {
               label: `Stations ${url}`,
               id: `GBFS_Stations_${index}`,
@@ -142,8 +138,10 @@ export async function loadGbfsFeedsAsKeplerDatasets(urls) {
                   properties: {
                     ...properties,
                     id: station_id,
-                    fillColor: [200, 200, 200],
-                    radius: 77,
+                    fillColor: [0, 0, 0, 0],
+                    radius: 30,
+                    lineColor: [200, 0, 0],
+                    lineWidth: 1,
                   },
                 }
               }),

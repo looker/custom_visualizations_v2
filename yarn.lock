@@ -6262,10 +6262,10 @@ kdbush@^3.0.0:
   resolved "https://registry.yarnpkg.com/kdbush/-/kdbush-3.0.0.tgz#f8484794d47004cc2d85ed3a79353dbe0abc2bf0"
   integrity sha512-hRkd6/XW4HTsA9vjVpY9tuXJYLSlelnkTmVFu4M9/7MIYQtFcHpbugAU7UbOfjOiVSVYl2fqgBuJ32JUmRo5Ew==
 
-kepler.gl@^1.1.12:
-  version "1.1.12"
-  resolved "https://registry.yarnpkg.com/kepler.gl/-/kepler.gl-1.1.12.tgz#ffead86cacb760599bd5948b372ed634f7d58027"
-  integrity sha512-ETnbxF5r0BPBWONf8vczX91Iv6poG9ejRJTF4y0CJRfDca8I0bEQ8meBbTD4njjWv4r5JTOycOpTKnoCdwypzg==
+kepler.gl@^1.1.13:
+  version "1.1.13"
+  resolved "https://registry.yarnpkg.com/kepler.gl/-/kepler.gl-1.1.13.tgz#5056f3d163efe7ebfbfd5c0a2d60fad75d9945d1"
+  integrity sha512-blvD9vAaXrKAdb/i+/CdAGuh5S2JO0WuVqc9k7CcWgHU0wfDv50IFzl6Odi+AnGMWpvAswU95HF11ptyhvPtCw==
   dependencies:
     "@mapbox/geo-viewport" "^0.2.2"
     "@mapbox/geojson-normalize" "0.0.1"
@@ -6318,7 +6318,7 @@ kepler.gl@^1.1.12:
     redux-actions "^2.2.1"
     reselect "^3.0.1"
     supercluster "^6.0.1"
-    type-analyzer "0.2.3"
+    type-analyzer "0.2.4"
     uber-licence "^3.1.1"
     viewport-mercator-project "^6.0.0"
     wellknown "^0.5.0"
@@ -9920,10 +9920,10 @@ tweetnacl@^0.14.3, tweetnacl@~0.14.0:
   resolved "https://registry.yarnpkg.com/tweetnacl/-/tweetnacl-0.14.5.tgz#5ae68177f192d4456269d108afa93ff8743f4f64"
   integrity sha1-WuaBd/GS1EViadEIr6k/+HQ/T2Q=
 
-type-analyzer@0.2.3:
-  version "0.2.3"
-  resolved "https://registry.yarnpkg.com/type-analyzer/-/type-analyzer-0.2.3.tgz#a265b29b33290e465e2c611c3daaaf979c780e71"
-  integrity sha512-CwHct29PabC8ze2QIczh82/9r277ljuxctCmriwxx63kIXDObe2BhF2iGU/iOnyjU/c+aiSEdWAVqR27rnp4mw==
+type-analyzer@0.2.4:
+  version "0.2.4"
+  resolved "https://registry.yarnpkg.com/type-analyzer/-/type-analyzer-0.2.4.tgz#bb7150437d96e2d6bcd78bcfdd05a5c73d7309d0"
+  integrity sha512-5ldI2maOK8b4/TUpmyj41LMXyqtUHUnp9I33EALQPbMOLpkepYC97q6jL2ED/w77bkDF4abOPHv9VnZt9BcEcA==
 
 type-check@~0.3.2:
   version "0.3.2"

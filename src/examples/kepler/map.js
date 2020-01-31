@@ -364,16 +364,6 @@ class Map extends Component {
       }),
     )
 
-    // We need this workaround until issue is fixed: https://github.com/keplergl/kepler.gl/issues/847
-    let ghostLayerIndex
-    while (
-      (ghostLayerIndex = this.props.keplerGl.map.visState.layers.findIndex(
-        layer => layer.dataToFeature && layer.dataToFeature[0] === null,
-      )) > -1
-    ) {
-      this.props.dispatch(removeLayer(ghostLayerIndex))
-    }
-
     // Let's re-center the map around non-GBFS layers
     const nonGbfsLayers = this.props.keplerGl.map.visState.layers.filter(
       layer => !layer.config.dataId.includes('GBFS'),

@@ -35,7 +35,7 @@ const options = {
   geojsonColumnStrings: {
     type: 'array',
     label: 'GeoJSON column strings',
-    default: ['geom', 'route'],
+    default: ['geo', 'route', 'trip'],
   },
   serialisedKeplerMapConfig: {
     type: 'string',
@@ -110,7 +110,7 @@ looker.plugins.visualizations.add({
   },
   // Render in response to the data or settings changing
   updateAsync: function(data, element, config, queryResponse, details, done) {
-    console.log('updateAsync', new Date(), {
+    console.log('Looker sent updated data or settings', new Date(), {
       data,
       element,
       config,
