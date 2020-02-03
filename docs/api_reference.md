@@ -261,11 +261,6 @@ Here's an example:
 
 ```js
 options: {
-    color_application: {
-      type: 'object',
-      display: 'color_application',
-      label: 'Color Configuration',
-    },
     color_range: {
       type: "array",
       label: "Color Range",
@@ -298,7 +293,7 @@ options: {
 
 	The data type of the option.
 
-	**Allowed Values:** `string` (default), `number`, `boolean`, `array`, `object`
+	**Allowed Values:** `string` (default), `number`, `boolean`, `array`
 
 - `label` _string_
 
@@ -323,10 +318,6 @@ options: {
 	- when `type` is `array`:
 
 	   	**Allowed Values:** `text` (default), `color`, `colors`
-		
-	- when `type` is `object`:
-	
-		**Allowed Values:** `color_application`
 
 - `placeholder` _string_
 
