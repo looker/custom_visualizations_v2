@@ -5,6 +5,8 @@ const MIN_LATITUDE = -90
 const MAX_LONGITUDE = 180
 const MIN_LONGITUDE = -180
 
+export const GBFS_STATION_ID_PREFIX = 'GBFS_Stations_'
+
 export function getLayerBounds(layers) {
   // Taken from non-importable utils, see: https://github.com/keplergl/kepler.gl/blob/master/src/utils/data-utils.js#L54
   const availableLayerBounds = layers.reduce((res, l) => {
@@ -119,7 +121,7 @@ export async function loadGbfsFeedsAsKeplerDatasets(urls) {
           datasets.splice(0, 0, {
             info: {
               label: `Stations ${url}`,
-              id: `GBFS_Stations_${index}`,
+              id: `${GBFS_STATION_ID_PREFIX}${index}`,
             },
             data: processGeojson({
               type: 'FeatureCollection',
@@ -165,8 +167,11 @@ export async function loadGbfsFeedsAsKeplerDatasets(urls) {
   return datasets
 }
 
+// This custom merger enables us to merge arrays as object properties
 export function mergeArrayProperties(objValue, srcValue) {
   if (Array.isArray(objValue)) {
-    return objValue.concat(srcValue)
+    // Update the existing array with push() instead of creating a new one with concat() as it's much faster
+    Array.prototype.push.apply(objValue, srcValue)
+    return objValue
   }
 }

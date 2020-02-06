@@ -30,6 +30,7 @@ import keplerGlReducer, { combinedUpdaters } from 'kepler.gl/reducers'
 import KeplerGlSchema from 'kepler.gl/schemas'
 
 import {
+  GBFS_STATION_ID_PREFIX,
   getLayerBounds,
   doesLinestringHaveTimes,
   enrichLinestringFeatureToTrip,
@@ -86,6 +87,11 @@ const composedReducer = (state, action) => {
           } else if (layer.type === 'trip') {
             // make trip trails longer
             layer.config.visConfig.trailLength = 1000
+          } else if (layer.type === 'geojson') {
+            // make GBFS station stroke enabled by default
+            if (layer.config.dataId.includes(GBFS_STATION_ID_PREFIX)) {
+              layer.config.visConfig.stroked = true
+            }
           }
           return layer
         },
@@ -119,6 +125,7 @@ export const store = createStore(
 class Map extends Component {
   previousColumnsHeaders = null
   gbfsDatasets = null
+  currentGbfsFeeds = null
 
   _updateMapData = async () => {
     const {
@@ -132,17 +139,24 @@ class Map extends Component {
       data,
     } = this.props
 
-    // Clear up previous datasets, except GBFS as we don't expect those to change
+    // We need to wait for the next tick if the Kepler map object is not created yet
     if (
-      this.props.keplerGl &&
-      this.props.keplerGl.map &&
-      this.props.keplerGl.map.hasOwnProperty('visState')
+      !this.props.keplerGl ||
+      !this.props.keplerGl.hasOwnProperty('map') ||
+      !this.props.keplerGl.map.hasOwnProperty('visState')
     ) {
-      const nonGbfsDatasets = Object.keys(this.props.keplerGl.map.visState.datasets).filter(
-        datasetId => !datasetId.includes('GBFS'),
-      )
-      nonGbfsDatasets.forEach(datasetId => this.props.dispatch(removeDataset(datasetId)))
+      await new Promise(_ => setTimeout(_, 1))
+      this._updateMapData()
+      return
     }
+
+    const isNewGbfs = !isEqual(this.currentGbfsFeeds, gbfsFeeds)
+    this.currentGbfsFeeds = gbfsFeeds
+
+    // Clear up previous datasets, except GBFS if the feed URLs are the same as before
+    Object.keys(this.props.keplerGl.map.visState.datasets)
+      .filter(datasetId => (isNewGbfs ? true : !datasetId.includes('GBFS')))
+      .forEach(datasetId => this.props.dispatch(removeDataset(datasetId)))
 
     // We are using CSV as a convenient intermediate format between Looker and Kepler
     // First we process the column headers
@@ -247,12 +261,12 @@ class Map extends Component {
             previousRows,
             normalizeGeojson(parsedGeo).features.reduce((previousFeatures, feature) => {
               if (feature && feature.hasOwnProperty('properties')) {
-                feature.properties = {
-                  ...feature.properties,
-                  // We need to add the rest of the data fields to the Feature to show on hover
-                  ...processedCsvDataWithoutGeoJson.fields.reduce(
+                // We need to add the rest of the data fields to the Feature to show on hover
+                Object.assign(
+                  feature.properties,
+                  processedCsvDataWithoutGeoJson.fields.reduce(
                     (previousFields, currentField, fieldIndex) => {
-                      // But we need to filter out lat / lon columns as those would be rendered
+                      // But we need to filter out lat / lon columns as those would be rendered twice
                       if (
                         !latitudeColumnStrings.some(item =>
                           currentField.name
@@ -277,11 +291,11 @@ class Map extends Component {
                     },
                     {},
                   ),
-                }
+                )
                 return mergeWith(
                   previousFeatures,
                   {
-                    // If it's a LineString it could be a trip so try to add timestamps to points in it
+                    // If it's a LineString it could be a trip so try to add timestamps to Points in it
                     ...(feature.geometry.type === 'LineString' &&
                       doesLinestringHaveTimes(feature) && {
                         Trip: [enrichLinestringFeatureToTrip(feature)],
@@ -309,8 +323,8 @@ class Map extends Component {
     })
     console.log('geoJsonDatasets', geoJsonDatasets)
 
-    // Load GBFS datasets if this is the first time we add data
-    if (this.gbfsDatasets === null) {
+    // Load GBFS datasets if we got new feeds
+    if (isNewGbfs) {
       this.gbfsDatasets = await loadGbfsFeedsAsKeplerDatasets(gbfsFeeds)
     }
 
