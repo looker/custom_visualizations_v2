@@ -43,8 +43,8 @@
     "babel-loader": "^8.0.6",
     "d3-sankey": "^0.10.4",
     "jest": "^24.9.0",
-    "react": "^16.8.3",
-    "react-dom": "^16.7.0",
+    "react": "^16.12.0",
+    "react-dom": "^16.12.0",
     "react-responsive-carousel": "^3.1.51",
     "typescript": "^3.3.3333"
   }

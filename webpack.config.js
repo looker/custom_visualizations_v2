@@ -3,7 +3,7 @@ var path = require('path')
 const UglifyJSPlugin = require('uglifyjs-webpack-plugin');
 
 var webpackConfig = {
-  mode: 'production',
+  mode: 'development',
   entry: {
     advanced_table: './src/examples/advanced_table/advanced_table.js',
     v1_common: './src/common/common-entry.js',
@@ -16,7 +16,8 @@ var webpackConfig = {
     chord: './src/examples/chord/chord.ts',
     treemap: './src/examples/treemap/treemap.ts',
     subtotal: './src/examples/subtotal/subtotal.ts',
-    image_carousel: './src/examples/image_carousel/image_carousel.js'
+    image_carousel: './src/examples/image_carousel/image_carousel.js',
+    react_starter: './src/examples/react-starter/api-wrapper.js'
   },
   output: {
     filename: "[name].js",
