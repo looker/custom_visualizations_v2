@@ -3,7 +3,7 @@ var path = require('path')
 const UglifyJSPlugin = require('uglifyjs-webpack-plugin');
 
 var webpackConfig = {
-  mode: 'development',
+  mode: 'production',
   entry: {
     advanced_table: './src/examples/advanced_table/advanced_table.js',
     v1_common: './src/common/common-entry.js',
