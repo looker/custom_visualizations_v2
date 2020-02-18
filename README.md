@@ -25,7 +25,7 @@
 
 **A Note on Support**
 
-Visualizations provided as examples here are a community supported effort.
+Visualizations provided as examples here.
 
 Looker's support team does not troubleshoot issues relating to these example visualizations or your custom visualization code.
 
