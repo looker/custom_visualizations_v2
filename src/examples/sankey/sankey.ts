@@ -24,7 +24,7 @@ const vis: Sankey = {
   options: {
     color_range: {
       type: 'array',
-      label: 'Color Range',
+      label: 'I AM DOING SOMETHING',
       display: 'colors',
       default: ['#dd3333', '#80ce5d', '#f78131', '#369dc1', '#c572d3', '#36c1b3', '#b57052', '#ed69af']
     },
@@ -122,8 +122,9 @@ const vis: Sankey = {
       }
       path.forEach(function (p: any, i: number) {
         if (i === path.length - 1) return
-        const source: any = path.slice(i, i + 1)[0] + i
-        const target: any = path.slice(i + 1, i + 2)[0] + (i + 1)
+        const source: any = path.slice(i, i + 1)[0] + i + `len:${path.slice(i, i + 1)[0].length}`
+        const target: any = path.slice(i + 1, i + 2)[0] + (i + 1) +`len:${path.slice(i + 1, i + 2)[0].length}`
+        
         nodes.add(source)
         nodes.add(target)
         // Setup drill links
@@ -152,7 +153,7 @@ const vis: Sankey = {
 
     graph.nodes = nodes.values().map((d: any) => {
       return {
-        name: d.slice(0, -1)
+        name: d.slice(0, d.split("len:")[1])
       }
     })
 
@@ -234,6 +235,7 @@ const vis: Sankey = {
       .on('mouseleave', function (d: Cell) {
         d3.selectAll('.link').style('opacity', 0.4)
       })
+      
 
     node.append('rect')
       .attr('x', function (d: Cell) { return d.x0 })
