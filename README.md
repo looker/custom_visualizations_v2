@@ -1,4 +1,4 @@
-### Please note that the visualizations in this repository are not supported by Looker. Supported visualizations are downloadable through the (Looker Marketplace)[https://docs.looker.com/data-modeling/marketplace]. 
+## Please note that the visualizations in this repository are not supported by Looker. Supported visualizations are downloadable through the [Looker Marketplace](https://docs.looker.com/data-modeling/marketplace). 
 
 # Looker Visualization API Examples [![Build Status](https://travis-ci.org/looker/visualization-api-examples.svg?branch=master)](https://travis-ci.org/looker/visualization-api-examples)
 
