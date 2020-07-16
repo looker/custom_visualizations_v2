@@ -80,7 +80,7 @@ const composedReducer = (state, action) => {
       }
       // We need to do a bit of post-processing here to change Kepler's default behavior
       processedState.keplerGl.map.visState.layers = processedState.keplerGl.map.visState.layers.map(
-        layer => {
+        (layer) => {
           if (layer.type === 'point') {
             // make sure all of the point layers are shown, even if Kepler hides them
             layer.config.isVisible = true
@@ -103,7 +103,7 @@ const composedReducer = (state, action) => {
   const updatedState = reducers(state, action)
   // Update saved config except on noisy / irrelevant actions – also debounce to improve performance
   if (
-    !nonConfigActions.some(item => action.type.includes(item)) &&
+    !nonConfigActions.some((item) => action.type.includes(item)) &&
     updatedState.keplerGl &&
     updatedState.keplerGl.map &&
     updatedState.keplerGl.map.visState
@@ -145,7 +145,7 @@ class Map extends Component {
       !this.props.keplerGl.hasOwnProperty('map') ||
       !this.props.keplerGl.map.hasOwnProperty('visState')
     ) {
-      await new Promise(_ => setTimeout(_, 1))
+      await new Promise((_) => setTimeout(_, 1))
       this._updateMapData()
       return
     }
@@ -155,20 +155,15 @@ class Map extends Component {
 
     // Clear up previous datasets, except GBFS if the feed URLs are the same as before
     Object.keys(this.props.keplerGl.map.visState.datasets)
-      .filter(datasetId => (isNewGbfs ? true : !datasetId.includes('GBFS')))
-      .forEach(datasetId => this.props.dispatch(removeDataset(datasetId)))
+      .filter((datasetId) => (isNewGbfs ? true : !datasetId.includes('GBFS')))
+      .forEach((datasetId) => this.props.dispatch(removeDataset(datasetId)))
 
     // We are using CSV as a convenient intermediate format between Looker and Kepler
     // First we process the column headers
     const columnHeaders = Object.keys(data[0])
-      .map(column =>
+      .map((column) =>
         // Looker native Location data is "lat,lon" format so we need to split the column header
-        positionColumnStrings.some(item =>
-          column
-            .split('.')
-            .slice(-1)[0]
-            .includes(item),
-        )
+        positionColumnStrings.some((item) => column.split('.').slice(-1)[0].includes(item))
           ? [`${column}_lat`, `${column}_lon`].join(',')
           : column,
       )
@@ -176,42 +171,27 @@ class Map extends Component {
 
     // Then the value rows
     const rows = data.map(
-      row =>
+      (row) =>
         `${Object.entries(row)
           .map(([name, cell]) => {
             const { value } = cell
             let parsedValue = value
             if (
               value &&
-              geojsonColumnStrings.some(item =>
-                name
-                  .split('.')
-                  .slice(-1)[0]
-                  .includes(item),
-              )
+              geojsonColumnStrings.some((item) => name.split('.').slice(-1)[0].includes(item))
             ) {
-              // We need to espace GeoJSON column values otherwise they'll be split up
+              // We need to escape GeoJSON column values otherwise they'll be split up
               // See: https://github.com/keplergl/kepler.gl/issues/736#issuecomment-552087721
               parsedValue = `${value.replace(/"/g, '""')}`
             } else if (
               !value &&
-              positionColumnStrings.some(item =>
-                name
-                  .split('.')
-                  .slice(-1)[0]
-                  .includes(item),
-              )
+              positionColumnStrings.some((item) => name.split('.').slice(-1)[0].includes(item))
             ) {
               // Null location value needs a comma to prevent it from shifting CSV columns
               parsedValue = ','
             }
 
-            return positionColumnStrings.some(item =>
-              name
-                .split('.')
-                .slice(-1)[0]
-                .includes(item),
-            )
+            return positionColumnStrings.some((item) => name.split('.').slice(-1)[0].includes(item))
               ? parsedValue
               : `"${parsedValue}"`
           })
@@ -219,6 +199,7 @@ class Map extends Component {
     )
     // Finally we join them all togeter into a big old CSV string
     const dataAsCSV = `${columnHeaders}\n${rows.join('')}`
+    console.log('dataAsCSV', dataAsCSV)
 
     // We're using Kepler's own processing utility to generate its dataset
     const processedCsvData = processCsvData(dataAsCSV)
@@ -238,14 +219,14 @@ class Map extends Component {
     // Remove GeoJSON columns from original dataset as we're adding them separately
     const processedCsvDataWithoutGeoJson = {
       fields: processedCsvData.fields.filter((_, index) => !geoJsonDatasetIndices.includes(index)),
-      rows: processedCsvData.rows.map(row =>
+      rows: processedCsvData.rows.map((row) =>
         row.filter((_, index) => !geoJsonDatasetIndices.includes(index)),
       ),
     }
     console.log('processedCsvDataWithoutGeoJson', processedCsvDataWithoutGeoJson)
 
     // Then merge the contents of all GeoJSON rows and then sort them into datasets by feature type
-    const geoJsonDatasets = geoJsonDatasetIndices.flatMap(index => {
+    const geoJsonDatasets = geoJsonDatasetIndices.flatMap((index) => {
       const geojsonMerged = processedCsvData.rows.reduce((previousRows, currentRow, rowIndex) => {
         let parsedGeo
         try {
@@ -268,17 +249,11 @@ class Map extends Component {
                     (previousFields, currentField, fieldIndex) => {
                       // But we need to filter out lat / lon columns as those would be rendered twice
                       if (
-                        !latitudeColumnStrings.some(item =>
-                          currentField.name
-                            .split('.')
-                            .slice(-1)[0]
-                            .includes(item),
+                        !latitudeColumnStrings.some((item) =>
+                          currentField.name.split('.').slice(-1)[0].includes(item),
                         ) &&
-                        !longitudeColumnStrings.some(item =>
-                          currentField.name
-                            .split('.')
-                            .slice(-1)[0]
-                            .includes(item),
+                        !longitudeColumnStrings.some((item) =>
+                          currentField.name.split('.').slice(-1)[0].includes(item),
                         )
                       ) {
                         return {
@@ -336,11 +311,12 @@ class Map extends Component {
       },
     }
     let loadedConfig
-    // Let's try to apply the previous config, but we need to reset it if data columns have changed
-    // to prevent strange behaviour
+    // Let's try to apply the previous config, but we need to reset it if data columns or GBFS feeds
+    // have changed to prevent strange behaviour
     if (
       this.props.config.serialisedKeplerMapConfig &&
-      (this.previousColumnsHeaders === null || this.previousColumnsHeaders === columnHeaders)
+      (this.previousColumnsHeaders === null || this.previousColumnsHeaders === columnHeaders) &&
+      !isNewGbfs
     ) {
       const decompressedConfig = JSON.parse(
         pako.inflate(atob(this.props.config.serialisedKeplerMapConfig), {
@@ -380,7 +356,7 @@ class Map extends Component {
 
     // Let's re-center the map around non-GBFS layers
     const nonGbfsLayers = this.props.keplerGl.map.visState.layers.filter(
-      layer => !layer.config.dataId.includes('GBFS'),
+      (layer) => !layer.config.dataId.includes('GBFS'),
     )
     if (nonGbfsLayers.length > 0) {
       this.props.dispatch(fitBounds(getLayerBounds(nonGbfsLayers)))
@@ -390,7 +366,7 @@ class Map extends Component {
     // NOTE: Doesn't apply to GeoJSON layers, waiting for https://github.com/keplergl/kepler.gl/issues/768
     if (!loadedConfig && this.props.keplerGl.map.visState.filters.length === 0) {
       const timeFields = this.props.keplerGl.map.visState.datasets.looker_data.fields.filter(
-        field => field.type === 'timestamp',
+        (field) => field.type === 'timestamp',
       )
       if (timeFields.length > 0) {
         this.props.dispatch(
@@ -453,10 +429,10 @@ class Map extends Component {
   }
 }
 
-const mapStateToProps = state => {
+const mapStateToProps = (state) => {
   return state
 }
 
-const dispatchToProps = dispatch => ({ dispatch })
+const dispatchToProps = (dispatch) => ({ dispatch })
 
 export default connect(mapStateToProps, dispatchToProps)(Map)

@@ -54,6 +54,10 @@ const options = {
       'https://storage.googleapis.com/gbfs.basis-pdn.bike/Hereford/system_regions.json',
       'https://storage.googleapis.com/gbfs.basis-pdn.bike/London/station_information.json',
       'https://storage.googleapis.com/gbfs.basis-pdn.bike/London/system_regions.json',
+      'https://storage.googleapis.com/gbfs.basis-pdn.bike/Watford/station_information.json',
+      'https://storage.googleapis.com/gbfs.basis-pdn.bike/Watford/system_regions.json',
+      'https://storage.googleapis.com/gbfs.basis-pdn.bike/Norwich/station_information.json',
+      'https://storage.googleapis.com/gbfs.basis-pdn.bike/Norwich/system_regions.json',
     ],
   },
 }
@@ -64,7 +68,7 @@ looker.plugins.visualizations.add({
   label: 'Kepler',
   options,
   // Set up the initial state of the visualization
-  create: function(element, config) {
+  create: function (element, config) {
     // Insert a <style> tag with some styles we'll use later.
     element.innerHTML = `
       <style>
@@ -109,7 +113,7 @@ looker.plugins.visualizations.add({
     )
   },
   // Render in response to the data or settings changing
-  updateAsync: function(data, element, config, queryResponse, details, done) {
+  updateAsync: function (data, element, config, queryResponse, details, done) {
     console.log('Looker sent updated data or settings', new Date(), {
       data,
       element,
@@ -119,7 +123,7 @@ looker.plugins.visualizations.add({
     })
 
     // We need to bail if we don't get a properly populated config object or Kepler will crash
-    if (!Object.keys(options).every(item => Object.keys(config).includes(item))) return
+    if (!Object.keys(options).every((item) => Object.keys(config).includes(item))) return
 
     // Clear any errors from previous updates
     this.clearErrors()
@@ -170,7 +174,7 @@ looker.plugins.visualizations.add({
       }
     }
 
-    const configUpdateCallback = serialisedKeplerMapConfig => {
+    const configUpdateCallback = (serialisedKeplerMapConfig) => {
       this.trigger('updateConfig', [{ serialisedKeplerMapConfig }])
     }
 
