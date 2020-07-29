@@ -58,6 +58,8 @@ const options = {
       'https://storage.googleapis.com/gbfs.basis-pdn.bike/Watford/system_regions.json',
       'https://storage.googleapis.com/gbfs.basis-pdn.bike/Norwich/station_information.json',
       'https://storage.googleapis.com/gbfs.basis-pdn.bike/Norwich/system_regions.json',
+      'https://storage.googleapis.com/gbfs.basis-pdn.bike/Staten Island/station_information.json',
+      'https://storage.googleapis.com/gbfs.basis-pdn.bike/Staten Island/system_regions.json',
     ],
   },
 }
