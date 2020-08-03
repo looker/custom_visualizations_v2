@@ -43,9 +43,9 @@ export function getLayerBounds(layers) {
 export function doesLinestringHaveTimes(feature) {
   const propertyKeys = Object.keys(feature.properties)
   return (
-    propertyKeys.some(item => item.includes('start')) &&
-    (propertyKeys.some(item => item.includes('duration')) ||
-      propertyKeys.some(item => item.includes('end')))
+    propertyKeys.some((item) => item.includes('start')) &&
+    (propertyKeys.some((item) => item.includes('duration')) ||
+      propertyKeys.some((item) => item.includes('end')))
   )
 }
 
@@ -54,11 +54,11 @@ export function enrichLinestringFeatureToTrip(feature) {
   const propertyKeys = Object.keys(feature.properties)
   if (doesLinestringHaveTimes(feature)) {
     try {
-      const startDateProperty = propertyKeys.find(item => item.includes('start'))
+      const startDateProperty = propertyKeys.find((item) => item.includes('start'))
       const startTimestamp = Date.parse(feature.properties[startDateProperty])
-      const durationProperty = propertyKeys.find(item => item.includes('duration'))
+      const durationProperty = propertyKeys.find((item) => item.includes('duration'))
       const duration = feature.properties[durationProperty]
-      const endDateProperty = propertyKeys.find(item => item.includes('end'))
+      const endDateProperty = propertyKeys.find((item) => item.includes('end'))
       const endTimestamp = Date.parse(feature.properties[endDateProperty])
       const tripDuration = duration ? duration * 1000 : endTimestamp - startTimestamp
       coordinates = feature.geometry.coordinates.map((item, index, array) => [
@@ -94,7 +94,11 @@ export async function loadGbfsFeedsAsKeplerDatasets(urls) {
         const response = await fetch(url, { cors: true })
         const body = await response.json()
         console.log(`Got GBFS data for ${url}:`, body)
-        if (body.hasOwnProperty('data') && body.data.hasOwnProperty('regions')) {
+        if (
+          body.hasOwnProperty('data') &&
+          body.data.hasOwnProperty('regions') &&
+          body.data.regions.length > 0
+        ) {
           datasets.push({
             info: {
               label: `Service areas ${body.data.regions[0].name || url}`,
@@ -102,7 +106,7 @@ export async function loadGbfsFeedsAsKeplerDatasets(urls) {
             },
             data: processGeojson({
               type: 'FeatureCollection',
-              features: body.data.regions.map(region => {
+              features: body.data.regions.map((region) => {
                 const { region_id, geom, ...properties } = region
                 return {
                   type: 'Feature',
@@ -117,7 +121,11 @@ export async function loadGbfsFeedsAsKeplerDatasets(urls) {
               }),
             }),
           })
-        } else if (body.hasOwnProperty('data') && body.data.hasOwnProperty('stations')) {
+        } else if (
+          body.hasOwnProperty('data') &&
+          body.data.hasOwnProperty('stations') &&
+          body.data.stations.length > 0
+        ) {
           datasets.splice(0, 0, {
             info: {
               label: `Stations ${url}`,
@@ -125,7 +133,7 @@ export async function loadGbfsFeedsAsKeplerDatasets(urls) {
             },
             data: processGeojson({
               type: 'FeatureCollection',
-              features: body.data.stations.map(station => {
+              features: body.data.stations.map((station) => {
                 const { station_id, lat, lon, ...properties } = station
                 return {
                   type: 'Feature',

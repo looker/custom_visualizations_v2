@@ -19,7 +19,6 @@ import {
   toggleModal,
   inputMapStyle,
   addCustomMapStyle,
-  removeLayer,
   fitBounds,
   resetMapConfig,
   addFilter,
@@ -150,7 +149,11 @@ class Map extends Component {
       return
     }
 
-    const isNewGbfs = !isEqual(this.currentGbfsFeeds, gbfsFeeds)
+    // We need to store the config here so that it won't get updated while we work through all the
+    // bits, including async and dispatched stuff
+    const currentSerialisedKeplerMapConfig = this.props.config.serialisedKeplerMapConfig
+
+    const isNewGbfs = this.currentGbfsFeeds !== null && !isEqual(this.currentGbfsFeeds, gbfsFeeds)
     this.currentGbfsFeeds = gbfsFeeds
 
     // Clear up previous datasets, except GBFS if the feed URLs are the same as before
@@ -199,7 +202,7 @@ class Map extends Component {
     )
     // Finally we join them all togeter into a big old CSV string
     const dataAsCSV = `${columnHeaders}\n${rows.join('')}`
-    console.log('dataAsCSV', dataAsCSV)
+    console.debug('dataAsCSV', dataAsCSV)
 
     // We're using Kepler's own processing utility to generate its dataset
     const processedCsvData = processCsvData(dataAsCSV)
@@ -299,7 +302,12 @@ class Map extends Component {
     console.log('geoJsonDatasets', geoJsonDatasets)
 
     // Load GBFS datasets if we got new feeds
-    if (isNewGbfs) {
+    if (
+      isNewGbfs ||
+      !Object.keys(this.props.keplerGl.map.visState.datasets).some((datasetId) =>
+        datasetId.includes('GBFS'),
+      )
+    ) {
       this.gbfsDatasets = await loadGbfsFeedsAsKeplerDatasets(gbfsFeeds)
     }
 
@@ -314,12 +322,12 @@ class Map extends Component {
     // Let's try to apply the previous config, but we need to reset it if data columns or GBFS feeds
     // have changed to prevent strange behaviour
     if (
-      this.props.config.serialisedKeplerMapConfig &&
+      currentSerialisedKeplerMapConfig &&
       (this.previousColumnsHeaders === null || this.previousColumnsHeaders === columnHeaders) &&
       !isNewGbfs
     ) {
       const decompressedConfig = JSON.parse(
-        pako.inflate(atob(this.props.config.serialisedKeplerMapConfig), {
+        pako.inflate(atob(currentSerialisedKeplerMapConfig), {
           to: 'string',
         }),
       )
@@ -329,6 +337,15 @@ class Map extends Component {
         config = loadedConfig
       }
     } else {
+      console.log(
+        `not applying loaded config as one of the conditions weren't met`,
+        'currentSerialisedKeplerMapConfig',
+        !!currentSerialisedKeplerMapConfig,
+        'previousColumnsHeaders',
+        this.previousColumnsHeaders === null || this.previousColumnsHeaders === columnHeaders,
+        '!isNewGbfs',
+        !isNewGbfs,
+      )
       this.props.dispatch(resetMapConfig())
     }
     this.previousColumnsHeaders = columnHeaders
