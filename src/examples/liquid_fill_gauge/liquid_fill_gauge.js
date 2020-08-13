@@ -7,6 +7,8 @@
  * and modified for use in the Looker example custom visualizations project.
  */
 
+const SSF = require('ssf')
+
 var defaultConfig = {
     // Values
     minValue: 0, // The gauge minimum value.
@@ -56,7 +58,7 @@ function initialize(d3) {
         };
     })();
 
-    d3.liquidfillgauge = function(g, value, settings) {
+    d3.liquidfillgauge = function(g, value, settings, valueFormat) {
         // Handle configuration
         var config = d3.map(defaultConfig);
         d3.map(settings).each(function(val, key) {
@@ -99,8 +101,8 @@ function initialize(d3) {
             var waveClipWidth = waveLength * waveClipCount;
 
             // Rounding functions so that the correct number of decimal places is always displayed as the value counts up.
-            var textRounder = function(value) {
-                return Math.round(value);
+            var textRounder = function(value) { 
+              return Math.round(value);
             };
             if (parseFloat(textFinalValue) != parseFloat(textRounder(textFinalValue))) {
                 textRounder = function(value) {
@@ -112,6 +114,12 @@ function initialize(d3) {
                     return parseFloat(value).toFixed(2);
                 };
             }
+            if (valueFormat !== null){
+              textRounder = function(value) {
+                return SSF.format(valueFormat, parseFloat(value))
+              }
+            }
+
 
             // Data for building the clip wave area.
             var data = [];
@@ -260,6 +268,10 @@ function initialize(d3) {
                         var that = d3.select(this);
                         var i = d3.interpolate(from, to);
                         return function(t) {
+                            if(parseFloat(value) < parseFloat(i(t))) {
+                              that.text(textRounder(value) + percentText);
+                              return;
+                            }
                             that.text(textRounder(i(t)) + percentText);
                         };
                     };
