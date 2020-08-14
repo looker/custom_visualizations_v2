@@ -15,12 +15,6 @@
     "lint-fix": "tslint --fix --project tsconfig.json  --format stylish 'src/**/*.ts'",
     "test": "jest"
   },
-  "jest": {
-    "modulePaths": [
-      "node_modules",
-      "src"
-    ]
-  },
   "author": "",
   "private": true,
   "devDependencies": {
@@ -46,7 +40,7 @@
     "@babel/preset-react": "^7.7.0",
     "@types/d3": "^5.0.0",
     "@types/d3-sankey": "^0.7.4",
-    "babel-loader": "^8.0.6",
+    "babel-loader": "8.0.6",
     "d3-sankey": "^0.10.4",
     "jest": "^24.9.0",
     "react": "^16.8.3",
