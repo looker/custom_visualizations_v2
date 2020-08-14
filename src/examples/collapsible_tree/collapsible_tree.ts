@@ -1,5 +1,6 @@
 // Global values provided via the API
 declare var looker: Looker
+declare var LookerCharts: LookerChartUtils
 
 import * as d3 from 'd3'
 import { handleErrors } from '../common/utils'
@@ -7,15 +8,18 @@ import { handleErrors } from '../common/utils'
 import {
   Row,
   Looker,
+  Link,
+  Cell,
+  LookerChartUtils,
   VisualizationDefinition
 } from '../types/types'
 
+
 interface CollapsibleTreeVisualization extends VisualizationDefinition {
-  svg?: d3.Selection<d3.BaseType, {}, null, undefined>,
+  svg?: any
 }
 
-// recursively create children array
-function descend(obj: any, depth: number = 0) {
+function descend(obj: any, taxonomy: any[], depth: number = 0) {
   const arr: any[] = []
   for (const k in obj) {
     if (k === '__data') {
@@ -24,7 +28,7 @@ function descend(obj: any, depth: number = 0) {
     const child: any = {
       name: k,
       depth,
-      children: descend(obj[k], depth + 1)
+      children: descend(obj[k], taxonomy, depth + 1)
     }
     if ('__data' in obj[k]) {
       child.data = obj[k].__data
@@ -34,28 +38,28 @@ function descend(obj: any, depth: number = 0) {
   return arr
 }
 
-function burrow(table: any, taxonomy: any[]) {
+function burrow(table: any, taxonomy: any[], linkMap: Map<string, Cell|Link[]|undefined> ) {
   // create nested object
   const obj: any = {}
 
   table.forEach((row: Row) => {
     // start at root
     let layer = obj
-
     // create children as nested objects
     taxonomy.forEach((t: any) => {
       const key = row[t.name].value
+      linkMap.set(key, row[t.name].links)
       layer[key] = key in layer ? layer[key] : {}
       layer = layer[key]
     })
     layer.__data = row
   })
 
-  // use descend to create nested children arrays
   return {
     name: 'root',
-    children: descend(obj, 1),
-    depth: 0
+    children: descend(obj, taxonomy, 1),
+    depth: 0,
+    links: linkMap
   }
 }
 
@@ -101,7 +105,9 @@ const vis: CollapsibleTreeVisualization = {
     const margin = { top: 10, right: 10, bottom: 10, left: 10 }
     const width = element.clientWidth - margin.left - margin.right
     const height = element.clientHeight - margin.top - margin.bottom
-    const nested = burrow(data, queryResponse.fields.dimension_like)
+    const linkMap: Map<string, Link[]> = new Map()
+    const nested = burrow(data, queryResponse.fields.dimension_like, linkMap)
+
 
     const svg = this.svg!
       .html('')
@@ -182,16 +188,17 @@ const vis: CollapsibleTreeVisualization = {
           .enter()
           .append('g')
           .attr('class', 'node')
-          .attr('transform', (d) => {
+          .attr('transform', (d: any) => {
             return 'translate(' + source.y0 + ',' + source.x0 + ')'
           })
-          .on('click', click)
+          
       )
 
       // Add Circle for the nodes
       nodeEnter.append('circle')
         .attr('class', 'node')
         .attr('r', 1e-6)
+        .on('click', click)
 
       // Add labels for the nodes
       nodeEnter.append('text')
@@ -202,9 +209,16 @@ const vis: CollapsibleTreeVisualization = {
         .attr('text-anchor', (d: any) => {
           return d.children || d._children ? 'end' : 'start'
         })
+        .style('cursor', 'pointer')
         .style('font-family', "'Open Sans', Helvetica, sans-serif")
         .style('font-size', textSize + 'px')
-        .text((d: any) => d.data.name)
+        .text((d: any) => { return d.data.name })
+        .on('click', (d: any) => { 
+         LookerCharts.Utils.openDrillMenu({
+            links: linkMap.get(d.data.name)!,
+            event: event!
+          });
+        })
 
       // UPDATE
       const nodeUpdate = nodeEnter.merge(node)
@@ -212,7 +226,7 @@ const vis: CollapsibleTreeVisualization = {
       // Transition to the proper position for the node
       nodeUpdate.transition()
         .duration(duration)
-        .attr('transform', (d) => {
+        .attr('transform', (d: any) => {
           return 'translate(' + d.y + ',' + d.x + ')'
         })
 
@@ -227,7 +241,7 @@ const vis: CollapsibleTreeVisualization = {
       // Remove any exiting nodes
       const nodeExit = node.exit().transition()
         .duration(duration)
-        .attr('transform', (d) => {
+        .attr('transform', (d: any) => {
           return 'translate(' + source.y + ',' + source.x + ')'
         })
         .remove()
@@ -258,7 +272,7 @@ const vis: CollapsibleTreeVisualization = {
           .style('fill', 'none')
           .style('stroke', '#ddd')
           .style('stroke-width', 1.5)
-          .attr('d', (d) => {
+          .attr('d', (d: any) => {
             const o = { x: source.x0, y: source.y0 }
             return diagonal(o, o)
           })
@@ -271,14 +285,14 @@ const vis: CollapsibleTreeVisualization = {
       linkUpdate
         .transition()
         .duration(duration)
-        .attr('d', (d) => diagonal(d, d.parent))
+        .attr('d', (d: any) => diagonal(d, d.parent))
 
       // Remove any exiting links
       link
         .exit()
         .transition()
         .duration(duration)
-        .attr('d', (d) => {
+        .attr('d', (d: any) => {
           const o = { x: source.x, y: source.y }
           return diagonal(o, o)
         })

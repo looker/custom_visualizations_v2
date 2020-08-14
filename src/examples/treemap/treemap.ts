@@ -11,7 +11,7 @@ import {
 declare var looker: Looker
 
 interface TreemapVisualization extends VisualizationDefinition {
-  svg?: d3.Selection<SVGElement, {}, any, any>,
+  svg?: any
 }
 
 // recursively create children array
@@ -102,7 +102,7 @@ const vis: TreemapVisualization = {
       .size([width, height - 16])
       .tile(d3.treemapSquarify.ratio(1))
       .paddingOuter(1)
-      .paddingTop((d) => {
+      .paddingTop((d: any) => {
         return d.depth === 1 ? 16 : 0
       })
       .paddingInner(1)
@@ -128,10 +128,10 @@ const vis: TreemapVisualization = {
       .data(root.descendants())
       .enter().append('g')
       .attr('transform', (d: any) => 'translate(' + d.x0 + ',' + d.y0 + ')')
-      .attr('class', (d, i) => 'node depth-' + d.depth)
+      .attr('class', (d: any, i: any) => 'node depth-' + d.depth)
       .style('stroke-width', 1.5)
       .style('cursor', 'pointer')
-      .on('click', (d) => console.log(d))
+      .on('click', (d: any) => console.log(d))
       .on('mouseenter', (d: any) => {
         const ancestors = d.ancestors()
         breadcrumb.text(
@@ -145,21 +145,21 @@ const vis: TreemapVisualization = {
           .filter((p: any) => ancestors.indexOf(p) > -1)
           .style('stroke', '#fff')
       })
-      .on('mouseleave', (d) => {
+      .on('mouseleave', (d: any) => {
         breadcrumb.text('')
         svg.selectAll('g.node rect')
-          .style('stroke', (d) => {
+          .style('stroke', (d: any) => {
             return null
           })
       })
 
     cell.append('rect')
-      .attr('id', (d, i) => 'rect-' + i)
+      .attr('id', (d: any, i: any) => 'rect-' + i)
       .attr('width', (d: any) => d.x1 - d.x0)
       .attr('height', (d: any) => d.y1 - d.y0)
-      .style('fill', (d) => {
+      .style('fill', (d: any) => {
         if (d.depth === 0) return 'none'
-        const ancestor: string = d.ancestors().map((p) => p.data.name).slice(-2, -1)[0]
+        const ancestor: string = d.ancestors().map((p: any) => p.data.name).slice(-2, -1)[0]
         const colors: any[] = [color(ancestor), '#ddd']
         const scale = d3.scaleLinear()
           .domain([1, 6.5])
@@ -168,26 +168,26 @@ const vis: TreemapVisualization = {
       })
 
     cell.append('clipPath')
-      .attr('id', (d, i) => 'clip-' + i)
+      .attr('id', (d: any, i: any) => 'clip-' + i)
       .append('use')
-      .attr('xlink:href', (d, i) => '#rect-' + i)
+      .attr('xlink:href', (d: any, i: any) => '#rect-' + i)
 
     cell.append('text')
-      .style('opacity', (d) => {
+      .style('opacity', (d: any) => {
         if (d.depth === 1) return 1
         return 0
       })
-      .attr('clip-path', (d, i) => 'url(#clip-' + i + ')')
-      .attr('y', (d) => {
+      .attr('clip-path', (d: any, i: any) => 'url(#clip-' + i + ')')
+      .attr('y', (d: any) => {
         return d.depth === 1 ? '13' : '10'
       })
       .attr('x', 2)
       .style('font-family', 'Helvetica, Arial, sans-serif')
       .style('fill', 'white')
-      .style('font-size', (d) => {
+      .style('font-size', (d: any) => {
         return d.depth === 1 ? '14px' : '10px'
       })
-      .text((d) => d.data.name === 'root' ? '' : d.data.name)
+      .text((d: any) => d.data.name === 'root' ? '' : d.data.name)
 
   }
 }
