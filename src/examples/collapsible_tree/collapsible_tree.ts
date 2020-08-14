@@ -14,7 +14,6 @@ import {
   VisualizationDefinition
 } from '../types/types'
 
-
 interface CollapsibleTreeVisualization extends VisualizationDefinition {
   svg?: any
 }
@@ -38,7 +37,7 @@ function descend(obj: any, taxonomy: any[], depth: number = 0) {
   return arr
 }
 
-function burrow(table: any, taxonomy: any[], linkMap: Map<string, Cell|Link[]|undefined> ) {
+function burrow(table: any, taxonomy: any[], linkMap: Map<string, Cell | Link[] | undefined>) {
   // create nested object
   const obj: any = {}
 
@@ -108,8 +107,7 @@ const vis: CollapsibleTreeVisualization = {
     const linkMap: Map<string, Link[]> = new Map()
     const nested = burrow(data, queryResponse.fields.dimension_like, linkMap)
 
-
-    const svg = this.svg!
+    const svg = this.svg
       .html('')
       .attr('width', width + margin.right + margin.left)
       .attr('height', height + margin.top + margin.bottom)
@@ -191,7 +189,7 @@ const vis: CollapsibleTreeVisualization = {
           .attr('transform', (d: any) => {
             return 'translate(' + source.y0 + ',' + source.x0 + ')'
           })
-          
+
       )
 
       // Add Circle for the nodes
@@ -213,11 +211,11 @@ const vis: CollapsibleTreeVisualization = {
         .style('font-family', "'Open Sans', Helvetica, sans-serif")
         .style('font-size', textSize + 'px')
         .text((d: any) => { return d.data.name })
-        .on('click', (d: any) => { 
-         LookerCharts.Utils.openDrillMenu({
+        .on('click', (d: any) => {
+          LookerCharts.Utils.openDrillMenu({
             links: linkMap.get(d.data.name)!,
             event: event!
-          });
+          })
         })
 
       // UPDATE

@@ -13,7 +13,6 @@ declare var looker: Looker
 interface TreemapVisualization extends VisualizationDefinition {
   svg?: any
 }
-
 // recursively create children array
 function descend(obj: any, depth: number = 0) {
   const arr: any[] = []
@@ -108,7 +107,7 @@ const vis: TreemapVisualization = {
       .paddingInner(1)
       .round(true)
 
-    const svg = this.svg!
+    const svg = this.svg
       .html('')
       .attr('width', '100%')
       .attr('height', '100%')
