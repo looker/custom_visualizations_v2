@@ -15,6 +15,12 @@
     "lint-fix": "tslint --fix --project tsconfig.json  --format stylish 'src/**/*.ts'",
     "test": "jest"
   },
+  "jest": {
+    "modulePaths": [
+      "node_modules",
+      "src"
+    ]
+  },
   "author": "",
   "private": true,
   "devDependencies": {
@@ -47,6 +53,7 @@
     "react-dom": "^16.7.0",
     "react-responsive-carousel": "^3.1.51",
     "ssf": "^0.11.2",
+    "trim-right": "^1.0.1",
     "typescript": "^3.3.3333"
   }
 }
