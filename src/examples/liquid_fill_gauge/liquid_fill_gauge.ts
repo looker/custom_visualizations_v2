@@ -102,7 +102,7 @@ const vis: LiquidFillGaugeVisualization = {
     },
     waveAnimateTime: {
       label: 'Wave Animation Time',
-      min: 0,
+      min: 1,
       max: 5000,
       step: 50,
       default: defaults.waveAnimateTime,
@@ -231,6 +231,7 @@ const vis: LiquidFillGaugeVisualization = {
     }
 
     const datumField = queryResponse.fields.measure_like[0]
+    const valueFormat = gaugeConfig.displayPercent ? null : datumField.value_format;
     const datum = data[0][datumField.name]
     let value = datum.value
 
@@ -260,7 +261,7 @@ const vis: LiquidFillGaugeVisualization = {
       })
     }
     // @ts-ignore
-    d3.liquidfillgauge(this.svg, value, gaugeConfig)
+    d3.liquidfillgauge(this.svg, value, gaugeConfig, valueFormat)
 
   }
 }
