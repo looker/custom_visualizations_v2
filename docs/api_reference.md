@@ -185,11 +185,12 @@ update: function(data, element, config, queryResponse, details){
 
 - `details` _object_
 
-	Details about the current rendering context. Contains information about why the chart is rendering and what has changed. Usually this information is only used in advanced cases.
+	Details about the current rendering context. Contains information about why the chart is rendering and what has changed. Usually this information is only used in advanced cases. Allowed attributes include `crossfilterEnabled` and `crossfilters`. 
 
 - `done` _function_
 
 	A callback to indicate that the visualization is fully rendered. This is especially important to call if your visualization needs to perform asynchronous calls or needs to be rendered as a PDF. 
+		
 
 
 ## Rendering Data
@@ -216,6 +217,14 @@ These are all available on the global `LookerCharts.Utils` object.
 - `LookerCharts.Utils.filterableValueForCell(cell)`
 
 	This function accepts a cell and returns a Looker advanced filter syntax string that would match the value of this cell.
+
+- `LookerCharts.Utils.crossfilter({row, pivot, event})`
+	
+	This function accepts a row, pivot, or event and is used to toggle crossfilters in a visualization.
+
+- `LookerCharts.Utils.isCrossfilterSelected(row, pivot?)`
+
+	This function accepts a row or pivot and is used to check if that row or pivot is currently selected in a custom visualization.
 
 - `LookerCharts.Utils.openDrillMenu(options)`
 
