@@ -231,7 +231,7 @@ const vis: LiquidFillGaugeVisualization = {
     }
 
     const datumField = queryResponse.fields.measure_like[0]
-    const valueFormat = gaugeConfig.displayPercent ? null : datumField.value_format;
+    const valueFormat = gaugeConfig.displayPercent ? null : datumField.value_format
     const datum = data[0][datumField.name]
     let value = datum.value
 
