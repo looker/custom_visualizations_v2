@@ -185,11 +185,21 @@ update: function(data, element, config, queryResponse, details){
 
 - `details` _object_
 
-	Details about the current rendering context. Contains information about why the chart is rendering and what has changed. Usually this information is only used in advanced cases.
+	Details about the current rendering context. Contains information about why the chart is rendering and what has changed. Usually this information is only used in advanced cases. 
+	
+	Pertaining to [crossfilters](https://docs.looker.com/dashboards/cross-filtering) in Looker dashboards that use the new dashboard experience, allowed attributes include `crossfilterEnabled` and `crossfilters`.
+
+	The `print` attribute can be used in conjunction with the `done` function to improve PDF rendering for custom visualizations, especially those that include animation. For example:
+	
+	```
+	if (details.print) {
+    	    done();
+	}
+	```
 
 - `done` _function_
 
-	A callback to indicate that the visualization is fully rendered. This is especially important to call if your visualization needs to perform asynchronous calls or needs to be rendered as a PDF. 
+	A callback to indicate that the visualization is fully rendered. This is especially important to call if your visualization needs to perform asynchronous calls or needs to be rendered as a PDF.
 
 
 ## Rendering Data
@@ -216,6 +226,36 @@ These are all available on the global `LookerCharts.Utils` object.
 - `LookerCharts.Utils.filterableValueForCell(cell)`
 
 	This function accepts a cell and returns a Looker advanced filter syntax string that would match the value of this cell.
+
+- `LookerCharts.Utils.toggleCrossfilter({row, pivot, event})`
+	
+	This function accepts a row, pivot, or event and is used to check if crossfiltering is enabled for a visualization. For example, to add an event listener to an element that checks if crossfiltering is enabled when the event occurs:
+
+	```
+	.on("click", function (row, event) {
+  if (details.crossfilterEnabled) {
+    LookerCharts.Utils.toggleCrossfilter({
+      row: row,
+      event: event,
+    });
+  } else {
+	```
+
+- `LookerCharts.Utils.getCrossfilterSelection(row, pivot?)`
+
+	This function accepts a row or pivot and is used to check if that row or pivot is currently selected in a custom visualization. The function returns an enum for `CrossfilterSelection {NONE, SELECTED, UNSELECTED}` of 0 if `NONE`, 1 if `SELECTED`, and 2 if `UNSELECTED`.
+
+	For example, to conditionally apply a fill color to a row if it is being crossfiltered and apply default colors if crossfiltering is not enabled for that row:
+
+	```
+	d3.select("#myElement")
+  .attr("fill", function (d) {
+    const crossfilter = LookerCharts.Utils.getCrossfilterSelection(d.row)
+    if (details.crossfilterEnabled && crossfilter === 1) {
+        return d.color
+      } else {
+        return "#DEE1E5" //Hex used for unselected elements in native visualizations
+	```
 
 - `LookerCharts.Utils.openDrillMenu(options)`
 
