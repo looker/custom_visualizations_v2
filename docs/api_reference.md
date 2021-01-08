@@ -192,9 +192,9 @@ update: function(data, element, config, queryResponse, details){
 	The `print` attribute can be used in conjunction with the `done` function to improve PDF rendering for custom visualizations, especially those that include animation. For example:
 	
 	```
-		if (details.print) {
-    		done();
-		}
+	if (details.print) {
+    	    done();
+	}
 	```
 
 - `done` _function_
