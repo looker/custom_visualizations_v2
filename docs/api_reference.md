@@ -241,9 +241,21 @@ These are all available on the global `LookerCharts.Utils` object.
   } else {
 	```
 
-- `LookerCharts.Utils.isCrossfilterSelected(row, pivot?)`
+- `LookerCharts.Utils.getCrossfilterSelection(row, pivot?)`
 
-	This function accepts a row or pivot and is used to check if that row or pivot is currently selected in a custom visualization.
+	This function accepts a row or pivot and is used to check if that row or pivot is currently selected in a custom visualization. The function returns an enum for `CrossfilterSelection {NONE, SELECTED, UNSELECTED}` of 0 if `NONE`, 1 if `SELECTED`, and 2 if `UNSELECTED`.
+
+	For example, to conditionally apply a fill color to a row if it is being crossfiltered and apply default colors if crossfiltering is not enabled for that row:
+
+	```
+	d3.select("#myElement")
+  .attr("fill", function (d) {
+    const crossfilter = LookerCharts.Utils.getCrossfilterSelection(d.row)
+    if (details.crossfilterEnabled && crossfilter === 1) {
+        return d.color
+      } else {
+        return "#DEE1E5" //Hex used for unselected elements in native visualizations
+	```
 
 - `LookerCharts.Utils.openDrillMenu(options)`
 
