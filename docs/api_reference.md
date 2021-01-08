@@ -191,7 +191,7 @@ update: function(data, element, config, queryResponse, details){
 
 	The `print` attribute can be used in conjunction with the `done` function to improve PDF rendering for custom visualizations, especially those that include animation. For example:
 	
-	```
+	```js
 	if (details.print) {
     	    done();
 	}
@@ -231,14 +231,16 @@ These are all available on the global `LookerCharts.Utils` object.
 	
 	This function accepts a row, pivot, or event and is used to check if crossfiltering is enabled for a visualization. For example, to add an event listener to an element that checks if crossfiltering is enabled when the event occurs:
 
-	```
-	.on("click", function (row, event) {
-  if (details.crossfilterEnabled) {
-    LookerCharts.Utils.toggleCrossfilter({
-      row: row,
-      event: event,
-    });
-  } else {
+	```js
+	d3.select(#myElement)
+	.on("click", function (d) {
+  		if (details.crossfilterEnabled) {
+    			LookerCharts.Utils.toggleCrossfilter({
+      				row: d.row,
+      				event: d3.event,
+    			});
+  		} else {
+		  ... 
 	```
 
 - `LookerCharts.Utils.getCrossfilterSelection(row, pivot?)`
@@ -247,14 +249,15 @@ These are all available on the global `LookerCharts.Utils` object.
 
 	For example, to conditionally apply a fill color to a row if it is being crossfiltered and apply default colors if crossfiltering is not enabled for that row:
 
-	```
+	```js
 	d3.select("#myElement")
-  .attr("fill", function (d) {
-    const crossfilter = LookerCharts.Utils.getCrossfilterSelection(d.row)
-    if (details.crossfilterEnabled && crossfilter === 1) {
-        return d.color
-      } else {
-        return "#DEE1E5" //Hex used for unselected elements in native visualizations
+  	.attr("fill", function (d) {
+    	const crossfilter = LookerCharts.Utils.getCrossfilterSelection(d.row)
+    	if (details.crossfilterEnabled && crossfilter === 1) {
+        		return d.color
+      	} else {
+        		return "#DEE1E5" //Hex used for unselected elements in native visualizations
+	...
 	```
 
 - `LookerCharts.Utils.openDrillMenu(options)`
