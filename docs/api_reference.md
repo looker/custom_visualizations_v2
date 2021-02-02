@@ -24,7 +24,7 @@ looker.plugins.visualizations.add({
 
 ### Environment
 
-Since the Visualization API is plain JavaScript, you can use any JavaScript libraries to visualize your data. 
+Since the Visualization API is plain JavaScript, you can use any JavaScript libraries to visualize your data.
 
 Your JavaScript code will run in a sandboxed iframe, separate from your Looker instance. All the same, authors of custom visualizations are responsible for ensuring that the code they write is secure.
 
@@ -185,12 +185,12 @@ update: function(data, element, config, queryResponse, details){
 
 - `details` _object_
 
-	Details about the current rendering context. Contains information about why the chart is rendering and what has changed. Usually this information is only used in advanced cases. 
-	
+	Details about the current rendering context. Contains information about why the chart is rendering and what has changed. Usually this information is only used in advanced cases.
+
 	Pertaining to [crossfilters](https://docs.looker.com/dashboards/cross-filtering) in Looker dashboards that use the new dashboard experience, allowed attributes include `crossfilterEnabled` and `crossfilters`.
 
 	The `print` attribute can be used in conjunction with the `done` function to improve PDF rendering for custom visualizations, especially those that include animation. For example:
-	
+
 	```js
 	if (details.print) {
     	    done();
@@ -228,7 +228,7 @@ These are all available on the global `LookerCharts.Utils` object.
 	This function accepts a cell and returns a Looker advanced filter syntax string that would match the value of this cell.
 
 - `LookerCharts.Utils.toggleCrossfilter({row, pivot, event})`
-	
+
 	This function accepts a row, pivot, or event and is used to check if crossfiltering is enabled for a visualization. For example, to add an event listener to an element that checks if crossfiltering is enabled when the event occurs:
 
 	```js
@@ -240,7 +240,7 @@ These are all available on the global `LookerCharts.Utils` object.
       				event: d3.event,
     			});
   		} else {
-		  ... 
+		  ...
 	```
 
 - `LookerCharts.Utils.getCrossfilterSelection(row, pivot?)`
@@ -270,13 +270,9 @@ These are all available on the global `LookerCharts.Utils` object.
 
 		An array of the objects returned from the `links` property of a cell. If you want to display links for multiple cells at once, you may concatenate these arrays together first. For custom links, provide an array of objects with the following form: <pre><code>{ label: _string_, type: 'drill', type_label: _string_, url: _url_ }</code></pre>
 
-	- `element` _DOMElement_
-
-		The element that caused the drill event. Looker will use this to determine where to place the drill menu. If you don't have one, try to pass `event` instead.
-
 	- `event` _HTML DOM Event_
 
-		The click (or other) event that caused the drill event. Looker will use this to determine where to place the drill menu. If you don't have one, try to pass `element` instead.
+		The click (or other) event that caused the drill event. Looker will use this to determine where to place the drill menu. If you don't have one, try passing an object with the pageX and pageY coordinates.
 
 	**Example:**
 
@@ -491,10 +487,10 @@ this.trigger("limit", [20]);
 - `loadingEnd`
 
 	Mark the visualization as no longer loading.
-	
+
 - `registerOptions` (Looker 5.24+)
 
-	Allows visualizations to register additional options after the visualization has been registered: 
+	Allows visualizations to register additional options after the visualization has been registered:
 
 	```
 	  update: function(data, element, config, queryResponse, details){
