@@ -9,7 +9,6 @@ import {
   LookerChartUtils,
   VisualizationDefinition
 } from '../types/types'
-console.log('LOOK AT ME!!!!!_______________________________________________')
 // Global values provided via the API
 declare var looker: Looker
 declare var LookerCharts: LookerChartUtils
@@ -60,7 +59,7 @@ const vis: Sankey = {
   updateAsync (data, element, config, queryResponse, details, doneRendering) {
     if (!handleErrors(this, queryResponse, {
       min_pivots: 0, max_pivots: 0,
-      min_dimensions: 2, max_dimensions: undefined,
+      min_dimensions: 1, max_dimensions: undefined,
       min_measures: 1, max_measures: 1
     })) return
 
@@ -115,11 +114,13 @@ const vis: Sankey = {
 
     data.forEach(function (d: any) {
       // variable number of dimensions
-      const path: any[] = []
+      var path: any[] = []
+
       for (const dim of dimensions) {
         if (d[dim.name].value === null && !config.show_null_points) break
-        path.push(d[dim.name].value + '')
+        path = (d[dim.name].value + '').split(',')
       }
+
       path.forEach(function (p: any, i: number) {
         if (i === path.length - 1) return
         const source: any = path.slice(i, i + 1)[0] + i + `len:${path.slice(i, i + 1)[0].length}`

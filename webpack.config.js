@@ -19,7 +19,7 @@ var webpackConfig = {
     // image_carousel: './src/examples/image_carousel/image_carousel.js'
   },
   output: {
-    filename: "[name].js",
+    filename: "[name]-il3.js",
     path: path.join(__dirname, "dist"),
     library: "[name]",
     libraryTarget: "umd"
