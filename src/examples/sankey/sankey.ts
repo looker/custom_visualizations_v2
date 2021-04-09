@@ -9,7 +9,7 @@ import {
   LookerChartUtils,
   VisualizationDefinition
 } from '../types/types'
-
+console.log('LOOK AT ME!!!!!_______________________________________________')
 // Global values provided via the API
 declare var looker: Looker
 declare var LookerCharts: LookerChartUtils
@@ -20,7 +20,7 @@ interface Sankey extends VisualizationDefinition {
 
 const vis: Sankey = {
   id: 'sankey', // id/label not required, but nice for testing and keeping manifests in sync
-  label: 'Sankey',
+  label: 'Sankey Dvelp',
   options: {
     color_range: {
       type: 'array',
