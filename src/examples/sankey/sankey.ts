@@ -25,7 +25,7 @@ const vis: Sankey = {
       type: 'array',
       label: 'Color Range',
       display: 'colors',
-      default: ['#dd3333', '#80ce5d', '#f78131', '#369dc1', '#c572d3', '#36c1b3', '#b57052', '#ed69af']
+      default: ['#80ce5d', '#dd3333', '#f78131', '#369dc1', '#c572d3', '#36c1b3', '#b57052', '#ed69af']
     },
     label_type: {
       default: 'name',
@@ -151,10 +151,6 @@ const vis: Sankey = {
     const nodesArray = nodes.values()
 
     graph.links.forEach(function (d: Cell) {
-      console.log("----")
-      console.log(nodesArray)
-      console.log(d)
-      console.log("----")
       d.source = nodesArray.indexOf(d.source)
       d.target = nodesArray.indexOf(d.target)
     })
@@ -164,9 +160,6 @@ const vis: Sankey = {
         name: d.slice(0, d.split('len:')[1])
       }
     })
-    console.log("&&&")
-    console.log(graph.nodes)
-    console.log("&&&")
 
     sankeyInst(graph)
 
@@ -178,27 +171,25 @@ const vis: Sankey = {
       .style('opacity', 0.4)
       .attr('stroke-width', function (d: Cell) { return Math.max(1, d.width) })
       .on('mouseenter', function (this: any, d: Cell) {
-        svg.selectAll('.link')
-          .style('opacity', 0.05)
+        svg.selectAll('.link').style('opacity', 0.05)
 
-        svg.selectAll('.link')
-          .style('opacity', function (p: any) {
-            if (p.pathId === d.pathId) {
-              p.source.style('opacity', 1)
-              p.target.style('opacity', 1)
-              return 0.7
-            }
-            return 0.05
-          })
+        var activeNodes: any[] = [d.source, d.target]
+
+        svg.selectAll('.link').style('opacity', function (p: any) {
+          if (p.pathId == d.pathId) {
+            activeNodes.push(p.source)
+            activeNodes.push(p.target)
+            return 0.7
+          }
+          return 0.05
+        })
+
+        svg.selectAll('.node').style('opacity', function (p: any) {
+          if (activeNodes.includes(p)) return 1
+          return 0.5
+        })
 
         d3.select(this).style('opacity', 0.7)
-
-        svg.selectAll('.node')
-          .style('opacity', function (p: any) {
-            if (p === d.source) return 1
-            if (p === d.target) return 1
-            return 0.5
-          })
       })
       .on('click', function (this: any, d: Cell) {
         // Add drill menu event
@@ -219,6 +210,19 @@ const vis: Sankey = {
 
       // make unique gradient ids
       const gradientID = 'gradient' + i
+
+      console.log('---')
+      console.log(color)
+      console.log('*')
+      console.log(color(d.source.name.replace(/ .*/, '')))
+      console.log('*')
+      console.log(color(d.target.name.replace(/ .*/, '')))
+      console.log('*')
+      console.log(d.source.name.replace(/ .*/, ''))
+      console.log('*')
+      console.log(d.target.name.replace(/ .*/, ''))
+      console.log('---')
+
 
       const startColor = color(d.source.name.replace(/ .*/, ''))
       const stopColor = color(d.target.name.replace(/ .*/, ''))
