@@ -19,7 +19,7 @@ interface Sankey extends VisualizationDefinition {
 
 const vis: Sankey = {
   id: 'sankey', // id/label not required, but nice for testing and keeping manifests in sync
-  label: 'Sankey Dvelp',
+  label: 'Sankey Flow',
   options: {
     color_range: {
       type: 'array',
@@ -153,7 +153,6 @@ const vis: Sankey = {
     graph.links.forEach(function (d: Cell) {
       d.source = nodesArray.indexOf(d.source)
       d.target = nodesArray.indexOf(d.target)
-      d.d3_object = d3
     })
 
     graph.nodes = nodes.values().map((d: any) => {
@@ -208,16 +207,11 @@ const vis: Sankey = {
 
     // gradients https://bl.ocks.org/micahstubbs/bf90fda6717e243832edad6ed9f82814
     link.style('stroke', function (d: Cell, i: number) {
-      console.log('d from gradient stroke func', d);
-
       // make unique gradient ids
       const gradientID = 'gradient' + i
 
       var startColor = color(d.source.name);
       var stopColor = color(d.target.name);
-
-      console.log('startColor', startColor);
-      console.log('stopColor', stopColor);
 
       const linearGradient = defs.append('linearGradient')
         .attr('id', gradientID)
@@ -234,11 +228,9 @@ const vis: Sankey = {
         ])
         .enter().append('stop')
         .attr('offset', function (d: Cell) {
-          console.log('d.offset', d.offset);
           return d.offset
         })
         .attr('stop-color', function (d: Cell) {
-          console.log('d.color', d.color);
           return d.color
         })
 
