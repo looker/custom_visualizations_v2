@@ -215,7 +215,6 @@ const vis: Sankey = {
 
       const linearGradient = defs.append('linearGradient')
           .attr('id', gradientID)
-          .attr('gradientUnits', 'userSpaceOnUse')
 
       linearGradient.selectAll('stop')
         .data([
