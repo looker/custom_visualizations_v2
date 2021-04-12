@@ -153,6 +153,7 @@ const vis: Sankey = {
     graph.links.forEach(function (d: Cell) {
       d.source = nodesArray.indexOf(d.source)
       d.target = nodesArray.indexOf(d.target)
+      d.d3_object = d3
     })
 
     graph.nodes = nodes.values().map((d: any) => {
@@ -207,28 +208,24 @@ const vis: Sankey = {
 
     // gradients https://bl.ocks.org/micahstubbs/bf90fda6717e243832edad6ed9f82814
     link.style('stroke', function (d: Cell, i: number) {
+      console.log('d from gradient stroke func', d);
 
       // make unique gradient ids
       const gradientID = 'gradient' + i
 
-      console.log('---')
-      console.log(color)
-      console.log('*')
-      console.log(color(d.source.name.replace(/ .*/, '')))
-      console.log('*')
-      console.log(color(d.target.name.replace(/ .*/, '')))
-      console.log('*')
-      console.log(d.source.name.replace(/ .*/, ''))
-      console.log('*')
-      console.log(d.target.name.replace(/ .*/, ''))
-      console.log('---')
+      var startColor = color(d.source.name);
+      var stopColor = color(d.target.name);
 
-
-      const startColor = color(d.source.name.replace(/ .*/, ''))
-      const stopColor = color(d.target.name.replace(/ .*/, ''))
+      console.log('startColor', startColor);
+      console.log('stopColor', stopColor);
 
       const linearGradient = defs.append('linearGradient')
         .attr('id', gradientID)
+        .attr("x1", d.source.x0)
+        .attr("y1", d.source.y0)
+        .attr("x2", d.target.x0)
+        .attr("y2", d.target.y0)
+        .attr("gradientUnits", "userSpaceOnUse")
 
       linearGradient.selectAll('stop')
         .data([
@@ -237,9 +234,11 @@ const vis: Sankey = {
         ])
         .enter().append('stop')
         .attr('offset', function (d: Cell) {
+          console.log('d.offset', d.offset);
           return d.offset
         })
         .attr('stop-color', function (d: Cell) {
+          console.log('d.color', d.color);
           return d.color
         })
 
@@ -267,7 +266,7 @@ const vis: Sankey = {
       .attr('y', function (d: Cell) { return d.y0 })
       .attr('height', function (d: Cell) { return Math.abs(d.y1 - d.y0) })
       .attr('width', function (d: Cell) { return Math.abs(d.x1 - d.x0) })
-      .attr('fill', function (d: Cell) { return color(d.name.replace(/ .*/, '')) })
+      .attr('fill', function (d: Cell) { return d.color = color(d.name) })
       .attr('stroke', '#555')
 
     node.append('text')
