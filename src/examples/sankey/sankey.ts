@@ -111,10 +111,12 @@ const vis: Sankey = {
     }
 
     const nodes = d3.set()
+    var pathId: any = 0
 
     data.forEach(function (d: any) {
       // variable number of dimensions
       var path: any[] = []
+      pathId += 1
 
       for (const dim of dimensions) {
         if (d[dim.name].value === null && !config.show_null_points) break
@@ -123,6 +125,7 @@ const vis: Sankey = {
 
       path.forEach(function (p: any, i: number) {
         if (i === path.length - 1) return
+
         const source: any = path.slice(i, i + 1)[0] + i + `len:${path.slice(i, i + 1)[0].length}`
         const target: any = path.slice(i + 1, i + 2)[0] + (i + 1) + `len:${path.slice(i + 1, i + 2)[0].length}`
         nodes.add(source)
@@ -136,6 +139,7 @@ const vis: Sankey = {
         }
 
         graph.links.push({
+          'pathId': pathId,
           'drillLinks': drillLinks,
           'source': source,
           'target': target,
@@ -147,6 +151,10 @@ const vis: Sankey = {
     const nodesArray = nodes.values()
 
     graph.links.forEach(function (d: Cell) {
+      console.log("----")
+      console.log(nodesArray)
+      console.log(d)
+      console.log("----")
       d.source = nodesArray.indexOf(d.source)
       d.target = nodesArray.indexOf(d.target)
     })
@@ -156,6 +164,9 @@ const vis: Sankey = {
         name: d.slice(0, d.split('len:')[1])
       }
     })
+    console.log("&&&")
+    console.log(graph.nodes)
+    console.log("&&&")
 
     sankeyInst(graph)
 
@@ -169,8 +180,19 @@ const vis: Sankey = {
       .on('mouseenter', function (this: any, d: Cell) {
         svg.selectAll('.link')
           .style('opacity', 0.05)
-        d3.select(this)
-          .style('opacity', 0.7)
+
+        svg.selectAll('.link')
+          .style('opacity', function (p: any) {
+            if (p.pathId === d.pathId) {
+              p.source.style('opacity', 1)
+              p.target.style('opacity', 1)
+              return 0.7
+            }
+            return 0.05
+          })
+
+        d3.select(this).style('opacity', 0.7)
+
         svg.selectAll('.node')
           .style('opacity', function (p: any) {
             if (p === d.source) return 1
