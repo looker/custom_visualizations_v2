@@ -111,11 +111,11 @@ const vis: Sankey = {
     }
 
     const nodes = d3.set()
-    var pathId: any = 0
+    let pathId: any = 0
 
     data.forEach(function (d: any) {
       // variable number of dimensions
-      var path: any[] = []
+      let path: any[] = []
       pathId += 1
 
       for (const dim of dimensions) {
@@ -173,10 +173,10 @@ const vis: Sankey = {
       .on('mouseenter', function (this: any, d: Cell) {
         svg.selectAll('.link').style('opacity', 0.05)
 
-        var activeNodes: any[] = [d.source, d.target]
+        const activeNodes: any[] = [d.source, d.target]
 
         svg.selectAll('.link').style('opacity', function (p: any) {
-          if (p.pathId == d.pathId) {
+          if (p.pathId === d.pathId) {
             activeNodes.push(p.source)
             activeNodes.push(p.target)
             return 0.7
@@ -210,16 +210,16 @@ const vis: Sankey = {
       // make unique gradient ids
       const gradientID = 'gradient' + i
 
-      var startColor = color(d.source.name);
-      var stopColor = color(d.target.name);
+      const startColor = color(d.source.name)
+      const stopColor = color(d.target.name)
 
       const linearGradient = defs.append('linearGradient')
         .attr('id', gradientID)
-        .attr("x1", d.source.x0)
-        .attr("y1", d.source.y0)
-        .attr("x2", d.target.x0)
-        .attr("y2", d.target.y0)
-        .attr("gradientUnits", "userSpaceOnUse")
+        .attr('x1', d.source.x0)
+        .attr('y1', d.source.y0)
+        .attr('x2', d.target.x0)
+        .attr('y2', d.target.y0)
+        .attr('gradientUnits', 'userSpaceOnUse')
 
       linearGradient.selectAll('stop')
         .data([
