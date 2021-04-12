@@ -210,9 +210,6 @@ const vis: Sankey = {
       // make unique gradient ids
       const gradientID = 'gradient' + i
 
-      const startColor = d.source.color
-      const stopColor = d.target.color
-      console.log({ startColor, stopColor })
       const linearGradient = defs.append('linearGradient')
         .attr('id', gradientID)
         .attr('x1', d.source.x0)
@@ -220,6 +217,9 @@ const vis: Sankey = {
         .attr('x2', d.target.x0)
         .attr('y2', d.target.y0)
         .attr('gradientUnits', 'userSpaceOnUse')
+      const startColor = d.source.color
+      const stopColor = d.target.color
+      console.log({ startColor, stopColor })
       console.log(d)
 
       linearGradient.selectAll('stop')
