@@ -217,11 +217,11 @@ const vis: Sankey = {
         .attr('x2', d.target.x0)
         .attr('y2', d.target.y0)
         .attr('gradientUnits', 'userSpaceOnUse')
-      const startColor = d.source.color
-      const stopColor = d.target.color
+      const startColor = '#4ef542'
+      const stopColor = '#231eb3'
       console.log(gradientID)
-      console.log(d)
-      console.log({ startColor, stopColor })
+      console.log(d.source)
+      console.log(d.target)
 
       linearGradient.selectAll('stop')
         .data([
