@@ -16,7 +16,7 @@ declare var LookerCharts: LookerChartUtils
 interface Sankey extends VisualizationDefinition {
   svg?: any
 }
-console.log('THIS IS TEST CONSOLE LOG')
+console.log('THIS IS TEST CONSOLE LOG 2')
 const vis: Sankey = {
   id: 'sankey', // id/label not required, but nice for testing and keeping manifests in sync
   label: 'Sankey Flow',
@@ -210,8 +210,8 @@ const vis: Sankey = {
       // make unique gradient ids
       const gradientID = 'gradient' + i
 
-      const startColor = color(d.source.name)
-      const stopColor = color(d.target.name)
+      const startColor = color(d.source.color)
+      const stopColor = color(d.target.color)
 
       const linearGradient = defs.append('linearGradient')
         .attr('id', gradientID)
