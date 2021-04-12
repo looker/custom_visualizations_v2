@@ -215,11 +215,12 @@ const vis: Sankey = {
 
       const linearGradient = defs.append('linearGradient')
           .attr('id', gradientID)
+          .attr('gradientUnits', 'userSpaceOnUse')
 
       linearGradient.selectAll('stop')
         .data([
-          { offset: '30%', color: startColor },
-          { offset: '70%', color: stopColor }
+          { offset: '10%', color: startColor },
+          { offset: '90%', color: stopColor }
         ])
         .enter().append('stop')
         .attr('offset', function (d: Cell) {
