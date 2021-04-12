@@ -16,7 +16,7 @@ declare var LookerCharts: LookerChartUtils
 interface Sankey extends VisualizationDefinition {
   svg?: any
 }
-
+console.log('THIS IS TEST CONSOLE LOG')
 const vis: Sankey = {
   id: 'sankey', // id/label not required, but nice for testing and keeping manifests in sync
   label: 'Sankey Flow',
@@ -220,6 +220,7 @@ const vis: Sankey = {
         .attr('x2', d.target.x0)
         .attr('y2', d.target.y0)
         .attr('gradientUnits', 'userSpaceOnUse')
+      console.log(d)
 
       linearGradient.selectAll('stop')
         .data([

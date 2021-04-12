@@ -8,7 +8,7 @@ var webpackConfig = {
     sankey: './src/examples/sankey/sankey.ts',
   },
   output: {
-    filename: "[name]-stable.js",
+    filename: `[name]-stable-${Math.floor(Math.random() * 999) + 1}.js`,
     path: path.join(__dirname, "dist"),
     library: "[name]",
     libraryTarget: "umd"
