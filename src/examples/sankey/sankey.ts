@@ -213,8 +213,8 @@ const vis: Sankey = {
       // make unique gradient ids
       const gradientID = `gradient${i}`
 
-      const startColor = d.source.color
-      const stopColor = d.target.color
+      const startColor = color(d.source.name)
+      const stopColor = color(d.target.name)
 
       console.log('startColor', startColor)
       console.log('stopColor', stopColor)
