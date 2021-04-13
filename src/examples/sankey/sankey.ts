@@ -206,30 +206,38 @@ const vis: Sankey = {
       })
 
     // gradients https://bl.ocks.org/micahstubbs/bf90fda6717e243832edad6ed9f82814
-    link.style('stroke', function (d: Cell, i: number) {
-      // make unique gradient ids
-      const gradientID = 'gradient' + i
+    // add gradient to links
+    link.style('stroke', (d: Cell, i: number) => {
+      console.log('d from gradient stroke func', d)
 
-      const startColor = color(d.source.name)
-      const stopColor = color(d.target.name)
+      // make unique gradient ids
+      const gradientID = `gradient${i}`
+
+      const startColor = d.source.color
+      const stopColor = d.target.color
+
+      console.log('startColor', startColor)
+      console.log('stopColor', stopColor)
 
       const linearGradient = defs.append('linearGradient')
           .attr('id', gradientID)
 
       linearGradient.selectAll('stop')
-        .data([
-          { offset: '10%', color: startColor },
-          { offset: '90%', color: stopColor }
-        ])
-        .enter().append('stop')
-        .attr('offset', function (d: Cell) {
-          return d.offset
-        })
-        .attr('stop-color', function (d: Cell) {
-          return d.color
-        })
+          .data([
+            { offset: '10%', color: startColor },
+            { offset: '90%', color: stopColor }
+          ])
+          .enter().append('stop')
+          .attr('offset', (d: Cell) => {
+            console.log('d.offset', d.offset)
+            return d.offset
+          })
+          .attr('stop-color', (d: Cell) => {
+            console.log('d.color', d.color)
+            return d.color
+          })
 
-      return 'url(#' + gradientID + ')'
+      return `url(#${gradientID})`
     })
 
     node = node
