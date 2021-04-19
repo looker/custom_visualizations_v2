@@ -21,7 +21,7 @@
     "@types/jquery": "^3.3.31",
     "css-loader": "^0.28.11",
     "d3": "^4.8.0",
-    "jquery": "^3.3.1",
+    "jquery": "^3.5.0",
     "jsdom": "^11.11.0",
     "pivottable": "^2.20.0",
     "subtotal-multiple-aggregates": "4mile/subtotal-multiple-aggregates",
