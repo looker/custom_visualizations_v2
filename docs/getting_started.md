@@ -22,16 +22,12 @@ We'll create a simple "Hello World" visualization that displays the first dimens
 
 ### Setup
 
-To develop and test a visualization in Looker, you need to host your visualization over https and create a manifest with a "Main" file pointing at your IP address and hosting port.
+To develop and test a visualization in Looker, you have two options:
 
-1. `pip install pyhttps` to install a simple https server.
-2. `pyhttps` in whichever folder you wish to develop.
-3. In Looker, navigate to the Admin page. In the left-hand navigation pane, find the "Platform" section and select "Visualizations".
-4. Click "Add Visualization" to create a new manifest.
-5. Add a unique id, a label for your visualization (we suggest prefixing it with DEV ONLY so no one creates and saves content with it).
-6. Finally, your "Main" file should point at `https://localhost:4443/hello_world.js`.
+1. [Save the visualization's source code directly in your LookML project](https://docs.looker.com/reference/manifest-params/visualization) (recommended)
+2. [Host your visualization over https and point to it from Looker](https://docs.looker.com/admin-options/platform/visualizations)
 
-Now let's actually create `hello_world.js`.
+Once you've set up one of those options, you can follow the example below to create `hello_world.js`.
 
 ### Just The Bones
 
