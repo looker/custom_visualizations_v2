@@ -1,3 +1,8 @@
+**THIS REPOSITORY HAS MOVED, PLEASE FIND THE NEW REPOSITORY [HERE](https://github.com/looker-open-source/custom_visualizations_v2)**
+
+
+----
+
 **A Note on Support**
 
 The visualizations provided in this repository are intended to serve as examples. Looker's support team does not troubleshoot issues relating to these example visualizations or your custom visualization code. Supported visualizations are downloadable through the [Looker Marketplace](https://docs.looker.com/data-modeling/marketplace). 
