@@ -34,4 +34,3 @@ The visualizations provided in this repository are intended to serve as examples
 
 ----
 
-
